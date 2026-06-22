@@ -410,6 +410,21 @@ export function mount(container, opts = {}) {
     ctx.lineTo(x + w, y + h);
     ctx.closePath();
   }
+  // fully-rounded rect (used for the record value contrast pill)
+  function roundRectFull(x, y, w, h, r) {
+    r = Math.min(r, w * 0.5, h * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
 
   // additive glow halo
   function capGlow(cx, cy, radius, color, alpha) {
@@ -832,25 +847,86 @@ export function mount(container, opts = {}) {
       ctx.fillText(MONTHS[i], x, geo.baseY + clamp(geo.floorDepth * 0.42, 14, 26));
     }
 
-    // record value + caption with tabular digits + landing flash
+    // record value + caption on a dark contrast pill, ABOVE the bar top edge.
+    // The pill sits on the dark backdrop (never over the bright bloomed bar) and
+    // carries its own dark fill + shadow, so the pure-white value can NEVER be
+    // washed out by the bloom/composite pass. Always shown once the strike begins
+    // (and unconditionally in the static frame, where recordPhase.v === 1).
     if (recordPhase.v > 0.18 && !small) {
       const i = RECORD;
       const cx = barX(i) + w / 2;
       const yTop = barTopY(i, liveH[i]);
+      // keep the pill clear of the thrown crown chevron, anchored above the cap
       const lift = Math.max(11, w * 0.95) * easeOutCubic(clamp(crownPop, 0, 1));
-      const labelY = yTop - lift - 16;
       const v = Math.round(dispVal[i]);
       const popA = clamp(crownPop, 0, 1);
-      // landing flash only tints during the brief flash, then resolves to pure white
-      const flashCol = mixHex(tokens.white, tokens.lilacHi, (1 - landFlash) * 0.0 + landFlash * 0.35);
+      const valStr = formatFR(v) + " vues";
+
+      // measure the chip so it fits the value + caption snugly (tabular value)
+      ctx.font = recordValFont();
+      const valW = measureTabular(valStr);
+      ctx.font = "700 9px 'Inter',system-ui,sans-serif";
+      const capW = ctx.measureText("RECORD").width;
+      const padX = 11, padTop = 7, gapY = 5, capH = 9;
+      const valFontPx = clamp(Math.round(geo.barW * 0.62), 12, 18);
+      const chipW = Math.max(valW, capW) + padX * 2;
+      const chipH = padTop + valFontPx + gapY + capH + padTop;
+      // bottom of the pill rides just above the (possibly lifted) crown stem
+      const chipBottom = yTop - lift - 10;
+      const chipTop = chipBottom - chipH;
+      const chipX = cx - chipW / 2;
+
+      // dark rounded backdrop (drawn whether or not it overlaps the bloom)
+      ctx.save();
+      ctx.globalAlpha = popA;
+      // soft drop shadow lifts the pill off the background
+      ctx.shadowColor = hexA(tokens.void, 0.85);
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetY = 3;
+      roundRectFull(chipX, chipTop, chipW, chipH, Math.min(10, chipH * 0.5));
+      ctx.fillStyle = hexA("#0B0717", 0.9);
+      ctx.fill();
+      // kill the shadow before the border/stem so they stay crisp
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+      // thin royal hairline border
+      roundRectFull(chipX, chipTop, chipW, chipH, Math.min(10, chipH * 0.5));
+      ctx.strokeStyle = hexA(tokens.royal, 0.7);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      // tiny connector tick from the pill down toward the cap
+      ctx.strokeStyle = hexA(tokens.royal, 0.55);
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(cx, chipBottom);
+      ctx.lineTo(cx, Math.min(chipBottom + 6, yTop - 2));
+      ctx.stroke();
+      ctx.restore();
+
+      // value — pure crisp white on the dark pill, with a dark text-shadow as a
+      // belt-and-suspenders guard against any stray bloom bleeding onto it.
+      const valBaseline = chipTop + padTop + valFontPx - 2;
+      ctx.save();
+      ctx.shadowColor = hexA(tokens.void, 0.9);
+      ctx.shadowBlur = 4;
+      // landing flash briefly tints toward lilac, then resolves to pure white
+      const flashCol = mixHex(tokens.white, tokens.lilacHi, landFlash * 0.35);
       ctx.fillStyle = hexA(flashCol, popA);
-      drawTabularValue(cx, labelY, formatFR(v));
-      // caption — crisp white, legible against the dark backdrop
+      drawTabularValue(cx, valBaseline, valStr);
+      ctx.restore();
+
+      // caption — crisp lilac/white on the dark pill
+      ctx.save();
+      ctx.shadowColor = hexA(tokens.void, 0.9);
+      ctx.shadowBlur = 3;
       ctx.textAlign = "center";
       ctx.font = "700 9px 'Inter',system-ui,sans-serif";
-      ctx.fillStyle = hexA(mixHex(tokens.white, tokens.lilacHi, landFlash * 0.5),
+      ctx.fillStyle = hexA(mixHex(tokens.lilacHi, tokens.white, 0.4 + landFlash * 0.3),
         0.95 * popA);
-      ctx.fillText("RECORD", cx, labelY + 12);
+      ctx.fillText("RECORD", cx, chipBottom - padTop + 1);
+      ctx.restore();
     }
 
     // corner brand + metric label
@@ -868,16 +944,23 @@ export function mount(container, opts = {}) {
     ctx.fillText("illustratif", W - geo.padX * 0.55, H * 0.1);
   }
 
-  // fixed-advance digits so the count-up never jitters horizontally
-  function drawTabularValue(cx, y, str) {
-    ctx.font = recordValFont();
-    ctx.textBaseline = "alphabetic";
-    // measure layout: each glyph occupies a slot; digits use recordValW, others natural
+  // total advance of a tabular string (digits = fixed slot, others natural).
+  // Caller must have set ctx.font to recordValFont() first.
+  function measureTabular(str) {
     let total = 0;
     for (let k = 0; k < str.length; k++) {
       const ch = str[k];
       total += (ch >= "0" && ch <= "9") ? recordValW : ctx.measureText(ch).width;
     }
+    return total;
+  }
+
+  // fixed-advance digits so the count-up never jitters horizontally
+  function drawTabularValue(cx, y, str) {
+    ctx.font = recordValFont();
+    ctx.textBaseline = "alphabetic";
+    // measure layout: each glyph occupies a slot; digits use recordValW, others natural
+    const total = measureTabular(str);
     let x = cx - total / 2;
     ctx.textAlign = "center";
     for (let k = 0; k < str.length; k++) {
