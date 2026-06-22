@@ -184,6 +184,27 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
   .success{display:none;text-align:center;padding:30px 10px}
   .success.show{display:block} .formgrid.hide,.formnote.hide{display:none}
   .success .big{font-family:var(--serif);font-size:28px;margin:10px 0}
+  /* chip selectors + hint */
+  .fchips{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+  .chipbtn{font:inherit;font-size:13.5px;color:rgba(246,243,254,.82);background:rgba(7,6,13,.7);border:1px solid var(--line2);border-radius:11px;padding:11px 16px;cursor:pointer;transition:.15s}
+  .chipbtn:hover{border-color:var(--lilac);color:#fff}
+  .chipbtn.on{background:linear-gradient(120deg,var(--royal),var(--deep));border-color:var(--lilac);color:#fff;box-shadow:0 6px 18px -8px rgba(124,58,237,.9)}
+  .hint{font-size:11.5px;color:var(--mut2);margin-top:6px;line-height:1.45}
+  /* checkout / milestone overlay */
+  .checkout{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(7,6,13,.88);backdrop-filter:blur(12px);overflow-y:auto}
+  .checkout.show{display:flex}
+  .checkout-card{position:relative;max-width:520px;width:100%;border:1px solid var(--line2);border-radius:22px;background:linear-gradient(180deg,#0e0a1c,#08060f);padding:clamp(24px,4vw,40px);box-shadow:0 40px 120px -40px rgba(124,58,237,.75);margin:auto}
+  .checkout-card h2{font-size:clamp(22px,3vw,32px);margin:10px 0 0}
+  .checkout-close{position:absolute;top:14px;right:16px;background:transparent;border:0;color:var(--mut);font-size:19px;cursor:pointer;line-height:1}
+  .timeline{list-style:none;padding:0;margin:22px 0;display:grid;gap:14px}
+  .timeline li{display:flex;gap:14px;align-items:flex-start}
+  .timeline li .d{flex:none;min-width:62px;font-weight:700;color:var(--lilac2);font-size:13px;letter-spacing:.03em;padding-top:1px}
+  .timeline li span:last-child{color:rgba(246,243,254,.85);font-size:14.5px;line-height:1.45}
+  .co-price{display:flex;align-items:baseline;gap:9px;margin:6px 0 18px;flex-wrap:wrap}
+  .co-price .amt{font-family:var(--serif);font-weight:800;font-size:40px;line-height:1}
+  .co-price span:last-child{color:var(--mut);font-size:12.5px}
+  .checkout-card .btn{width:100%}
+  .co-note{font-size:11.5px;color:var(--mut2);margin-top:12px;text-align:center}
   @media(max-width:880px){.formwrap{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}}
 
   footer{border-top:1px solid var(--line);padding:40px 0 60px;color:var(--mut)}
@@ -198,7 +219,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
   <div class="logo">VANTA<b>.</b> <span data-i18n="logosub" style="font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--mut);text-transform:uppercase;font-weight:600">Marketing</span></div>
   <div class="navspace"></div>
   <div class="langtog" id="langtog"><button data-lang="fr" class="on">FR</button><button data-lang="en">EN</button></div>
-  <a href="#demo" class="btn primary hidesm" data-i18n="nav.cta">Réserver ma démo</a>
+  <a href="#demo" class="btn primary hidesm" data-i18n="nav.cta">Commencer</a>
 </div></nav>
 
 <!-- HERO -->
@@ -210,7 +231,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
     <p class="sub" data-i18n="hero.sub">Un blogue clé en main pour votre restaurant qui vous fait remonter dans Google et dans ChatGPT, Gemini et Perplexity, et qui envoie ces clients droit vers votre fiche Google.</p>
     <div class="price-chip"><b>97 $/mois</b> · <span data-i18n="hero.chip">sans engagement · annulez en tout temps</span></div>
     <div class="cta">
-      <a href="#demo" class="btn primary lg" data-i18n="hero.cta1">Réserver ma démo</a>
+      <a href="#demo" class="btn primary lg" data-i18n="hero.cta1">Commencer</a>
       <a href="#dashboard" class="btn ghost lg" data-i18n="hero.cta2">Voir le tableau de bord</a>
     </div>
     <div class="trust">
@@ -278,15 +299,15 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
       <span class="t">Vanta · Tableau de bord · Café Verre</span>
       <span class="live" data-i18n="dash.livelabel">En direct</span></div>
     <div class="dashgrid">
-      <div class="tile big"><span class="cap" data-i18n="dash.t_skyline">Vues du blogue · par mois</span><div class="elh"><div class="el" data-el="skyline"></div></div></div>
+      <div class="tile big"><div class="elh"><div class="el" data-el="skyline"></div></div></div>
       <div class="colstack">
-        <div class="tile sm"><span class="cap" data-i18n="dash.t_gauge">Objectif du mois</span><div class="elh"><div class="el" data-el="liquidgauge"></div></div></div>
-        <div class="tile sm"><span class="cap" data-i18n="dash.t_cluster">Indicateurs en direct</span><div class="elh"><div class="el" data-el="gaugecluster"></div></div></div>
+        <div class="tile sm"><div class="elh"><div class="el" data-el="liquidgauge"></div></div></div>
+        <div class="tile sm"><div class="elh"><div class="el" data-el="gaugecluster"></div></div></div>
       </div>
     </div>
     <div class="dashrow">
-      <div class="tile md"><span class="cap" data-i18n="dash.t_sparkline">Clics vers votre profil Google</span><div class="elh"><div class="el" data-el="sparkline"></div></div></div>
-      <div class="tile md"><span class="cap" data-i18n="dash.t_donut">D'où viennent vos lecteurs · Citations IA</span><div class="elh"><div class="el" data-el="donut"></div></div></div>
+      <div class="tile md"><span class="cap" data-i18n="dash.t_constellation">Votre réseau de découverte</span><div class="elh"><div class="el" data-el="constellation"></div></div></div>
+      <div class="tile md"><div class="elh"><div class="el" data-el="donut"></div></div></div>
     </div>
     <div class="samp" data-i18n="dash.sample">Données illustratives. Non représentatives d'un résultat client.</div>
   </div>
@@ -319,7 +340,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
         <div class="o"><div class="chk">✓</div><div><b data-i18n="out.o4t">Zéro effort, preuve transparente</b><p data-i18n="out.o4b">100 % clé en main. Vous ouvrez le tableau de bord, vous voyez les chiffres monter.</p></div></div>
       </div>
     </div>
-    <div class="statbox"><span class="cap" style="position:absolute;top:12px;left:14px;z-index:3;font-size:11px;letter-spacing:.04em;color:var(--mut);text-transform:uppercase;font-weight:600" data-i18n="out.statcap">Citations IA · ce mois</span><div class="el" data-el="donut"></div></div>
+    <div class="statbox"><div class="el" data-el="donut"></div></div>
   </div>
 </div></section>
 
@@ -337,8 +358,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
       <div data-i18n="price.f5">Tableau de bord : vues + clics Google</div>
       <div data-i18n="price.f6">Sans engagement · annulez en tout temps</div>
     </div>
-    <div class="roistrip"><div class="el" data-el="sparkline"></div></div>
-    <a href="#demo" class="btn primary lg" style="width:100%;margin-top:22px" data-i18n="price.cta">Réserver ma démo</a>
+    <a href="#demo" class="btn primary lg" style="width:100%;margin-top:22px" data-i18n="price.cta">Commencer maintenant</a>
     <div class="anchor" data-i18n="price.anchor">≈ 3 $/jour. Moins qu'une seule table tranquille, vs 1 500 $+/mois pour une agence SEO.</div>
   </div>
 </div></section>
@@ -372,32 +392,30 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
 <section class="cta-final sec" id="demo"><div class="el bg" data-el="godrays"></div><div class="wrap">
   <div class="formwrap">
     <div>
-      <div class="eyebrow" data-i18n="form.eyebrow">Réservez votre démo</div>
+      <div class="eyebrow" data-i18n="form.eyebrow">Lancez votre blogue</div>
       <h2 style="font-size:clamp(28px,4vw,48px);margin:14px 0 0"><span data-i18n="form.h2a">Soyez le restaurant que Google met en avant</span> <span class="grad" data-i18n="form.h2b">et que l'IA recommande.</span></h2>
-      <p class="lead" style="margin-top:18px" data-i18n="form.sub">Laissez-nous vos infos. On vous montre une démo du tableau de bord et comment on remplit vos tables. 97 $/mois, sans engagement.</p>
+      <p class="lead" style="margin-top:18px" data-i18n="form.sub">Entrez vos infos, on s'occupe de tout le reste. 97 $/mois, annulez en tout temps, garantie 60 jours.</p>
       <div class="trust" style="margin-top:22px">
         <span data-i18n="trust.1">Sans engagement</span><span data-i18n="trust.3">Garantie 60 jours</span><span data-i18n="trust.4">Fait au Québec</span>
       </div>
     </div>
     <div class="formcard">
       <form id="leadform" class="formgrid" novalidate>
-        <div class="field"><label data-i18n="form.name">Nom complet *</label><input name="nom" required autocomplete="name" /></div>
-        <div class="field"><label data-i18n="form.email">Courriel *</label><input name="courriel" type="email" required autocomplete="email" /></div>
-        <div class="field"><label data-i18n="form.phone">Téléphone</label><input name="telephone" type="tel" autocomplete="tel" /></div>
-        <div class="field"><label data-i18n="form.resto">Nom du restaurant</label><input name="restaurant" /></div>
-        <div class="field"><label data-i18n="form.city">Ville</label><input name="ville" /></div>
-        <div class="field"><label data-i18n="form.nresto">Combien de restaurants ?</label>
-          <select name="nb_restaurants"><option value="" data-i18n="form.choose">Choisir…</option><option>1</option><option>2-3</option><option>4-10</option><option>10+</option></select></div>
-        <div class="field"><label data-i18n="form.nsites">Combien de sites voulez-vous ?</label>
-          <select name="nb_sites"><option value="" data-i18n="form.choose">Choisir…</option><option value="1" data-i18n="form.s1">1 site</option><option value="3" data-i18n="form.s3">3 sites</option><option value="10" data-i18n="form.s10">10 sites</option><option value="?" data-i18n="form.sx">Pas encore sûr</option></select></div>
-        <div class="field"><label data-i18n="form.contact">Meilleur moyen de vous joindre</label>
-          <select name="contact_pref"><option value="" data-i18n="form.choose">Choisir…</option><option data-i18n="form.c_phone">Téléphone</option><option data-i18n="form.c_email">Courriel</option><option data-i18n="form.c_text">Texto</option></select></div>
-        <div class="field full"><label data-i18n="form.time">Meilleur moment pour vous joindre</label>
-          <select name="best_time"><option value="" data-i18n="form.choose">Choisir…</option><option data-i18n="form.t_morn">Matin</option><option data-i18n="form.t_aft">Après-midi</option><option data-i18n="form.t_eve">Soir</option></select></div>
-        <div class="field full"><button type="submit" class="btn primary lg" data-i18n="form.submit">Réserver ma démo gratuite</button></div>
+        <div class="field full"><label data-i18n="form.resto">Nom du restaurant et du propriétaire *</label><input name="resto_owner" required autocomplete="organization" placeholder="Café Verre, Marie Tremblay" /></div>
+        <div class="field full"><label data-i18n="form.email">Courriel *</label><input name="courriel" type="email" required autocomplete="email" /></div>
+        <div class="field full"><label data-i18n="form.sms">Cellulaire (SMS) *</label><input name="sms" type="tel" required autocomplete="tel" /><span class="hint" data-i18n="form.smshint">On ne vous appellera pas. Juste un texto pour confirmer quand vous êtes prêt à démarrer.</span></div>
+        <div class="field full"><label data-i18n="form.nresto">Combien de restaurants ?</label>
+          <div class="fchips" data-single="1"><button type="button" class="chipbtn" data-val="1">1</button><button type="button" class="chipbtn" data-val="2-3">2-3</button><button type="button" class="chipbtn" data-val="4-10">4-10</button><button type="button" class="chipbtn" data-val="10+">10+</button></div>
+          <input type="hidden" name="nb_restaurants" /></div>
+        <div class="field full"><label data-i18n="form.nsites">Combien de sites voulez-vous ?</label>
+          <div class="fchips" data-single="1"><button type="button" class="chipbtn" data-val="1" data-i18n="form.s1">1 site</button><button type="button" class="chipbtn" data-val="3" data-i18n="form.s3">3 sites</button><button type="button" class="chipbtn" data-val="10" data-i18n="form.s10">10 sites</button></div>
+          <input type="hidden" name="nb_sites" /></div>
+        <div class="field full"><label data-i18n="form.contact">Meilleur moyen de vous joindre</label>
+          <div class="fchips"><button type="button" class="chipbtn" data-val="Texto" data-i18n="form.c_text">Texto</button><button type="button" class="chipbtn" data-val="Courriel" data-i18n="form.c_email">Courriel</button></div>
+          <input type="hidden" name="contact_pref" /></div>
+        <div class="field full"><button type="submit" class="btn primary lg" data-i18n="form.submit">Commencer maintenant · 97 $/mois</button></div>
       </form>
       <p class="formnote" id="formnote" data-i18n="form.note">En soumettant, vous acceptez d'être contacté au sujet de Vanta. Les résultats varient selon l'emplacement, la cuisine, la concurrence et le marché. Résultats individuels, non garantis.</p>
-      <div class="success" id="success"><div style="font-size:34px">✅</div><div class="big grad" data-i18n="form.okt">Merci ! On vous contacte sous peu.</div><p class="lead" data-i18n="form.okb">On vous prépare une démo du tableau de bord pour votre restaurant.</p></div>
     </div>
   </div>
 </div></section>
@@ -410,16 +428,34 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
   <p class="footlegal" data-i18n="footer.legal">© 2026 Vanta Marketing. 97 $/mois, par restaurant, sans engagement, annulable en tout temps, garantie de remboursement 60 jours. Vanta améliore la visibilité et les clics vers votre profil Google ; nous ne garantissons aucun classement, trafic ou volume de ventes précis. Le référencement progresse généralement sur 3 à 6 mois et se stabilise vers 6 à 12 mois. Les résultats varient selon l'emplacement, la cuisine, la concurrence et le marché. Résultats individuels, non garantis. Les chiffres du tableau de bord présentés ici sont illustratifs.</p>
 </div></footer>
 
+<!-- CHECKOUT / MILESTONE OVERLAY (shown after lead is saved, before payment) -->
+<div class="checkout" id="checkout" aria-hidden="true">
+  <div class="checkout-card">
+    <button class="checkout-close" id="checkoutClose" aria-label="Fermer">✕</button>
+    <div class="eyebrow" data-i18n="co.eyebrow">Vous y êtes presque</div>
+    <h2 data-i18n="co.h2">Voici ce qui se passe ensuite</h2>
+    <ol class="timeline">
+      <li><span class="d" data-i18n="co.d1n">Jour 1</span><span data-i18n="co.d1">Inscription. On reçoit tout ce qu'il faut pour démarrer.</span></li>
+      <li><span class="d" data-i18n="co.d2n">Jour 2</span><span data-i18n="co.d2">La logique de votre blogue est créée.</span></li>
+      <li><span class="d" data-i18n="co.d3n">Jour 3</span><span data-i18n="co.d3">Vos premiers articles sont en production.</span></li>
+      <li><span class="d" data-i18n="co.d4n">Jour 7</span><span data-i18n="co.d4">Tout est prêt. On publie chaque semaine.</span></li>
+    </ol>
+    <div class="co-price"><span class="amt grad">97 $</span><span data-i18n="co.per">/mois · annulez en tout temps · garantie 60 jours</span></div>
+    <button class="btn primary lg" id="checkoutGo" data-i18n="co.go">Procéder au paiement sécurisé</button>
+    <p class="co-note" data-i18n="co.note">Paiement sécurisé. Vos informations sont déjà enregistrées.</p>
+  </div>
+</div>
+
 <script type="module">
 /* ---------------- i18n ---------------- */
 const I18N = {
   fr: {}, // FR is authored inline in the HTML (default); EN overrides below
   en: {
-    "logosub":"Marketing","nav.cta":"Book my demo",
+    "logosub":"Marketing","nav.cta":"Get started",
     "hero.eyebrow":"Local SEO + AI visibility · Québec restaurants",
     "hero.h1a":"Get found everywhere,","hero.h1b":"on Google AND in AI answers.",
     "hero.sub":"A done-for-you blog for your restaurant that lifts you in Google and in ChatGPT, Gemini & Perplexity, and funnels those diners straight to your Google profile.",
-    "hero.chip":"no contract · cancel anytime","hero.cta1":"Book my demo","hero.cta2":"See the dashboard",
+    "hero.chip":"no contract · cancel anytime","hero.cta1":"Get started","hero.cta2":"See the dashboard",
     "trust.1":"No contract","trust.2":"Cancel anytime","trust.3":"60-day guarantee","trust.4":"Made in Québec",
     "shift.eyebrow":"The big shift","shift.h2":"Search just split in two. Two front doors.",
     "shift.body":"Your future customers still Google “best restaurant near me”. But more and more, they also ask an AI where to eat. Most restaurants are invisible in that second door. That's exactly where Vanta puts you.",
@@ -434,7 +470,7 @@ const I18N = {
     "how.s3t":"Diners click","how.s3b":"Readers click straight to your Google profile: call, directions, menu, reservation, order.",
     "how.vizcap":"Blog views, month over month (illustrative)",
     "dash.eyebrow":"The dashboard","dash.h2":"Proof, in plain numbers.","dash.sub":"No 40-page report. One screen, the two numbers that matter: how many people read you, and how many clicked to your Google profile.",
-    "dash.livelabel":"Live","dash.t_skyline":"Blog views · by month","dash.t_gauge":"This month's goal","dash.t_cluster":"Live metrics","dash.t_sparkline":"Clicks to your Google profile","dash.t_donut":"Where your readers come from · AI citations","dash.sample":"Illustrative data. Not representative of a client result.",
+    "dash.livelabel":"Live","dash.t_constellation":"Your discovery network","dash.t_skyline":"Blog views · by month","dash.t_gauge":"This month's goal","dash.t_cluster":"Live metrics","dash.t_sparkline":"Clicks to your Google profile","dash.t_donut":"Where your readers come from · AI citations","dash.sample":"Illustrative data. Not representative of a client result.",
     "incl.eyebrow":"Everything included","incl.h2":"What you get every month",
     "incl.i1t":"Done-for-you blog","incl.i1b":"A branded blog site, hosted and managed. Nothing to install, nothing to manage.",
     "incl.i2t":"Articles in French","incl.i2b":"Fresh local content, optimized for both Google and AI discovery.",
@@ -450,7 +486,7 @@ const I18N = {
     "out.statcap":"AI citations · this month",
     "price.eyebrow":"Simple pricing","price.h2":"One price. No catch.","price.per":"per month, per restaurant",
     "price.f1":"Branded blog, hosted and managed","price.f2":"French articles optimized for Google + AI","price.f3":"Schema, IndexNow, llms.txt: technical setup included","price.f4":"Links to your Google profile","price.f5":"Dashboard: views + Google clicks","price.f6":"No contract · cancel anytime",
-    "price.cta":"Book my demo","price.anchor":"≈ $3/day. Less than one slow table, vs $1,500+/mo for an SEO agency.",
+    "price.cta":"Get started now","price.anchor":"≈ $3/day. Less than one slow table, vs $1,500+/mo for an SEO agency.",
     "guar.badge":"🛡️ 60-day guarantee","guar.h2":"Try it risk-free. Cancel anytime.","guar.body":"Month-to-month, no contract. Not satisfied? You're refunded within 60 days. You stay in control, and you see the results yourself in the dashboard.",
     "guar.disc":"SEO ramps over 3 to 6 months and stabilizes around 6 to 12 months. Results vary by location, cuisine, competition and market. Individual results, not a guarantee.",
     "faq.eyebrow":"FAQ","faq.h2":"You're probably wondering…",
@@ -460,14 +496,18 @@ const I18N = {
     "faq.q4":"How is this different from an agency?","faq.a4":"No contract, no vague reports, no jargon. One price, one dashboard, real clicks to your Google profile you can count.",
     "faq.q5":"$97, what's the catch?","faq.a5":"None. Month-to-month, cancel anytime, 60-day guarantee. One extra table pays for the month.",
     "faq.q6":"Does AI really matter for my restaurant?","faq.a6":"More and more diners choose where to eat via ChatGPT and Google AI Overviews. Being cited now is a head start.",
-    "form.eyebrow":"Book your demo","form.h2a":"Be the restaurant Google features","form.h2b":"and AI recommends.",
-    "form.sub":"Leave us your details. We'll show you a dashboard demo and how we fill your tables. $97/mo, no contract.",
-    "form.name":"Full name *","form.email":"Email *","form.phone":"Phone","form.resto":"Restaurant name","form.city":"City",
+    "form.eyebrow":"Launch your blog","form.h2a":"Be the restaurant Google features","form.h2b":"and AI recommends.",
+    "form.sub":"Enter your details, we handle the rest. $97/mo, cancel anytime, 60-day guarantee.",
+    "form.email":"Email *","form.resto":"Restaurant & owner name *","form.sms":"Mobile (SMS) *","form.smshint":"We won't call you. Just one text to confirm when you're ready to start.",
     "form.nresto":"How many restaurants?","form.nsites":"How many sites do you want?","form.contact":"Best way to reach you","form.time":"Best time to reach you",
     "form.choose":"Choose…","form.s1":"1 site","form.s3":"3 sites","form.s10":"10 sites","form.sx":"Not sure yet",
     "form.c_phone":"Phone","form.c_email":"Email","form.c_text":"Text","form.t_morn":"Morning","form.t_aft":"Afternoon","form.t_eve":"Evening",
-    "form.submit":"Book my free demo","form.note":"By submitting, you agree to be contacted about Vanta. Results vary by location, cuisine, competition and market. Individual results, not a guarantee.",
-    "form.okt":"Thank you! We'll be in touch shortly.","form.okb":"We're preparing a dashboard demo for your restaurant.",
+    "form.submit":"Get started now · $97/mo","form.note":"By submitting, you agree to be contacted about Vanta. Results vary by location, cuisine, competition and market. Individual results, not a guarantee.",
+    "co.eyebrow":"You're almost in","co.h2":"Here's what happens next",
+    "co.d1n":"Day 1","co.d1":"Sign-up. We get everything we need to start.",
+    "co.d2n":"Day 2","co.d2":"Your blog's logic is built.","co.d3n":"Day 3","co.d3":"Your first articles go into production.",
+    "co.d4n":"Day 7","co.d4":"Everything's ready. We publish every week.",
+    "co.per":"/month · cancel anytime · 60-day guarantee","co.go":"Proceed to secure checkout","co.note":"Secure payment. Your details are already saved.",
     "footer.made":"Made in Québec · Local SEO + AI visibility for restaurants",
     "footer.legal":"© 2026 Vanta Marketing. $97/month, per restaurant, no contract, cancel anytime, 60-day money-back guarantee. Vanta improves visibility and clicks to your Google profile; we do not guarantee any specific ranking, traffic or sales volume. SEO typically ramps over 3 to 6 months and stabilizes around 6 to 12 months. Results vary by location, cuisine, competition and market. Individual results, not a guarantee. Dashboard numbers shown here are illustrative.",
   }
@@ -525,21 +565,52 @@ refresh(); setTimeout(refresh,250); setTimeout(refresh,1000);
 // IntersectionObserver as a bonus trigger where supported
 try{ const io=new IntersectionObserver(es=>es.forEach(e=>{e.isIntersecting?mountHost(e.target):unmountHost(e.target);}),{rootMargin:'420px 0px 420px 0px',threshold:0.01}); hosts.forEach(h=>io.observe(h)); }catch(_){}
 
-/* ---------------- lead form ---------------- */
+/* ---------------- chips + lead form + checkout ---------------- */
 const LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzLawKgUNxG-jwSqV_er_kepAFJe5fl7XVbtwlOf_e1AYdAMCYqu6VqWnc3E57aafk/exec";
+const CHECKOUT_URL = ""; // <-- paste your Whop checkout URL here (see WHOP-SETUP-SOP.md). Empty = not wired yet.
+
+// chip toggles: single-select when data-single="1", else multi-select; value(s) -> sibling hidden input
+document.querySelectorAll('.fchips').forEach(group=>{
+  const single = group.dataset.single==='1';
+  const hidden = group.parentElement.querySelector('input[type=hidden]');
+  group.addEventListener('click', ev=>{
+    const b=ev.target.closest('.chipbtn'); if(!b) return;
+    if(single){ [...group.children].forEach(c=>c.classList.toggle('on', c===b)); }
+    else { b.classList.toggle('on'); }
+    if(hidden) hidden.value=[...group.querySelectorAll('.chipbtn.on')].map(c=>c.dataset.val).join(', ');
+  });
+});
+
 const form=document.getElementById('leadform');
+const checkout=document.getElementById('checkout');
+let lastLead=null;
 form.addEventListener('submit', async (e)=>{
   e.preventDefault();
-  if(!form.nom.value.trim() || !form.courriel.value.trim()){ form.reportValidity&&form.reportValidity(); return; }
-  const data=Object.fromEntries(new FormData(form).entries());
-  data.langue=lang; data.page='vanta-landing'; data.ts=new Date().toISOString();
+  const ro=form.resto_owner.value.trim(), em=form.courriel.value.trim(), sms=form.sms.value.trim();
+  if(!ro||!em||!sms){ form.reportValidity&&form.reportValidity(); return; }
+  const data={ ts:new Date().toISOString(), nom:ro, restaurant:ro, courriel:em, telephone:sms,
+    nb_restaurants:form.nb_restaurants.value||'', nb_sites:form.nb_sites.value||'', contact_pref:form.contact_pref.value||'',
+    langue:lang, page:'vanta-landing', enrolled:'non' };
+  lastLead=data;
+  // save the lead FIRST so we keep it even if they abandon payment
   try{
     if(LEADS_ENDPOINT){ await fetch(LEADS_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(data).toString()}); }
-    else { const k='vanta_leads'; const arr=JSON.parse(localStorage.getItem(k)||'[]'); arr.push(data); localStorage.setItem(k,JSON.stringify(arr)); }
-  }catch(_){ /* optimistic: still thank the user */ }
-  document.querySelector('.formgrid').classList.add('hide');
-  document.getElementById('formnote').classList.add('hide');
-  document.getElementById('success').classList.add('show');
+    else { const k='vanta_leads'; const a=JSON.parse(localStorage.getItem(k)||'[]'); a.push(data); localStorage.setItem(k,JSON.stringify(a)); }
+  }catch(_){}
+  checkout.classList.add('show'); document.body.style.overflow='hidden';
+});
+function closeCheckout(){ checkout.classList.remove('show'); document.body.style.overflow=''; }
+document.getElementById('checkoutClose').addEventListener('click', closeCheckout);
+checkout.addEventListener('click', e=>{ if(e.target===checkout) closeCheckout(); });
+document.getElementById('checkoutGo').addEventListener('click', ()=>{
+  const d=lastLead||{};
+  if(CHECKOUT_URL){
+    let u=null; try{ u=new URL(CHECKOUT_URL); }catch(_){}
+    if(u){ if(d.courriel)u.searchParams.set('email',d.courriel); if(d.nom)u.searchParams.set('name',d.nom); u.searchParams.set('plan','vanta-97'); location.href=u.toString(); }
+    else location.href=CHECKOUT_URL;
+  } else {
+    alert(lang==='fr' ? 'Paiement bientôt disponible — connexion Whop en cours.' : 'Checkout coming soon — Whop connection in progress.');
+  }
 });
 </script>
 </body>

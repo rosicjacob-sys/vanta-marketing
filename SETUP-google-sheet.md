@@ -4,7 +4,11 @@ The form posts every lead to a Google Sheet via a tiny Google Apps Script web ap
 
 ## Steps
 1. Create a new Google Sheet. Row 1 headers (any order is fine; the script auto-maps):
-   `ts | nom | courriel | telephone | restaurant | ville | nb_restaurants | nb_sites | contact_pref | best_time | langue | page`
+   `ts | nom | courriel | telephone | restaurant | ville | nb_restaurants | nb_sites | contact_pref | best_time | langue | page | enrolled`
+   - The form now sends: `nom` & `restaurant` = combined "restaurant + owner name", `telephone` = the SMS
+     number, `contact_pref` = chosen channel(s), and `enrolled` = `non` (flipped to `oui` after payment).
+   - `ville` and `best_time` are no longer collected (columns just stay empty — harmless).
+   - **For the payment / `enrolled` flip via Whop, use the upgraded `doPost` in `WHOP-SETUP-SOP.md`.**
 2. In the Sheet: **Extensions → Apps Script**. Delete the stub and paste:
 
 ```js

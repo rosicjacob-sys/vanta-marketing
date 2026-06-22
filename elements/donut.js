@@ -1028,20 +1028,24 @@ export function mount(container, opts = {}) {
     const targetH = u.heightScale * (1 + u.lift * 0.22);
     const z = Math.max(0.0001, u.grow * targetH);
     mesh.scale.z = z;
-    // outward radial lift on hover (magnetic pop)
-    const off = u.lift * 0.16;
-    mesh.position.x = Math.cos(u.midAng) * off;
-    mesh.position.y = Math.sin(u.midAng) * off;
-    mesh.position.z = u.lift * 0.06;
+    // Highlight pop stays FLUSH with the ring: no outward radial offset (an
+    // explode here detaches the wedge and the bloom blows it white). The pop is
+    // sold purely by a tiny forward (z) lift + the brighter emissive below, so
+    // the highlighted slice never separates from the continuous ring.
+    mesh.position.x = 0;
+    mesh.position.y = 0;
+    mesh.position.z = u.lift * 0.05;
 
     // colour / emissive response: hover pushes toward lilac + brightens;
     // the global flash spring lifts every slice's emissive on the landing.
     const mat = mesh.material;
     const hl = u.lift;
     const fl = Math.min(flash, 1.3);
-    mat.emissiveIntensity = 1.0 + hl * 1.4 + fl * 1.6;
-    mat.color.copy(u.baseColor).lerp(cHaloB, hl * 0.5);
-    mat.emissive.copy(u.baseEmissive).lerp(cHaloB, hl * 0.6).multiplyScalar(1 + hl * 0.4);
+    // keep the highlight a bright lilac, not a blown-out white wedge: cap the
+    // emissive lift so the bright-pass bloom reads it as "glowing" not "white".
+    mat.emissiveIntensity = 1.0 + hl * 0.7 + fl * 1.6;
+    mat.color.copy(u.baseColor).lerp(cHaloB, hl * 0.42);
+    mat.emissive.copy(u.baseEmissive).lerp(cHaloB, hl * 0.45).multiplyScalar(1 + hl * 0.25);
     // dim non-hovered slices slightly when something is hovered (focus)
     if (hoverIndex >= 0 && u.index !== hoverIndex) {
       mat.opacity = lerp(mat.opacity, 0.62, Math.min(1, dt * 8));
