@@ -611,7 +611,7 @@ document.getElementById('checkoutGo').addEventListener('click', ()=>{
     if(u){ if(d.courriel)u.searchParams.set('email',d.courriel); if(d.nom)u.searchParams.set('name',d.nom); u.searchParams.set('plan','vanta-97'); location.href=u.toString(); }
     else location.href=CHECKOUT_URL;
   } else {
-    alert(lang==='fr' ? 'Paiement bientôt disponible — connexion Whop en cours.' : 'Checkout coming soon — Whop connection in progress.');
+    alert(lang==='fr' ? 'Paiement bientôt disponible. Connexion Whop en cours.' : 'Checkout coming soon. Whop connection in progress.');
   }
 });
 </script>
