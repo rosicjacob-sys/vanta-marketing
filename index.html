@@ -196,6 +196,14 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
   .chipbtn:hover{border-color:var(--lilac);color:#fff}
   .chipbtn.on{background:linear-gradient(120deg,var(--royal),var(--deep));border-color:var(--lilac);color:#fff;box-shadow:0 6px 18px -8px rgba(124,58,237,.9)}
   .hint{font-size:11.5px;color:var(--mut2);margin-top:6px;line-height:1.45}
+  .lblrow{display:flex;align-items:center;gap:8px}
+  .info{position:relative;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line2);color:var(--lilac2);font:italic 700 11px var(--serif);cursor:help;flex:none}
+  .info:hover,.info:focus{border-color:var(--lilac);color:#fff;outline:none}
+  .info .tip{position:absolute;bottom:calc(100% + 9px);right:0;left:auto;width:min(320px,78vw);background:#150E2A;border:1px solid var(--line2);border-radius:10px;padding:11px 13px;font:400 12.5px/1.5 var(--sans);letter-spacing:0;text-transform:none;color:rgba(246,243,254,.88);opacity:0;pointer-events:none;transform:translateY(4px);transition:.18s;z-index:30;box-shadow:0 16px 44px -16px rgba(0,0,0,.95)}
+  .info:hover .tip,.info:focus .tip,.info.open .tip{opacity:1;transform:translateY(0)}
+  .field textarea{font:inherit;font-size:14px;color:var(--white);background:rgba(7,6,13,.7);border:1px solid var(--line2);border-radius:10px;padding:11px 12px;outline:none;resize:vertical;min-height:88px;width:100%;transition:.15s}
+  .field textarea:focus{border-color:var(--lilac);box-shadow:0 0 0 3px rgba(124,58,237,.18)}
+  .field textarea::placeholder{color:var(--mut2)}
   /* checkout / milestone overlay */
   .checkout{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(7,6,13,.88);backdrop-filter:blur(12px);overflow-y:auto}
   .checkout.show{display:flex}
@@ -421,6 +429,8 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
         <div class="field full"><label data-i18n="form.contact">Meilleur moyen de vous joindre</label>
           <div class="fchips"><button type="button" class="chipbtn" data-val="Texto" data-i18n="form.c_text">Texto</button><button type="button" class="chipbtn" data-val="Courriel" data-i18n="form.c_email">Courriel</button></div>
           <input type="hidden" name="contact_pref" /></div>
+        <div class="field full"><div class="lblrow"><label data-i18n="form.focus">Sur quoi mettre l'accent ? Ce qui vous rend unique</label><span class="info" tabindex="0" role="button" aria-label="Exemples">i<span class="tip" data-i18n="form.focustip">Ex. : votre spécialité (pizza au feu de bois, tartares, brunch), votre quartier, votre ambiance, vos plats signatures, votre histoire ou votre chef, vos événements (5 à 7, soirées thématiques)… Plus vous nous en dites, plus vos blogues vous ressemblent.</span></span></div>
+          <textarea name="focus_resto" rows="3" placeholder="Dites-nous ce qui vous distingue…" data-ph="form.focusph"></textarea></div>
         <div class="field full"><button type="submit" class="btn primary lg" id="submitBtn">Commencer maintenant · 97 $/mois</button></div>
       </form>
       <p class="formnote" id="formnote" data-i18n="form.note">En soumettant, vous acceptez d'être contacté au sujet de Vanta. Les résultats varient selon l'emplacement, la cuisine, la concurrence et le marché. Résultats individuels, non garantis.</p>
@@ -508,6 +518,7 @@ const I18N = {
     "form.sub":"Enter your details, we handle the rest. $97/mo, cancel anytime, 60-day guarantee.",
     "form.email":"Email *","form.resto":"Restaurant & owner name *","form.restoph":"Your restaurant and your name","form.sms":"Mobile (SMS) *","form.smshint":"We'll never call you. We only communicate by text: it's clearer, and it won't disturb you during service. Just a quick message to confirm when you're ready to start.",
     "form.nresto":"How many restaurants?","form.nsites":"How many sites do you want?","form.contact":"Best way to reach you","form.time":"Best time to reach you",
+    "form.focus":"What should we highlight? What makes you unique","form.focusph":"Tell us what sets you apart…","form.focustip":"E.g. your specialty (wood-fired pizza, tartares, brunch), your neighbourhood, your vibe, signature dishes, your story or chef, your events (happy hour, themed nights)… The more you tell us, the more your blog sounds like you.",
     "form.choose":"Choose…","form.s1":"1 site","form.s3":"3 sites","form.s10":"10 sites","form.sx":"Not sure yet",
     "form.c_phone":"Phone","form.c_email":"Email","form.c_text":"Text","form.t_morn":"Morning","form.t_aft":"Afternoon","form.t_eve":"Evening",
     "form.submit":"Get started now · $97/mo","form.note":"By submitting, you agree to be contacted about Vanta. Results vary by location, cuisine, competition and market. Individual results, not a guarantee.",
@@ -593,6 +604,9 @@ document.querySelectorAll('.fchips').forEach(group=>{
   });
 });
 
+// info tooltips: hover/focus on desktop, tap to toggle on mobile
+document.querySelectorAll('.info').forEach(ic=>ic.addEventListener('click',e=>{e.stopPropagation();ic.classList.toggle('open');}));
+document.addEventListener('click',()=>document.querySelectorAll('.info.open').forEach(i=>i.classList.remove('open')));
 const form=document.getElementById('leadform');
 const checkout=document.getElementById('checkout');
 const SITE_PRICES={'1':97,'3':193,'10':293};
@@ -617,7 +631,7 @@ form.addEventListener('submit', (e)=>{
   if(!ro||!em||!sms){ form.reportValidity&&form.reportValidity(); return; }
   const data={ ts:new Date().toISOString(), nom:ro, restaurant:ro, courriel:em, telephone:sms,
     nb_restaurants:form.nb_restaurants.value||'', nb_sites:form.nb_sites.value||'', contact_pref:form.contact_pref.value||'',
-    langue:lang, page:'vanta-landing', enrolled:'non' };
+    focus:(form.focus_resto.value||'').trim(), langue:lang, page:'vanta-landing', enrolled:'non' };
   lastLead=data;
   saveLead(data);                 // save the lead FIRST (background) so it's kept even if they abandon payment
   checkout.classList.add('show'); document.body.style.overflow='hidden';   // open milestone overlay immediately
