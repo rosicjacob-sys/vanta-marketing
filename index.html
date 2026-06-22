@@ -469,7 +469,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
           <input type="hidden" name="contact_pref" /></div>
         <div class="field full"><div class="lblrow"><label data-i18n="form.focus">Sur quoi mettre l'accent ? Ce qui vous rend unique</label><span class="info" tabindex="0" role="button" aria-label="Exemples">i<span class="tip" data-i18n="form.focustip">Ex. : votre spécialité (pizza au feu de bois, tartares, brunch), votre quartier, votre ambiance, vos plats signatures, votre histoire ou votre chef, vos événements (5 à 7, soirées thématiques)… Plus vous nous en dites, plus vos blogues vous ressemblent.</span></span></div>
           <textarea name="focus_resto" rows="3" placeholder="Dites-nous ce qui vous distingue…" data-ph="form.focusph"></textarea></div>
-        <div class="field full"><button type="submit" class="btn primary lg" id="submitBtn">Commencer maintenant · 97 $/mois</button></div>
+        <div class="field full"><button type="submit" class="btn primary lg" id="submitBtn" data-i18n="form.submit">Obtenir plus d'informations</button></div>
       </form>
       <p class="formnote" id="formnote" data-i18n="form.note">En soumettant, vous acceptez d'être contacté au sujet de Vanta. Les résultats varient selon l'emplacement, la cuisine, la concurrence et le marché. Résultats individuels, non garantis.</p>
     </div>
@@ -496,7 +496,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
       <li><span class="d" data-i18n="co.d3n">Jour 3</span><span data-i18n="co.d3">Vos premiers articles sont en production.</span></li>
       <li><span class="d" data-i18n="co.d4n">Jour 7</span><span data-i18n="co.d4">Tout est prêt. On publie chaque semaine.</span></li>
     </ol>
-    <p class="co-followup" data-i18n="co.followup">On vous envoie tous les détails par courriel, et on fait un suivi avec vous à la fin de votre essai. Aucun paiement maintenant.</p>
+    <p class="co-followup" data-i18n="co.followup">On vous envoie plus d'informations par courriel d'ici 1 à 2 jours. Aucun paiement maintenant.</p>
     <button class="btn primary lg" id="checkoutGo" data-i18n="co.go">Parfait, à bientôt !</button>
     <p class="co-note" data-i18n="co.note">Vos informations sont enregistrées. Surveillez votre courriel.</p>
   </div>
@@ -595,12 +595,12 @@ const I18N = {
     "form.focus":"What should we highlight? What makes you unique","form.focusph":"Tell us what sets you apart…","form.focustip":"E.g. your specialty (wood-fired pizza, tartares, brunch), your neighbourhood, your vibe, signature dishes, your story or chef, your events (happy hour, themed nights)… The more you tell us, the more your blog sounds like you.",
     "form.choose":"Choose…","form.s1":"1 site","form.s3":"3 sites","form.s10":"10 sites","form.sx":"Not sure yet",
     "form.c_phone":"Phone","form.c_email":"Email","form.c_text":"Text","form.t_morn":"Morning","form.t_aft":"Afternoon","form.t_eve":"Evening",
-    "form.submit":"Get started now · $97/mo","form.note":"By submitting, you agree to be contacted about Vanta. Results vary by location, cuisine, competition and market. Individual results, not a guarantee.",
+    "form.submit":"Get more information","form.note":"By submitting, you agree to be contacted about Vanta. Results vary by location, cuisine, competition and market. Individual results, not a guarantee.",
     "co.eyebrow":"You're almost in","co.h2":"Here's what happens next",
     "co.d1n":"Day 1","co.d1":"Sign-up. We get everything we need to start.",
     "co.d2n":"Day 2","co.d2":"Your blog's logic is built.","co.d3n":"Day 3","co.d3":"Your first articles go into production.",
     "co.d4n":"Day 7","co.d4":"Everything's ready. We publish every week.",
-    "co.per":"/month · cancel anytime · 60-day guarantee","co.followup":"We'll email you all the details, and follow up with you at the end of your trial. No payment now.","co.go":"Perfect, talk soon!","co.note":"Your details are saved. Watch your inbox.",
+    "co.per":"/month · cancel anytime · 60-day guarantee","co.followup":"We'll email you more information within 1 to 2 days. No payment now.","co.go":"Perfect, talk soon!","co.note":"Your details are saved. Watch your inbox.",
     "footer.made":"Made in Québec · Local SEO + AI visibility for restaurants",
     "footer.legal":"© 2026 Vanta Marketing. $97/month, per restaurant, no contract, cancel anytime, 60-day money-back guarantee. Vanta improves visibility and clicks to your Google profile; we do not guarantee any specific ranking, traffic or sales volume. SEO typically ramps over 3 to 6 months and stabilizes around 6 to 12 months. Results vary by location, cuisine, competition and market. Individual results, not a guarantee. Dashboard numbers shown here are illustrative.",
   }
@@ -696,7 +696,6 @@ const submitBtn=document.getElementById('submitBtn');
 const coAmt=document.getElementById('coAmt');
 function currentPrice(){ return SITE_PRICES[form.nb_sites.value] || 97; }
 function updatePrice(){ const p=currentPrice();
-  if(submitBtn) submitBtn.textContent = (lang==='fr') ? ('Commencer maintenant · '+p+' $/mois') : ('Get started now · $'+p+'/mo');
   if(coAmt) coAmt.textContent = (lang==='fr') ? (p+' $') : ('$'+p);
 }
 window.__updatePrice=updatePrice;
