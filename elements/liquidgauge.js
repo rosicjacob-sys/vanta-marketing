@@ -237,9 +237,9 @@ export function mount(container, opts = {}) {
   })();
 
   /* ---- data ----------------------------------------------------------- */
-  const GOAL = 1600;
-  const VALUE = 1240;             // illustrative
-  const TARGET = VALUE / GOAL;    // 0.775 -> Math.round = 78 %
+  const GOAL = 9500;
+  const VALUE = 7400;            // illustrative
+  const TARGET = VALUE / GOAL;   // 0.779 -> Math.round = 78 %
 
   /* ---- bubble pool (soft additive sprites) ---------------------------- */
   const BUB_N = small ? 10 : (coarse ? 16 : 26);
@@ -708,11 +708,11 @@ export function mount(container, opts = {}) {
     const lf = landFlash;
     const punch = 1 + easeOutCubic(lf) * 0.04;
 
-    // big tabular percent
+    // big tabular percent — pure white, heavier weight for crisp legibility
     g.save();
     g.scale(punch, punch);
-    g.fillStyle = P.white;
-    g.font = `300 ${R * 0.46}px ${MONO}`;
+    g.fillStyle = "#FFFFFF";
+    g.font = `500 ${R * 0.46}px ${MONO}`;
     g.textBaseline = "alphabetic";
     g.fillText(pct + " %", 0, -R * 0.02 / punch);
     // additive over-bloom on the flash frame
@@ -724,9 +724,9 @@ export function mount(container, opts = {}) {
     }
     g.restore();
 
-    // count-up value — tabular figures so digits never jitter
-    g.fillStyle = rgba(P.lilacB, 0.95);
-    g.font = `500 ${R * 0.15}px ${MONO}`;
+    // count-up value — tabular figures so digits never jitter — pure white, crisp
+    g.fillStyle = "#FFFFFF";
+    g.font = `600 ${R * 0.15}px ${MONO}`;
     g.fillText(`${FR(shownVal)} / ${FR(GOAL)}`, 0, R * 0.2);
 
     // 1px gradient hairline rule under the readout (lilac fading at both ends)
@@ -743,9 +743,9 @@ export function mount(container, opts = {}) {
     g.lineTo(hw, hy);
     g.stroke();
 
-    // metric label
-    g.fillStyle = rgba(P.white, 0.55);
-    g.font = `500 ${R * 0.1}px "Helvetica Neue", Arial, sans-serif`;
+    // metric label — pure white, crisp/legible
+    g.fillStyle = "#FFFFFF";
+    g.font = `600 ${R * 0.1}px "Helvetica Neue", Arial, sans-serif`;
     g.fillText("Vues du blogue · ce mois", 0, R * 0.38);
     g.restore();
   }

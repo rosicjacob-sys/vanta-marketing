@@ -207,7 +207,9 @@ export function mount(container, opts = {}) {
 
   // ---- data: "Vues du blogue" by month (illustrative) ----
   const MONTHS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
-  const RAW = [620, 540, 710, 660, 780, 720, 840, 910, 980, 1430, 1180, 1240];
+  // Illustrative "Vues du blogue" — trends up to the record month (Octobre).
+  // Scaled so the record bar reads 7 400 vues; others stay proportional.
+  const RAW = [3200, 2800, 3700, 3400, 4050, 3700, 4350, 4700, 5050, 7400, 6100, 6400];
   const RECORD = 9; // Octobre — the bar that breaks the skyline
   const N = RAW.length;
   const MAXV = Math.max.apply(null, RAW);
@@ -825,8 +827,8 @@ export function mount(container, opts = {}) {
       const isR = i === RECORD;
       const glow = hoverGlow[i];
       ctx.fillStyle = isR
-        ? hexA(tokens.lilacHi, 0.95)
-        : hexA(tokens.white, 0.34 + glow * 0.5);
+        ? hexA(tokens.white, 1)
+        : hexA(tokens.white, 0.82 + glow * 0.18);
       ctx.fillText(MONTHS[i], x, geo.baseY + clamp(geo.floorDepth * 0.42, 14, 26));
     }
 
@@ -839,30 +841,30 @@ export function mount(container, opts = {}) {
       const labelY = yTop - lift - 16;
       const v = Math.round(dispVal[i]);
       const popA = clamp(crownPop, 0, 1);
-      // landing flash: text color rides white -> lilacHi over the flash window
-      const flashCol = mixHex(tokens.white, tokens.lilacHi, 1 - landFlash);
-      ctx.fillStyle = hexA(flashCol, 0.96 * popA);
+      // landing flash only tints during the brief flash, then resolves to pure white
+      const flashCol = mixHex(tokens.white, tokens.lilacHi, (1 - landFlash) * 0.0 + landFlash * 0.35);
+      ctx.fillStyle = hexA(flashCol, popA);
       drawTabularValue(cx, labelY, formatFR(v));
-      // caption
+      // caption — crisp white, legible against the dark backdrop
       ctx.textAlign = "center";
-      ctx.font = "600 9px 'Inter',system-ui,sans-serif";
-      ctx.fillStyle = hexA(mixHex(tokens.lilac, tokens.white, landFlash * 0.7),
-        0.85 * popA);
+      ctx.font = "700 9px 'Inter',system-ui,sans-serif";
+      ctx.fillStyle = hexA(mixHex(tokens.white, tokens.lilacHi, landFlash * 0.5),
+        0.95 * popA);
       ctx.fillText("RECORD", cx, labelY + 12);
     }
 
     // corner brand + metric label
     ctx.textAlign = "left";
-    ctx.font = "600 11px 'Inter',system-ui,sans-serif";
-    ctx.fillStyle = hexA(tokens.white, 0.85);
+    ctx.font = "700 11px 'Inter',system-ui,sans-serif";
+    ctx.fillStyle = hexA(tokens.white, 1);
     ctx.fillText("VANTA", geo.padX * 0.55, H * 0.1);
-    ctx.font = "500 10px 'Inter',system-ui,sans-serif";
-    ctx.fillStyle = hexA(tokens.lilac, 0.7);
+    ctx.font = "600 10px 'Inter',system-ui,sans-serif";
+    ctx.fillStyle = hexA(tokens.white, 0.92);
     ctx.fillText("Vues du blogue · 2026", geo.padX * 0.55, H * 0.1 + 14);
 
     ctx.textAlign = "right";
     ctx.font = "500 10px 'Inter',system-ui,sans-serif";
-    ctx.fillStyle = hexA(tokens.white, 0.42);
+    ctx.fillStyle = hexA(tokens.white, 0.7);
     ctx.fillText("illustratif", W - geo.padX * 0.55, H * 0.1);
   }
 
@@ -1309,10 +1311,10 @@ export function mount(container, opts = {}) {
     const monthFull = MONTH_NAMES[i];
     const v = formatFR(Math.round(dispVal[i] > 1 ? RAW[i] : dispVal[i]));
     tip.innerHTML =
-      '<div style="font:600 13px Inter,system-ui,sans-serif;color:' +
-      tokens.white + ';letter-spacing:.2px">' + v + ' vues</div>' +
+      '<div style="font:700 13px Inter,system-ui,sans-serif;color:#FFFFFF' +
+      ';letter-spacing:.2px">' + v + ' vues</div>' +
       '<div style="font:500 10px Inter,system-ui,sans-serif;color:' +
-      hexA(tokens.lilac, 0.9) + ';margin-top:1px">' + monthFull +
+      hexA(tokens.lilacHi, 0.95) + ';margin-top:1px">' + monthFull +
       (i === RECORD ? ' · record' : '') + '</div>';
   }
 

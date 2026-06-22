@@ -270,10 +270,11 @@ export function mount(container, opts = {}) {
   const ambient = new THREE.AmbientLight(cDeep, 0.55);
   scene.add(ambient);
 
-  // Root group: the whole donut, tilted into an isometric-ish reading and
+  // Root group: the whole donut, given a subtle tilt for depth and
   // magnetically nudged by the cursor.
   const root = new THREE.Group();
-  root.rotation.x = -0.62; // lay it back so we see the top faces + depth
+  const ROOT_TILT = -0.20; // gentle lay-back: reads as a clean donut, not iso-chunky
+  root.rotation.x = ROOT_TILT;
   scene.add(root);
 
   // A spin group inside root so idle rotation and tilt don't fight.
@@ -285,10 +286,10 @@ export function mount(container, opts = {}) {
   // ---------------------------------------------------------------------------
   const R_OUT = 2.0;
   const R_IN  = 1.18;
-  const GAP   = 0.018;            // angular gap between slices (radians at mid radius)
+  const GAP   = 0.006;            // hairline angular gap so slices read flush/continuous
   const bevel = !small;
   const curveSeg = small ? 6 : 14;
-  const SLICE_BASE_DEPTH = 0.34;  // base thickness; per-slice scaled by value
+  const SLICE_BASE_DEPTH = 0.30;  // uniform thickness for every slice (no value towers)
 
   function makeSliceGeometry(a0, a1) {
     const shape = new THREE.Shape();
@@ -309,8 +310,8 @@ export function mount(container, opts = {}) {
     const geo = new THREE.ExtrudeGeometry(shape, {
       depth: SLICE_BASE_DEPTH,
       bevelEnabled: bevel,
-      bevelThickness: 0.05,
-      bevelSize: 0.045,
+      bevelThickness: 0.022,
+      bevelSize: 0.014,        // small bevel so neighbours stay flush, not overlapping
       bevelSegments: small ? 1 : 3,
       curveSegments: curveSeg,
       steps: 1,
@@ -349,8 +350,9 @@ export function mount(container, opts = {}) {
     }));
 
     const mesh = new THREE.Mesh(geo, mat);
-    // value drives final extrusion height — bigger channels stand taller (a 3D donut tell)
-    const heightScale = 0.55 + frac * 2.6;
+    // Uniform extrusion height for every slice so the ring stays flush + continuous
+    // (no detached/floating towers). Emphasis comes from colour/brightness, not height.
+    const heightScale = 1.0;
     const midAng = (a0 + a1) / 2;
     mesh.userData = {
       index: i,
@@ -995,6 +997,19 @@ export function mount(container, opts = {}) {
   // legend mini count-up scheduler (set on the landing beat; -1 idle, -2 done)
   let legendCountStart = -1;
 
+  // ---- highlight cycle: after the entrance, one channel is "active" at a time.
+  // The big centre %, the centre sublabel (channel name) and the legend all agree
+  // with this index. Hover overrides the cycle (and is reflected everywhere).
+  let highlightIndex = -1;      // currently highlighted channel (-1 = none yet)
+  let cycleEnabled = false;     // true once the entrance settles
+  let cycleTimer = elapsed;     // next-advance clock (seconds)
+  let appliedHighlightPrev = -1;// tracks active-index changes for the number-pop
+  const CYCLE_DWELL = 2.2;      // how long each channel stays highlighted
+  // the index actually shown = hover wins over the cycle
+  function activeIndex() {
+    return hoverIndex >= 0 ? hoverIndex : highlightIndex;
+  }
+
   // idle spin
   const IDLE_SPIN = 0.18;
   let idleSpin = reduced ? 0 : IDLE_SPIN;
@@ -1046,9 +1061,10 @@ export function mount(container, opts = {}) {
     mat.emissiveIntensity = 1.0 + hl * 0.7 + fl * 1.6;
     mat.color.copy(u.baseColor).lerp(cHaloB, hl * 0.42);
     mat.emissive.copy(u.baseEmissive).lerp(cHaloB, hl * 0.45).multiplyScalar(1 + hl * 0.25);
-    // dim non-hovered slices slightly when something is hovered (focus)
-    if (hoverIndex >= 0 && u.index !== hoverIndex) {
-      mat.opacity = lerp(mat.opacity, 0.62, Math.min(1, dt * 8));
+    // dim non-active slices slightly when a channel is focused (hover OR cycle)
+    const focus = hoverIndex >= 0 ? hoverIndex : (cycleEnabled ? highlightIndex : -1);
+    if (focus >= 0 && u.index !== focus) {
+      mat.opacity = lerp(mat.opacity, 0.7, Math.min(1, dt * 8));
     } else {
       mat.opacity = lerp(mat.opacity, 1.0, Math.min(1, dt * 8));
     }
@@ -1095,7 +1111,7 @@ export function mount(container, opts = {}) {
       compUniforms.uTime.value = 0;
     }
     spin.rotation.z = 0;
-    root.rotation.set(-0.62, 0, 0);
+    root.rotation.set(ROOT_TILT, 0, 0);
     camera.position.copy(CAM_BASE);
     camera.lookAt(camLook);
     displayedNum = TOTAL;
@@ -1105,13 +1121,21 @@ export function mount(container, opts = {}) {
     shockT = -1;
     exposure = 1; exposureTarget = 1;
     dof = 0; dofTarget = 0;
-    // DOM: assembled
-    setDigits(TOTAL, true);
+    // DOM: assembled. Static frame highlights the top channel (Google) so the
+    // centre %, the centre sublabel and the legend all agree (centre == 38 %).
     revealDigits(true);
     numWrap.style.transform = "translate(-50%,-50%) scale(1)";
     capEl.style.opacity = "1";
     noteEl.style.opacity = "1";
     revealLegend(true);
+    cycleEnabled = false;          // no auto-advance in the static/reduced frame
+    hoverIndex = -1;
+    highlightIndex = 0;
+    appliedHighlight = -2;         // force a fresh apply
+    appliedHighlightPrev = 0;
+    applyHighlight(0, false);      // centre -> "38 %", sublabel -> "GOOGLE"
+    // brighten the highlighted slice in place for the static frame
+    for (const m of slices) { m.userData.lift = m.userData.hover; applySlice(m, 1); }
     renderAll();
   }
 
@@ -1131,6 +1155,41 @@ export function mount(container, opts = {}) {
       lr.line.style.transform = on ? "scaleX(1)" : "scaleX(0)";
       if (on) { lr.displayed = lr.value; lr.val.textContent = lr.value + " %"; }
     }
+  }
+
+  // ---- highlight sync: make the centre %, the centre sublabel (channel name),
+  // the legend rows AND the 3D slice all agree on the active channel. The big
+  // centre number EQUALS the highlighted slice's percentage.
+  let appliedHighlight = -2; // last index applied to the DOM/centre (force first run)
+  function applyHighlight(idx, settle) {
+    // 3D: light up only the active slice (brighten in place; no separation).
+    // hover already drives userData.hover; the cycle reuses the same channel.
+    for (const m of slices) {
+      m.userData.hover = (m.userData.index === idx) ? 1 : 0;
+    }
+    // legend: emphasise the active row, dim the rest.
+    for (let i = 0; i < legendRows.length; i++) {
+      const lr = legendRows[i];
+      const isOn = i === idx;
+      lr.row.style.opacity = isOn ? "1" : "0.5";
+      lr.val.style.color = isOn ? C.white : C.haloB;
+      lr.line.style.transform = isOn ? "scaleX(1)" : "scaleX(0.001)";
+    }
+    if (idx === appliedHighlight) return; // centre already in sync
+    appliedHighlight = idx;
+    if (idx < 0) return;
+    const ch = CHANNELS[idx];
+    // centre big number = highlighted slice's %
+    if (settle) slotMachineSettle(ch.value);
+    else setDigits(ch.value, true);
+    displayedNum = ch.value;
+    // centre sublabel becomes the channel NAME (replaces the static "Citations IA")
+    capEl.textContent = ch.label.toUpperCase();
+    // top-left tag mirrors "Google · 38 %"
+    tagEl.innerHTML =
+      '<span style="color:' + C.haloB + '">' + ch.label + '</span>' +
+      '<span style="color:' + C.white + '"> · ' + ch.value + ' %</span>';
+    tagEl.style.opacity = "1";
   }
 
   // ---------------------------------------------------------------------------
@@ -1298,6 +1357,31 @@ export function mount(container, opts = {}) {
       if (lp >= 1) {
         for (const lr of legendRows) { lr.displayed = lr.value; lr.val.textContent = lr.value + " %"; }
         legendCountStart = -2; // done
+        // legend has fully tallied — hand off to the highlight cycle.
+        if (!cycleEnabled) {
+          cycleEnabled = true;
+          highlightIndex = 0;          // start on Google
+          cycleTimer = elapsed + CYCLE_DWELL;
+          applyHighlight(0, true);     // centre slot-machines from 100 -> 38
+        }
+      }
+    }
+
+    // ---- highlight cycle + centre/legend sync (after entrance) --------------
+    if (cycleEnabled) {
+      // advance the auto-cycle unless the user is hovering a slice.
+      if (hoverIndex < 0 && !reduced && elapsed >= cycleTimer) {
+        highlightIndex = (highlightIndex + 1) % CHANNELS.length;
+        cycleTimer = elapsed + CYCLE_DWELL;
+      }
+      // hover wins over the cycle; the centre + legend always reflect activeIndex().
+      const ai = activeIndex();
+      // settle (slot-machine roll) when the value changes; cheap when unchanged.
+      applyHighlight(ai, ai !== appliedHighlight);
+      // a tiny number-pop each time the active channel changes
+      if (ai !== appliedHighlightPrev) {
+        appliedHighlightPrev = ai;
+        if (ai >= 0) numScaleVel += 3.0;
       }
     }
 
@@ -1313,7 +1397,7 @@ export function mount(container, opts = {}) {
       spinAngle += dt * idleSpin;
       spin.rotation.z = spinAngle + spinKick;
       // gentle breathing tilt so the depth catches the light
-      root.rotation.x = -0.62 + Math.sin(elapsed * 0.5) * 0.04 + tilt.x;
+      root.rotation.x = ROOT_TILT + Math.sin(elapsed * 0.5) * 0.03 + tilt.x;
       root.rotation.y = tilt.y;
       // halo subtle pulse-scale
       const hp = 1 + Math.sin(elapsed * 1.1) * 0.02;
@@ -1366,22 +1450,25 @@ export function mount(container, opts = {}) {
     const idx = hits.length ? hits[0].object.userData.index : -1;
     if (idx !== hoverIndex) {
       hoverIndex = idx;
-      for (const m of slices) m.userData.hover = m.userData.index === idx ? 1 : 0;
-      if (idx >= 0) {
-        const ch = CHANNELS[idx];
-        tagEl.innerHTML =
-          '<span style="color:' + C.haloB + '">' + ch.label + '</span>' +
-          '<span style="color:' + C.white + '"> · ' + ch.value + ' %</span>';
-        tagEl.style.opacity = "1";
-        container.style.cursor = "pointer";
-        // a soft 1-frame tick on the matching legend row
-        if (legendRows[idx]) {
-          legendRows[idx].line.style.transform = "scaleX(1)";
-          legendRows[idx].row.style.opacity = "1";
+      container.style.cursor = idx >= 0 ? "pointer" : "";
+      // When hovering ends, snap the cycle clock forward so it doesn't instantly
+      // jump; the frame loop's highlight block re-syncs centre + legend + tag.
+      if (idx < 0 && cycleEnabled) {
+        cycleTimer = elapsed + CYCLE_DWELL;
+        // keep the tag visible on the cycle's current channel
+      }
+      // If the cycle hasn't started yet (rare), still reflect the hover directly.
+      if (!cycleEnabled) {
+        for (const m of slices) m.userData.hover = m.userData.index === idx ? 1 : 0;
+        if (idx >= 0) {
+          const ch = CHANNELS[idx];
+          tagEl.innerHTML =
+            '<span style="color:' + C.haloB + '">' + ch.label + '</span>' +
+            '<span style="color:' + C.white + '"> · ' + ch.value + ' %</span>';
+          tagEl.style.opacity = "1";
+        } else {
+          tagEl.style.opacity = "0";
         }
-      } else {
-        tagEl.style.opacity = "0";
-        container.style.cursor = "";
       }
     }
   }
@@ -1408,9 +1495,16 @@ export function mount(container, opts = {}) {
     tiltTarget.x = 0; tiltTarget.y = 0;
     camOffsetTarget.x = 0; camOffsetTarget.y = 0;
     hoverIndex = -1;
-    for (const m of slices) m.userData.hover = 0;
-    tagEl.style.opacity = "0";
     container.style.cursor = "";
+    if (cycleEnabled) {
+      // resume the auto-cycle from the current channel; the frame loop re-syncs
+      // centre + legend + tag to highlightIndex. Force a re-apply next frame.
+      appliedHighlight = -2;
+      cycleTimer = elapsed + CYCLE_DWELL;
+    } else {
+      for (const m of slices) m.userData.hover = 0;
+      tagEl.style.opacity = "0";
+    }
   }
   function onClick() {
     if (reduced) return;
@@ -1493,6 +1587,14 @@ export function mount(container, opts = {}) {
     camOffset.x = 0; camOffset.y = 0; camOffsetTarget.x = 0; camOffsetTarget.y = 0;
     camera.position.copy(CAM_BASE); camera.lookAt(camLook);
     legendCountStart = -1;
+    // reset highlight cycle (re-arms after the entrance settles)
+    cycleEnabled = false;
+    hoverIndex = -1;
+    highlightIndex = -1;
+    appliedHighlight = -2;
+    appliedHighlightPrev = -1;
+    cycleTimer = 0;
+    capEl.textContent = "Citations IA";
     for (const m of slices) {
       m.userData.grow = 0;
       m.userData.hover = 0;
@@ -1540,8 +1642,6 @@ export function mount(container, opts = {}) {
         hub.material.opacity = 0.5;
         if (floorUniforms) floorUniforms.uReveal.value = 1;
         if (contactShadow) contactShadow.material.uniforms.uReveal.value = 1;
-        displayedNum = TOTAL;
-        setDigits(TOTAL, true);
         revealDigits(true);
         capEl.style.opacity = "1";
         noteEl.style.opacity = "1";
@@ -1549,6 +1649,14 @@ export function mount(container, opts = {}) {
         entranceDone = true;
         landFired = true;
         anticipationFired = true;
+        legendCountStart = -2;
+        // arm the highlight cycle so the centre shows a channel %, not a stuck 100
+        cycleEnabled = true;
+        highlightIndex = 0;
+        appliedHighlight = -2;
+        appliedHighlightPrev = 0;
+        cycleTimer = elapsed + CYCLE_DWELL;
+        applyHighlight(0, false);
         if (!running && !reduced) start();
       }
     }, 4000);
