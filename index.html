@@ -7,6 +7,9 @@
 (function(){var p=location.pathname,last=p.split('/').pop();
 var dir=last===''?p:(last.indexOf('.')>=0?p.replace(/[^\/]*$/,''):p+'/');
 var b=document.createElement('base');b.href=location.origin+dir;document.head.appendChild(b);})();</script>
+<script>/* always (re)load at the very top, even on mobile — never restore the prior scroll position */
+if('scrollRestoration' in history) history.scrollRestoration='manual';
+addEventListener('pageshow',function(){ if(!location.hash) window.scrollTo({top:0,left:0,behavior:'instant'}); });</script>
 <title>Vanta Marketing · Soyez trouvé partout sur Google et l'IA</title>
 <meta name="description" content="Un blogue clé en main pour votre restaurant qui vous fait remonter dans Google et dans les réponses IA, et qui envoie ces clients vers votre fiche Google. 97 $/mois." />
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
