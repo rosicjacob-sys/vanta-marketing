@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <script>/* sub-path-proof base: resolves relative assets at site root AND under /vantamarketing (slash or not) */
 (function(){var p=location.pathname,last=p.split('/').pop();
 var dir=last===''?p:(last.indexOf('.')>=0?p.replace(/[^\/]*$/,''):p+'/');
@@ -20,8 +20,8 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
     --wrap:1180px;
   }
   *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{margin:0;background:var(--void);color:var(--white);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  html{scroll-behavior:smooth;overflow-x:hidden;width:100%;scroll-padding-top:76px}
+  body{margin:0;padding-top:64px;background:var(--void);color:var(--white);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;width:100%;max-width:100%;overscroll-behavior:none}
   body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:200;opacity:.045;mix-blend-mode:overlay;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
   a{color:inherit;text-decoration:none}
@@ -38,7 +38,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
   .el-ph{position:absolute;inset:0;background:radial-gradient(80% 80% at 50% 35%,rgba(124,58,237,.18),transparent 70%)}
 
   /* nav */
-  nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);background:linear-gradient(180deg,rgba(7,6,13,.9),rgba(7,6,13,.55));border-bottom:1px solid var(--line);transition:transform .32s cubic-bezier(.4,0,.2,1);will-change:transform}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(14px);background:linear-gradient(180deg,rgba(7,6,13,.9),rgba(7,6,13,.55));border-bottom:1px solid var(--line);transition:transform .32s cubic-bezier(.4,0,.2,1);will-change:transform}
   nav.nav-hidden{transform:translateY(-100%)}
   nav .row{display:flex;align-items:center;gap:18px;height:64px}
   .logo{font-family:var(--serif);font-weight:700;font-size:20px;letter-spacing:.02em}
@@ -182,7 +182,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
   .field{display:flex;flex-direction:column;gap:6px}
   .field.full{grid-column:1/-1}
   .field label{font-size:12px;color:var(--mut);font-weight:600}
-  .field input,.field select{font:inherit;font-size:14px;color:var(--white);background:rgba(7,6,13,.7);border:1px solid var(--line2);border-radius:10px;padding:11px 12px;outline:none;transition:.15s}
+  .field input,.field select{font:inherit;font-size:14px;color:var(--white);background:rgba(255,255,255,.08);border:1px solid var(--line2);border-radius:10px;padding:11px 12px;outline:none;transition:.15s}
   .field input:focus,.field select:focus{border-color:var(--lilac);box-shadow:0 0 0 3px rgba(124,58,237,.18)}
   .field input::placeholder{color:var(--mut2)}
   .field select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--lilac2) 50%),linear-gradient(135deg,var(--lilac2) 50%,transparent 50%);background-position:calc(100% - 18px) 18px,calc(100% - 13px) 18px;background-size:5px 5px;background-repeat:no-repeat}
@@ -193,7 +193,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
   .success .big{font-family:var(--serif);font-size:28px;margin:10px 0}
   /* chip selectors + hint */
   .fchips{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
-  .chipbtn{font:inherit;font-size:13.5px;color:rgba(246,243,254,.82);background:rgba(7,6,13,.7);border:1px solid var(--line2);border-radius:11px;padding:11px 16px;cursor:pointer;transition:.15s}
+  .chipbtn{font:inherit;font-size:13.5px;color:rgba(246,243,254,.82);background:rgba(255,255,255,.08);border:1px solid var(--line2);border-radius:11px;padding:11px 16px;cursor:pointer;transition:.15s}
   .chipbtn:hover{border-color:var(--lilac);color:#fff}
   .chipbtn.on{background:linear-gradient(120deg,var(--royal),var(--deep));border-color:var(--lilac);color:#fff;box-shadow:0 6px 18px -8px rgba(124,58,237,.9)}
   .hint{font-size:11.5px;color:var(--mut2);margin-top:6px;line-height:1.45}
@@ -202,7 +202,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
   .info:hover,.info:focus{border-color:var(--lilac);color:#fff;outline:none}
   .info .tip{position:absolute;bottom:calc(100% + 9px);right:0;left:auto;width:min(320px,78vw);background:#150E2A;border:1px solid var(--line2);border-radius:10px;padding:11px 13px;font:400 12.5px/1.5 var(--sans);letter-spacing:0;text-transform:none;color:rgba(246,243,254,.88);opacity:0;pointer-events:none;transform:translateY(4px);transition:.18s;z-index:30;box-shadow:0 16px 44px -16px rgba(0,0,0,.95)}
   .info:hover .tip,.info:focus .tip,.info.open .tip{opacity:1;transform:translateY(0)}
-  .field textarea{font:inherit;font-size:14px;color:var(--white);background:rgba(7,6,13,.7);border:1px solid var(--line2);border-radius:10px;padding:11px 12px;outline:none;resize:vertical;min-height:88px;width:100%;transition:.15s}
+  .field textarea{font:inherit;font-size:14px;color:var(--white);background:rgba(255,255,255,.08);border:1px solid var(--line2);border-radius:10px;padding:11px 12px;outline:none;resize:vertical;min-height:88px;width:100%;transition:.15s}
   .field textarea:focus{border-color:var(--lilac);box-shadow:0 0 0 3px rgba(124,58,237,.18)}
   .field textarea::placeholder{color:var(--mut2)}
   /* checkout / milestone overlay */
@@ -456,7 +456,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
         <div class="field full"><label data-i18n="form.resto">Nom du restaurant *</label><input name="resto_name" required autocomplete="organization" placeholder="Le nom de votre restaurant" data-ph="form.restoph" /></div>
         <div class="field full"><label data-i18n="form.owner">Nom du propriétaire *</label><input name="owner_name" required autocomplete="name" placeholder="Votre nom" data-ph="form.ownerph" /></div>
         <div class="field full"><label data-i18n="form.email">Courriel *</label><input name="courriel" type="email" required autocomplete="email" /></div>
-        <div class="field full"><label data-i18n="form.sms">Cellulaire (SMS) *</label><input name="sms" type="tel" required autocomplete="tel" /><span class="hint" data-i18n="form.smshint">On ne vous appellera jamais. On communique seulement par texto : c'est plus clair, et ça évite de vous déranger pendant le service. Juste un message pour confirmer quand vous êtes prêt à démarrer.</span></div>
+        <div class="field full"><label data-i18n="form.sms">Cellulaire (SMS)</label><input name="sms" type="tel" autocomplete="tel" /><span class="hint" data-i18n="form.smshint">On ne vous appellera jamais. On communique seulement par texto : c'est plus clair, et ça évite de vous déranger pendant le service. Juste un message pour confirmer quand vous êtes prêt à démarrer.</span></div>
         <div class="field full"><label data-i18n="form.nresto">Combien de restaurants ?</label>
           <div class="fchips" data-single="1"><button type="button" class="chipbtn" data-val="1">1</button><button type="button" class="chipbtn" data-val="2-3">2-3</button><button type="button" class="chipbtn" data-val="4-10">4-10</button><button type="button" class="chipbtn" data-val="10+">10+</button></div>
           <input type="hidden" name="nb_restaurants" /></div>
@@ -589,7 +589,7 @@ const I18N = {
     "faq.q6":"Does AI really matter for my restaurant?","faq.a6":"More and more, yes. Lots of people now ask ChatGPT or Google's AI overviews where to eat. Showing up there now gives you a head start, while most restaurants aren't there yet.",
     "form.eyebrow":"Launch your blog","form.h2a":"Be the restaurant Google features","form.h2b":"and AI recommends.",
     "form.sub":"Enter your details, we handle the rest. $97/mo, cancel anytime, 60-day guarantee.",
-    "form.email":"Email *","form.resto":"Restaurant name *","form.restoph":"Your restaurant's name","form.owner":"Owner's name *","form.ownerph":"Your name","form.sms":"Mobile (SMS) *","form.smshint":"We'll never call you. We only communicate by text: it's clearer, and it won't disturb you during service. Just a quick message to confirm when you're ready to start.",
+    "form.email":"Email *","form.resto":"Restaurant name *","form.restoph":"Your restaurant's name","form.owner":"Owner's name *","form.ownerph":"Your name","form.sms":"Mobile (SMS)","form.smshint":"We'll never call you. We only communicate by text: it's clearer, and it won't disturb you during service. Just a quick message to confirm when you're ready to start.",
     "form.nresto":"How many restaurants?","form.nsites":"How many sites do you want?","form.contact":"Best way to reach you","form.time":"Best time to reach you",
     "form.focus":"What should we highlight? What makes you unique","form.focusph":"Tell us what sets you apart…","form.focustip":"E.g. your specialty (wood-fired pizza, tartares, brunch), your neighbourhood, your vibe, signature dishes, your story or chef, your events (happy hour, themed nights)… The more you tell us, the more your blog sounds like you.",
     "form.choose":"Choose…","form.s1":"1 site","form.s3":"3 sites","form.s10":"10 sites","form.sx":"Not sure yet",
@@ -709,7 +709,7 @@ function saveLead(data){
 form.addEventListener('submit', (e)=>{
   e.preventDefault();
   const rn=form.resto_name.value.trim(), on=form.owner_name.value.trim(), em=form.courriel.value.trim(), sms=form.sms.value.trim();
-  if(!rn||!on||!em||!sms){ form.reportValidity&&form.reportValidity(); return; }
+  if(!rn||!on||!em){ form.reportValidity&&form.reportValidity(); return; }
   const data={ ts:new Date().toISOString(), nom:on, restaurant:rn, courriel:em, telephone:sms,
     nb_restaurants:form.nb_restaurants.value||'', nb_sites:form.nb_sites.value||'', contact_pref:form.contact_pref.value||'',
     focus:(form.focus_resto.value||'').trim(), langue:lang, page:'vanta-landing', enrolled:'non' };
