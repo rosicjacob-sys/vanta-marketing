@@ -584,7 +584,13 @@ document.querySelectorAll('.fchips').forEach(group=>{
 const form=document.getElementById('leadform');
 const checkout=document.getElementById('checkout');
 let lastLead=null;
-form.addEventListener('submit', async (e)=>{
+function saveLead(data){
+  try{
+    if(LEADS_ENDPOINT){ return fetch(LEADS_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(data).toString()}).catch(()=>{}); }
+    const k='vanta_leads'; const a=JSON.parse(localStorage.getItem(k)||'[]'); a.push(data); localStorage.setItem(k,JSON.stringify(a));
+  }catch(_){}
+}
+form.addEventListener('submit', (e)=>{
   e.preventDefault();
   const ro=form.resto_owner.value.trim(), em=form.courriel.value.trim(), sms=form.sms.value.trim();
   if(!ro||!em||!sms){ form.reportValidity&&form.reportValidity(); return; }
@@ -592,12 +598,8 @@ form.addEventListener('submit', async (e)=>{
     nb_restaurants:form.nb_restaurants.value||'', nb_sites:form.nb_sites.value||'', contact_pref:form.contact_pref.value||'',
     langue:lang, page:'vanta-landing', enrolled:'non' };
   lastLead=data;
-  // save the lead FIRST so we keep it even if they abandon payment
-  try{
-    if(LEADS_ENDPOINT){ await fetch(LEADS_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(data).toString()}); }
-    else { const k='vanta_leads'; const a=JSON.parse(localStorage.getItem(k)||'[]'); a.push(data); localStorage.setItem(k,JSON.stringify(a)); }
-  }catch(_){}
-  checkout.classList.add('show'); document.body.style.overflow='hidden';
+  saveLead(data);                 // save the lead FIRST (background) so it's kept even if they abandon payment
+  checkout.classList.add('show'); document.body.style.overflow='hidden';   // open milestone overlay immediately
 });
 function closeCheckout(){ checkout.classList.remove('show'); document.body.style.overflow=''; }
 document.getElementById('checkoutClose').addEventListener('click', closeCheckout);
