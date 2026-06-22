@@ -1,0 +1,4 @@
+# Always revalidate so visitors get the latest deploy immediately (no stale cached HTML/JS).
+# ETags make the revalidation cheap (304 Not Modified when unchanged).
+/*
+  Cache-Control: public, max-age=0, must-revalidate
