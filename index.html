@@ -7,7 +7,7 @@
 (function(){var p=location.pathname,last=p.split('/').pop();
 var dir=last===''?p:(last.indexOf('.')>=0?p.replace(/[^\/]*$/,''):p+'/');
 var b=document.createElement('base');b.href=location.origin+dir;document.head.appendChild(b);})();</script>
-<script>/* always (re)load at the very top, even on mobile — never restore the prior scroll position */
+<script>/* always (re)load at the very top, even on mobile; never restore the prior scroll position */
 if('scrollRestoration' in history) history.scrollRestoration='manual';
 addEventListener('pageshow',function(){ if(!location.hash) window.scrollTo({top:0,left:0,behavior:'instant'}); });</script>
 <title>Vanta Marketing · Soyez trouvé partout sur Google et l'IA</title>
@@ -565,7 +565,7 @@ const I18N = {
     "how.s3t":"Diners click","how.s3b":"Readers click straight to your Google profile: call, directions, menu, reservation, order.",
     "how.vizcap":"Blog views, month over month (illustrative)",
     "dash.eyebrow":"The dashboard","dash.h2":"Proof, in plain numbers.","dash.sub":"No 40-page report. One screen, the two numbers that matter: how many people read you, and how many clicked to your Google profile.",
-    "dash.livelabel":"Live","dash.bord":"Vanta · Dashboard · a local restaurant","dash.t_constellation":"Your discovery network","dash.t_skyline":"Blog views · by month","dash.t_gauge":"This month's goal","dash.t_cluster":"Live metrics","dash.t_sparkline":"Clicks to your Google profile","dash.t_donut":"Where your readers come from · AI citations","dash.sample":"Illustrative data. Not representative of a client result.",
+    "dash.livelabel":"Live","dash.bord":"Vanta · Dashboard · a local restaurant","dash.t_constellation":"Your discovery network","dash.sample":"Illustrative data. Not representative of a client result.",
     "incl.eyebrow":"Everything included","incl.h2":"What you get every month",
     "incl.i1t":"Done-for-you blog","incl.i1b":"A branded blog site, hosted and managed. Nothing to install, nothing to manage.",
     "incl.i2t":"Articles in French","incl.i2b":"Fresh local content, optimized for both Google and AI discovery.",
