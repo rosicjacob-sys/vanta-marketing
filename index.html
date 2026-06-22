@@ -459,9 +459,9 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
       <li><span class="d" data-i18n="co.d3n">Jour 3</span><span data-i18n="co.d3">Vos premiers articles sont en production.</span></li>
       <li><span class="d" data-i18n="co.d4n">Jour 7</span><span data-i18n="co.d4">Tout est prêt. On publie chaque semaine.</span></li>
     </ol>
-    <div class="co-price"><span class="amt grad" id="coAmt">97 $</span><span data-i18n="co.per">/mois · annulez en tout temps · garantie 60 jours</span></div>
-    <button class="btn primary lg" id="checkoutGo" data-i18n="co.go">Procéder au paiement sécurisé</button>
-    <p class="co-note" data-i18n="co.note">Paiement sécurisé. Vos informations sont déjà enregistrées.</p>
+    <p class="co-followup" data-i18n="co.followup">On vous envoie tous les détails par courriel, et on fait un suivi avec vous à la fin de votre essai. Aucun paiement maintenant.</p>
+    <button class="btn primary lg" id="checkoutGo" data-i18n="co.go">Parfait, à bientôt !</button>
+    <p class="co-note" data-i18n="co.note">Vos informations sont enregistrées. Surveillez votre courriel.</p>
   </div>
 </div>
 
@@ -527,7 +527,7 @@ const I18N = {
     "co.d1n":"Day 1","co.d1":"Sign-up. We get everything we need to start.",
     "co.d2n":"Day 2","co.d2":"Your blog's logic is built.","co.d3n":"Day 3","co.d3":"Your first articles go into production.",
     "co.d4n":"Day 7","co.d4":"Everything's ready. We publish every week.",
-    "co.per":"/month · cancel anytime · 60-day guarantee","co.go":"Proceed to secure checkout","co.note":"Secure payment. Your details are already saved.",
+    "co.per":"/month · cancel anytime · 60-day guarantee","co.followup":"We'll email you all the details, and follow up with you at the end of your trial. No payment now.","co.go":"Perfect, talk soon!","co.note":"Your details are saved. Watch your inbox.",
     "footer.made":"Made in Québec · Local SEO + AI visibility for restaurants",
     "footer.legal":"© 2026 Vanta Marketing. $97/month, per restaurant, no contract, cancel anytime, 60-day money-back guarantee. Vanta improves visibility and clicks to your Google profile; we do not guarantee any specific ranking, traffic or sales volume. SEO typically ramps over 3 to 6 months and stabilizes around 6 to 12 months. Results vary by location, cuisine, competition and market. Individual results, not a guarantee. Dashboard numbers shown here are illustrative.",
   }
@@ -640,16 +640,7 @@ form.addEventListener('submit', (e)=>{
 function closeCheckout(){ checkout.classList.remove('show'); document.body.style.overflow=''; }
 document.getElementById('checkoutClose').addEventListener('click', closeCheckout);
 checkout.addEventListener('click', e=>{ if(e.target===checkout) closeCheckout(); });
-document.getElementById('checkoutGo').addEventListener('click', ()=>{
-  const d=lastLead||{};
-  if(CHECKOUT_URL){
-    let u=null; try{ u=new URL(CHECKOUT_URL); }catch(_){}
-    if(u){ if(d.courriel)u.searchParams.set('email',d.courriel); if(d.nom)u.searchParams.set('name',d.nom); u.searchParams.set('sites',(form.nb_sites.value||'1')); u.searchParams.set('price',currentPrice()); location.href=u.toString(); }
-    else location.href=CHECKOUT_URL;
-  } else {
-    alert(lang==='fr' ? 'Paiement bientôt disponible. Connexion Whop en cours.' : 'Checkout coming soon. Whop connection in progress.');
-  }
-});
+document.getElementById('checkoutGo').addEventListener('click', closeCheckout);
 updatePrice();
 </script>
 </body>
