@@ -208,8 +208,8 @@ export function mount(container, opts = {}) {
   // ---- data: "Vues du blogue" by month (illustrative) ----
   const MONTHS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
   // Illustrative "Vues du blogue" — trends up to the record month (Octobre).
-  // Scaled so the record bar reads 7 400 vues; others stay proportional.
-  const RAW = [3200, 2800, 3700, 3400, 4050, 3700, 4350, 4700, 5050, 7400, 6100, 6400];
+  // Realistic, non-round monthly figures; record month ~7 418 vues.
+  const RAW = [3142, 2876, 3611, 3389, 4057, 3724, 4388, 4703, 5061, 7418, 6094, 6437];
   const RECORD = 9; // Octobre — the bar that breaks the skyline
   const N = RAW.length;
   const MAXV = Math.max.apply(null, RAW);

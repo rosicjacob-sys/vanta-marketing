@@ -142,13 +142,13 @@ export function mount(container, opts = {}) {
   // ---------------------------------------------------------------------------
   // type: 0 hub (restaurant) · 1 city · 2 channel
   const LABELS = [
-    { name: "Café Verre", type: 0 },
-    { name: "Pizza Chez Jo", type: 0 },
-    { name: "Burger Bros", type: 0 },
-    { name: "Le Petit Comptoir", type: 0 },
-    { name: "Sushi Nord", type: 0 },
-    { name: "Mile End Bagel", type: 0 },
-    { name: "Taverne Marquette", type: 0 },
+    { name: "Bistro", type: 0 },
+    { name: "Pizzeria", type: 0 },
+    { name: "Café", type: 0 },
+    { name: "Sushi", type: 0 },
+    { name: "Brunch", type: 0 },
+    { name: "Burger", type: 0 },
+    { name: "Grill", type: 0 },
     { name: "Montréal", type: 1 },
     { name: "Laval", type: 1 },
     { name: "Longueuil", type: 1 },

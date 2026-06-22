@@ -121,8 +121,8 @@ export function mount(container, opts = {}) {
   // Each gauge: French restaurant metric. value 0..1 is the resting needle pos.
   // redline gauges carry the magenta hot zone (only ONE is true → the one flare).
   const GAUGES = [
-    { label: "VUES DU BLOGUE", unit: "vues", max: 2000, val: 1240, redline: false, big: true },
-    { label: "CLICS GOOGLE", unit: "clics", max: 300, val: 180, redline: false, big: false },
+    { label: "VUES DU BLOGUE", unit: "vues", max: 2000, val: 1213, redline: false, big: true },
+    { label: "CLICS GOOGLE", unit: "clics", max: 300, val: 176, redline: false, big: false },
     { label: "CITATIONS IA", unit: "cit.", max: 16, val: 13, redline: true, big: false },
     { label: "RÉSERVATIONS", unit: "rés.", max: 120, val: 74, redline: false, big: false },
     { label: "APPELS", unit: "appels", max: 90, val: 41, redline: false, big: false },

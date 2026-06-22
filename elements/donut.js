@@ -853,7 +853,7 @@ export function mount(container, opts = {}) {
   noteEl.style.cssText =
     "position:absolute;font-weight:500;letter-spacing:.06em;" +
     "color:" + C.haloA + "99;opacity:0;transition:opacity .5s;";
-  noteEl.textContent = "+24 % ce mois · données illustratives";
+  noteEl.textContent = "+23 % ce mois · données illustratives";
   overlay.appendChild(noteEl);
 
   // -- layout / sizing of all DOM bits (called on boot + resize) --

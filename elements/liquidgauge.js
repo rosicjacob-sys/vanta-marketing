@@ -238,8 +238,8 @@ export function mount(container, opts = {}) {
 
   /* ---- data ----------------------------------------------------------- */
   const GOAL = 9500;
-  const VALUE = 7400;            // illustrative
-  const TARGET = VALUE / GOAL;   // 0.779 -> Math.round = 78 %
+  const VALUE = 7418;            // illustrative, non-round
+  const TARGET = VALUE / GOAL;   // 0.781 -> Math.round = 78 %
 
   /* ---- bubble pool (soft additive sprites) ---------------------------- */
   const BUB_N = small ? 10 : (coarse ? 16 : 26);

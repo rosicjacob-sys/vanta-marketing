@@ -302,7 +302,7 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
     <p class="lead" data-i18n="dash.sub">Pas de rapport de 40 pages. Un écran, deux chiffres qui comptent : combien de gens vous ont lu, et combien ont cliqué vers votre fiche Google.</p></div>
   <div class="dashframe">
     <div class="dashbar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-      <span class="t">Vanta · Tableau de bord · Café Verre</span>
+      <span class="t" data-i18n="dash.bord">Vanta · Tableau de bord · un restaurant local</span>
       <span class="live" data-i18n="dash.livelabel">En direct</span></div>
     <div class="dashbody">
       <div class="tile xl"><div class="elh"><div class="el" data-el="skyline"></div></div></div>
@@ -388,12 +388,12 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
 <section class="faq sec" id="faq"><div class="wrap" style="max-width:840px">
   <div class="sechead" style="text-align:center;margin:0 auto 36px"><div class="eyebrow" data-i18n="faq.eyebrow">Questions fréquentes</div>
     <h2 data-i18n="faq.h2">Vous vous demandez sûrement…</h2></div>
-  <details class="qa"><summary data-i18n="faq.q1">J'ai déjà un site web.</summary><div class="a" data-i18n="faq.a1">Parfait. Vanta n'est pas une brochure statique : c'est un moteur de découverte qui alimente Google et l'IA et dirige le trafic vers votre fiche Google. Il s'ajoute à votre site, sans refonte.</div></details>
-  <details class="qa"><summary data-i18n="faq.q2">Est-ce que les gens lisent les blogues de resto ?</summary><div class="a" data-i18n="faq.a2">Ce n'est pas une question de lecture : c'est une question d'être trouvé. Le contenu local frais est ce que le pack de cartes de Google et les assistants IA vont chercher. Le tableau de bord prouve les clics.</div></details>
-  <details class="qa"><summary data-i18n="faq.q3">Je n'ai pas le temps.</summary><div class="a" data-i18n="faq.a3">C'est 100 % clé en main. On écrit, on publie, on optimise. Vous, vous regardez le tableau de bord.</div></details>
-  <details class="qa"><summary data-i18n="faq.q4">En quoi est-ce différent d'une agence ?</summary><div class="a" data-i18n="faq.a4">Aucun contrat, aucun rapport flou, aucun jargon. Un prix, un tableau de bord, des clics réels vers votre profil Google que vous pouvez compter.</div></details>
-  <details class="qa"><summary data-i18n="faq.q5">97 $, où est le piège ?</summary><div class="a" data-i18n="faq.a5">Aucun. Mois par mois, annulez en tout temps, garantie 60 jours. Une seule table de plus paie le mois.</div></details>
-  <details class="qa"><summary data-i18n="faq.q6">L'IA, ça compte vraiment pour mon resto ?</summary><div class="a" data-i18n="faq.a6">De plus en plus de clients choisissent où manger via ChatGPT et les aperçus IA de Google. Être cité maintenant, c'est prendre une longueur d'avance.</div></details>
+  <details class="qa"><summary data-i18n="faq.q1">J'ai déjà un site web.</summary><div class="a" data-i18n="faq.a1">Aucun problème, et vous n'avez rien à refaire. Vanta s'ajoute à votre site existant : c'est un moteur de découverte qui aide Google et les outils d'IA à vous trouver, et qui ramène les visiteurs vers votre fiche Google.</div></details>
+  <details class="qa"><summary data-i18n="faq.q2">Est-ce que les gens lisent les blogues de resto ?</summary><div class="a" data-i18n="faq.a2">Honnêtement, peu les lisent au complet, et ce n'est pas le but. Ce contenu sert surtout à être repéré : c'est ce que Google et les assistants IA vont chercher pour vous recommander. Le tableau de bord vous montre les clics que ça génère.</div></details>
+  <details class="qa"><summary data-i18n="faq.q3">Je n'ai pas le temps.</summary><div class="a" data-i18n="faq.a3">C'est justement pour ça qu'on existe. On s'occupe de tout : la rédaction, la publication, l'optimisation. De votre côté, un coup d'œil au tableau de bord quand ça vous tente, et c'est tout.</div></details>
+  <details class="qa"><summary data-i18n="faq.q4">En quoi est-ce différent d'une agence ?</summary><div class="a" data-i18n="faq.a4">On a voulu retirer ce qui frustre souvent avec les agences : pas de contrat, pas de rapports compliqués, pas de jargon. Un prix clair, un tableau de bord simple, et de vrais clics vers votre fiche Google que vous pouvez suivre vous-même.</div></details>
+  <details class="qa"><summary data-i18n="faq.q5">97 $, où est le piège ?</summary><div class="a" data-i18n="faq.a5">Il n'y en a pas, promis. C'est mois par mois, annulable en tout temps, avec une garantie de 60 jours. À ce prix, une seule réservation de plus dans le mois couvre l'abonnement.</div></details>
+  <details class="qa"><summary data-i18n="faq.q6">L'IA, ça compte vraiment pour mon resto ?</summary><div class="a" data-i18n="faq.a6">De plus en plus, oui. Beaucoup de gens demandent maintenant à ChatGPT ou aux aperçus IA de Google où manger. Y apparaître dès maintenant vous donne une longueur d'avance, pendant que la plupart des restos n'y sont pas encore.</div></details>
 </div></section>
 
 <!-- CTA + FORM -->
@@ -409,9 +409,9 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
     </div>
     <div class="formcard">
       <form id="leadform" class="formgrid" novalidate>
-        <div class="field full"><label data-i18n="form.resto">Nom du restaurant et du propriétaire *</label><input name="resto_owner" required autocomplete="organization" placeholder="Café Verre, Marie Tremblay" /></div>
+        <div class="field full"><label data-i18n="form.resto">Nom du restaurant et du propriétaire *</label><input name="resto_owner" required autocomplete="organization" placeholder="Votre resto et votre nom" data-ph="form.restoph" /></div>
         <div class="field full"><label data-i18n="form.email">Courriel *</label><input name="courriel" type="email" required autocomplete="email" /></div>
-        <div class="field full"><label data-i18n="form.sms">Cellulaire (SMS) *</label><input name="sms" type="tel" required autocomplete="tel" /><span class="hint" data-i18n="form.smshint">On ne vous appellera pas. Juste un texto pour confirmer quand vous êtes prêt à démarrer.</span></div>
+        <div class="field full"><label data-i18n="form.sms">Cellulaire (SMS) *</label><input name="sms" type="tel" required autocomplete="tel" /><span class="hint" data-i18n="form.smshint">On ne vous appellera jamais. On communique seulement par texto : c'est plus clair, et ça évite de vous déranger pendant le service. Juste un message pour confirmer quand vous êtes prêt à démarrer.</span></div>
         <div class="field full"><label data-i18n="form.nresto">Combien de restaurants ?</label>
           <div class="fchips" data-single="1"><button type="button" class="chipbtn" data-val="1">1</button><button type="button" class="chipbtn" data-val="2-3">2-3</button><button type="button" class="chipbtn" data-val="4-10">4-10</button><button type="button" class="chipbtn" data-val="10+">10+</button></div>
           <input type="hidden" name="nb_restaurants" /></div>
@@ -478,7 +478,7 @@ const I18N = {
     "how.s3t":"Diners click","how.s3b":"Readers click straight to your Google profile: call, directions, menu, reservation, order.",
     "how.vizcap":"Blog views, month over month (illustrative)",
     "dash.eyebrow":"The dashboard","dash.h2":"Proof, in plain numbers.","dash.sub":"No 40-page report. One screen, the two numbers that matter: how many people read you, and how many clicked to your Google profile.",
-    "dash.livelabel":"Live","dash.t_constellation":"Your discovery network","dash.t_skyline":"Blog views · by month","dash.t_gauge":"This month's goal","dash.t_cluster":"Live metrics","dash.t_sparkline":"Clicks to your Google profile","dash.t_donut":"Where your readers come from · AI citations","dash.sample":"Illustrative data. Not representative of a client result.",
+    "dash.livelabel":"Live","dash.bord":"Vanta · Dashboard · a local restaurant","dash.t_constellation":"Your discovery network","dash.t_skyline":"Blog views · by month","dash.t_gauge":"This month's goal","dash.t_cluster":"Live metrics","dash.t_sparkline":"Clicks to your Google profile","dash.t_donut":"Where your readers come from · AI citations","dash.sample":"Illustrative data. Not representative of a client result.",
     "incl.eyebrow":"Everything included","incl.h2":"What you get every month",
     "incl.i1t":"Done-for-you blog","incl.i1b":"A branded blog site, hosted and managed. Nothing to install, nothing to manage.",
     "incl.i2t":"Articles in French","incl.i2b":"Fresh local content, optimized for both Google and AI discovery.",
@@ -498,15 +498,15 @@ const I18N = {
     "guar.badge":"🛡️ 60-day guarantee","guar.h2":"Try it risk-free. Cancel anytime.","guar.body":"Month-to-month, no contract. Not satisfied? You're refunded within 60 days. You stay in control, and you see the results yourself in the dashboard.",
     "guar.disc":"SEO ramps over 3 to 6 months and stabilizes around 6 to 12 months. Results vary by location, cuisine, competition and market. Individual results, not a guarantee.",
     "faq.eyebrow":"FAQ","faq.h2":"You're probably wondering…",
-    "faq.q1":"I already have a website.","faq.a1":"Great. Vanta isn't a static brochure. It's a discovery engine that feeds Google + AI and routes traffic to your Google profile. It layers on top of your site, no rebuild.",
-    "faq.q2":"Do people even read restaurant blogs?","faq.a2":"It's not about reading, it's about being found. Fresh local content is what Google's map pack and AI assistants pull from. The dashboard proves the clicks.",
-    "faq.q3":"I have no time.","faq.a3":"It's 100% done-for-you. We write, publish, optimize. You just watch the dashboard.",
-    "faq.q4":"How is this different from an agency?","faq.a4":"No contract, no vague reports, no jargon. One price, one dashboard, real clicks to your Google profile you can count.",
-    "faq.q5":"$97, what's the catch?","faq.a5":"None. Month-to-month, cancel anytime, 60-day guarantee. One extra table pays for the month.",
-    "faq.q6":"Does AI really matter for my restaurant?","faq.a6":"More and more diners choose where to eat via ChatGPT and Google AI Overviews. Being cited now is a head start.",
+    "faq.q1":"I already have a website.","faq.a1":"No problem, and you don't have to redo anything. Vanta adds onto your existing site: a discovery engine that helps Google and AI tools find you, and sends visitors to your Google profile.",
+    "faq.q2":"Do people even read restaurant blogs?","faq.a2":"Honestly, few read them end to end, and that's not the point. This content is mainly there to get you found: it's what Google and AI assistants pull from to recommend you. The dashboard shows you the clicks it brings.",
+    "faq.q3":"I have no time.","faq.a3":"That's exactly why we exist. We handle it all: writing, publishing, optimizing. On your side, a quick glance at the dashboard whenever you feel like it, and that's it.",
+    "faq.q4":"How is this different from an agency?","faq.a4":"We built it to remove what's often frustrating about agencies: no contract, no complicated reports, no jargon. A clear price, a simple dashboard, and real clicks to your Google profile you can track yourself.",
+    "faq.q5":"$97, what's the catch?","faq.a5":"There isn't one, promise. It's month to month, cancel anytime, with a 60-day guarantee. At this price, a single extra booking in the month covers it.",
+    "faq.q6":"Does AI really matter for my restaurant?","faq.a6":"More and more, yes. Lots of people now ask ChatGPT or Google's AI overviews where to eat. Showing up there now gives you a head start, while most restaurants aren't there yet.",
     "form.eyebrow":"Launch your blog","form.h2a":"Be the restaurant Google features","form.h2b":"and AI recommends.",
     "form.sub":"Enter your details, we handle the rest. $97/mo, cancel anytime, 60-day guarantee.",
-    "form.email":"Email *","form.resto":"Restaurant & owner name *","form.sms":"Mobile (SMS) *","form.smshint":"We won't call you. Just one text to confirm when you're ready to start.",
+    "form.email":"Email *","form.resto":"Restaurant & owner name *","form.restoph":"Your restaurant and your name","form.sms":"Mobile (SMS) *","form.smshint":"We'll never call you. We only communicate by text: it's clearer, and it won't disturb you during service. Just a quick message to confirm when you're ready to start.",
     "form.nresto":"How many restaurants?","form.nsites":"How many sites do you want?","form.contact":"Best way to reach you","form.time":"Best time to reach you",
     "form.choose":"Choose…","form.s1":"1 site","form.s3":"3 sites","form.s10":"10 sites","form.sx":"Not sure yet",
     "form.c_phone":"Phone","form.c_email":"Email","form.c_text":"Text","form.t_morn":"Morning","form.t_aft":"Afternoon","form.t_eve":"Evening",
@@ -521,12 +521,14 @@ const I18N = {
   }
 };
 // snapshot FR defaults from the DOM so toggling back restores them
-(function(){ document.querySelectorAll('[data-i18n]').forEach(el=>{ I18N.fr[el.getAttribute('data-i18n')] = el.innerHTML; }); })();
+(function(){ document.querySelectorAll('[data-i18n]').forEach(el=>{ I18N.fr[el.getAttribute('data-i18n')] = el.innerHTML; });
+  document.querySelectorAll('[data-ph]').forEach(el=>{ I18N.fr[el.getAttribute('data-ph')] = el.getAttribute('placeholder')||''; }); })();
 let lang='fr';
 function applyLang(l){
   lang=l; document.documentElement.lang=l;
   const d=I18N[l]; if(!d) return;
   document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(d[k]!=null) el.innerHTML=d[k]; });
+  document.querySelectorAll('[data-ph]').forEach(el=>{ const k=el.getAttribute('data-ph'); if(d[k]!=null) el.setAttribute('placeholder', d[k]); });
   document.querySelectorAll('#langtog button').forEach(b=>b.classList.toggle('on',b.dataset.lang===l));
   if(window.__updatePrice) window.__updatePrice();
 }
