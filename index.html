@@ -38,7 +38,8 @@ var b=document.createElement('base');b.href=location.origin+dir;document.head.ap
   .el-ph{position:absolute;inset:0;background:radial-gradient(80% 80% at 50% 35%,rgba(124,58,237,.18),transparent 70%)}
 
   /* nav */
-  nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);background:linear-gradient(180deg,rgba(7,6,13,.9),rgba(7,6,13,.55));border-bottom:1px solid var(--line)}
+  nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);background:linear-gradient(180deg,rgba(7,6,13,.9),rgba(7,6,13,.55));border-bottom:1px solid var(--line);transition:transform .32s cubic-bezier(.4,0,.2,1);will-change:transform}
+  nav.nav-hidden{transform:translateY(-100%)}
   nav .row{display:flex;align-items:center;gap:18px;height:64px}
   .logo{font-family:var(--serif);font-weight:700;font-size:20px;letter-spacing:.02em}
   .logo b{color:var(--lilac2)}
@@ -658,6 +659,14 @@ addEventListener('resize', onScroll);
 refresh(); setTimeout(refresh,250); setTimeout(refresh,1000);
 // IntersectionObserver as a bonus trigger where supported
 try{ const io=new IntersectionObserver(es=>es.forEach(e=>{e.isIntersecting?mountHost(e.target):unmountHost(e.target);}),{rootMargin:'420px 0px 420px 0px',threshold:0.01}); hosts.forEach(h=>io.observe(h)); }catch(_){}
+
+// nav: hide on scroll down, reveal on scroll up
+const navEl=document.querySelector('nav'); let lastNavY=scrollY;
+addEventListener('scroll', ()=>{ const y=scrollY;
+  if(y>lastNavY && y>120) navEl.classList.add('nav-hidden');
+  else if(y<lastNavY) navEl.classList.remove('nav-hidden');
+  lastNavY=y;
+}, {passive:true});
 
 /* ---------------- chips + lead form + checkout ---------------- */
 const LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzLawKgUNxG-jwSqV_er_kepAFJe5fl7XVbtwlOf_e1AYdAMCYqu6VqWnc3E57aafk/exec";
