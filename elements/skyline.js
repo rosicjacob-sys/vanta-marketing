@@ -856,8 +856,6 @@ export function mount(container, opts = {}) {
       const i = RECORD;
       const cx = barX(i) + w / 2;
       const yTop = barTopY(i, liveH[i]);
-      // keep the pill clear of the thrown crown chevron, anchored above the cap
-      const lift = Math.max(11, w * 0.95) * easeOutCubic(clamp(crownPop, 0, 1));
       const v = Math.round(dispVal[i]);
       const popA = clamp(crownPop, 0, 1);
       const valStr = formatFR(v) + " vues";
@@ -871,9 +869,20 @@ export function mount(container, opts = {}) {
       const valFontPx = clamp(Math.round(geo.barW * 0.62), 12, 18);
       const chipW = Math.max(valW, capW) + padX * 2;
       const chipH = padTop + valFontPx + gapY + capH + padTop;
-      // bottom of the pill rides just above the (possibly lifted) crown stem
-      const chipBottom = yTop - lift - 10;
-      const chipTop = chipBottom - chipH;
+
+      // Anchor the pill a small fixed offset above the cap (independent of the
+      // crown-throw lift), then CLAMP so it can never clip off the top of the
+      // canvas — guaranteeing the value is always fully on the dark backdrop and
+      // fully visible, even in short embed containers where the strike over-reach
+      // pushes the cap near the top edge. The opaque dark pill is drawn after the
+      // crown chevron, so any overlap is simply covered.
+      let chipBottom = yTop - 12;
+      let chipTop = chipBottom - chipH;
+      const topClamp = 6;            // keep a margin from the canvas top
+      if (chipTop < topClamp) {
+        chipTop = topClamp;
+        chipBottom = chipTop + chipH;
+      }
       const chipX = cx - chipW / 2;
 
       // dark rounded backdrop (drawn whether or not it overlaps the bloom)
@@ -895,14 +904,17 @@ export function mount(container, opts = {}) {
       ctx.strokeStyle = hexA(tokens.royal, 0.7);
       ctx.lineWidth = 1;
       ctx.stroke();
-      // tiny connector tick from the pill down toward the cap
-      ctx.strokeStyle = hexA(tokens.royal, 0.55);
-      ctx.lineWidth = 1.5;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(cx, chipBottom);
-      ctx.lineTo(cx, Math.min(chipBottom + 6, yTop - 2));
-      ctx.stroke();
+      // tiny connector tick from the pill down toward the cap (only when there's
+      // a clear gap between the pill bottom and the bar top)
+      if (yTop - chipBottom > 5) {
+        ctx.strokeStyle = hexA(tokens.royal, 0.55);
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(cx, chipBottom);
+        ctx.lineTo(cx, Math.min(chipBottom + 6, yTop - 2));
+        ctx.stroke();
+      }
       ctx.restore();
 
       // value — pure crisp white on the dark pill, with a dark text-shadow as a
