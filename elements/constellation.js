@@ -269,7 +269,7 @@ export function mount(container, opts = {}) {
   renderer.setClearColor(0x000000, 0);
   renderer.autoClear = false;
   const canvas = renderer.domElement;
-  canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block;";
+  canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;";
   container.appendChild(canvas);
 
   // Composite pass only on capable (non-small, non-coarse) devices.
