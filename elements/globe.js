@@ -167,7 +167,7 @@ export function mount(container, opts = {}) {
   renderer.autoClear = true;
   const canvas = renderer.domElement;
   canvas.style.cssText =
-    "position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;";
+    "position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:grab;";
 
   // void backdrop with violet undertone + vignette (behind canvas)
   const backdrop = document.createElement("div");
