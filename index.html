@@ -62,7 +62,8 @@ addEventListener('pageshow',function(){
   .btn.lg{padding:15px 26px;font-size:15px}
   nav .btn{padding:9px 16px}
   @media(max-width:680px){ nav .hidesm{display:none} }
-  @media(max-width:560px){ nav .logo span{display:none} nav .row{gap:10px} .navlink{padding:8px 10px;font-size:13px} }
+  @media(max-width:560px){ nav .logo span{display:none} nav .row{gap:8px} .navlink{padding:7px 8px;font-size:13px} .langtog button{padding:9px 11px} }
+  @media(max-width:340px){ #loginOpen{display:none} }
 
   /* hero */
   .hero{position:relative;min-height:clamp(620px,92vh,860px);min-height:clamp(620px,92svh,860px);display:flex;align-items:center;overflow:hidden;border-bottom:1px solid var(--line);
@@ -188,6 +189,9 @@ addEventListener('pageshow',function(){
   .plan-amt{font-family:var(--serif);font-weight:800;font-size:clamp(32px,5vw,44px);line-height:1;margin:10px 0 18px}
   .plan-amt .permo{font-family:var(--sans);font-weight:600;font-size:14px;color:var(--mut)}
   .plan .btn{width:100%}
+  .price-cta{text-align:center;margin-top:44px}
+  .price-cta .btn{min-width:240px}
+  .price-cta-note{color:var(--mut);font-size:13px;margin-top:12px}
   @media(max-width:720px){ .promo-grid{grid-template-columns:1fr} .pricegrid{grid-template-columns:1fr;max-width:360px} }
   .roistrip{height:90px;margin:22px 0 0;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
 
@@ -304,6 +308,7 @@ addEventListener('pageshow',function(){
 <nav><div class="wrap row">
   <div class="logo">VANTA<b>.</b> <span data-i18n="logosub" style="font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--mut);text-transform:uppercase;font-weight:600">Marketing</span></div>
   <div class="navspace"></div>
+  <a href="#pricing" class="navlink" data-i18n="nav.pricing">Tarifs</a>
   <a href="#" id="loginOpen" class="navlink" data-i18n="nav.login">Connexion</a>
   <div class="langtog" id="langtog"><button data-lang="fr" class="on">FR</button><button data-lang="en">EN</button></div>
   <a href="#demo" class="btn primary hidesm" data-i18n="nav.cta">Commencer</a>
@@ -491,6 +496,11 @@ addEventListener('pageshow',function(){
       </div>
     </div>
   </div>
+
+  <div class="price-cta">
+    <a href="#demo" class="btn primary lg" data-i18n="price.getstarted">Commencer</a>
+    <div class="price-cta-note" data-i18n="price.cta_note">Sans engagement · Garantie 60 jours · Annulez en tout temps</div>
+  </div>
 </div></section>
 
 <!-- GUARANTEE -->
@@ -619,7 +629,7 @@ addEventListener('pageshow',function(){
 const I18N = {
   fr: {}, // FR is authored inline in the HTML (default); EN overrides below
   en: {
-    "logosub":"Marketing","nav.cta":"Get started","nav.login":"Login",
+    "logosub":"Marketing","nav.cta":"Get started","nav.login":"Login","nav.pricing":"Pricing","price.getstarted":"Get started","price.cta_note":"No commitment · 60-day guarantee · Cancel anytime",
     "login.h2":"Welcome back","login.sub":"Log in to track your numbers in real time.","login.email":"Email","login.pass":"Password","login.btn":"Log in","login.forgot":"Forgot password?","login.noacct":"Not a client yet?","login.start":"Start here","login.preview":"A preview of your dashboard","login.f1":"Blog views, month over month","login.f2":"Clicks to your Google profile","login.f3":"AI citations and discovery sources","login.f4":"Your published and upcoming articles",
     "hero.eyebrow":"Local SEO + AI visibility · Québec restaurants",
     "hero.h1a":"Achieve visibility across Google","hero.h1b":"and AI-powered search, consistently.",
