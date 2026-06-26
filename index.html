@@ -436,6 +436,39 @@ addEventListener('pageshow',function(){
     <h2 data-i18n="price.h2">Tarif clair. Aucun piège.</h2></div>
   <p class="price-sub" data-i18n="price.sub">Payez au mois, sans engagement. Ou prenez une année d'avance et économisez gros.</p>
 
+  <div class="pricecard" style="max-width:620px">
+    <div class="pricefrom" data-i18n="price.incl_head">Inclus dans chaque forfait</div>
+    <div class="pricelist">
+      <div data-i18n="price.f1">Blogue à votre marque, hébergé et géré</div>
+      <div data-i18n="price.f2">Articles en français optimisés Google + IA</div>
+      <div data-i18n="price.f3">Schema, IndexNow, llms.txt : configuration technique incluse</div>
+      <div data-i18n="price.f4">Liens vers votre fiche Google</div>
+      <div data-i18n="price.f5">Tableau de bord : vues + clics Google</div>
+      <div data-i18n="price.f6">Sans engagement · annulez en tout temps</div>
+    </div>
+    <div class="anchor" data-i18n="price.anchor">≈ 3 $/jour. Moins qu'une seule table tranquille, vs 1 500 $+/mois pour une agence SEO.</div>
+  </div>
+
+  <div class="planhead" data-i18n="price.monthly_head">Au mois, sans engagement</div>
+  <div class="pricegrid">
+    <div class="plan">
+      <div class="plan-name" data-i18n="price.p1_name">1 site</div>
+      <div class="plan-amt"><span class="grad" data-i18n="price.p1_amt">97 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
+      <a href="#demo" class="btn ghost" data-pay="1" data-i18n="price.choose">Choisir</a>
+    </div>
+    <div class="plan">
+      <div class="plan-name" data-i18n="price.p3_name">3 sites</div>
+      <div class="plan-amt"><span class="grad" data-i18n="price.p3_amt">193 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
+      <a href="#demo" class="btn ghost" data-pay="3" data-i18n="price.choose">Choisir</a>
+    </div>
+    <div class="plan">
+      <div class="plan-name" data-i18n="price.p10_name">10 sites</div>
+      <div class="plan-amt"><span class="grad" data-i18n="price.p10_amt">293 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
+      <a href="#demo" class="btn ghost" data-pay="10" data-i18n="price.choose">Choisir</a>
+    </div>
+  </div>
+
+  <div class="planhead" data-i18n="price.promo_head">Ou économisez avec l'offre 1 an</div>
   <div class="promo">
     <div class="promo-badge" data-i18n="price.promo_badge">⭐ Meilleure valeur · Offre 1 an</div>
     <div class="promo-grid">
@@ -457,38 +490,6 @@ addEventListener('pageshow',function(){
         <a href="#demo" class="btn primary lg" data-pay="20yr" style="width:100%;margin-top:16px" data-i18n="price.promo_cta">Profiter de l'offre 1 an</a>
       </div>
     </div>
-  </div>
-
-  <div class="planhead" data-i18n="price.monthly_head">Ou au mois, sans engagement</div>
-  <div class="pricegrid">
-    <div class="plan">
-      <div class="plan-name" data-i18n="price.p1_name">1 site</div>
-      <div class="plan-amt"><span class="grad" data-i18n="price.p1_amt">97 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
-      <a href="#demo" class="btn ghost" data-pay="1" data-i18n="price.choose">Choisir</a>
-    </div>
-    <div class="plan">
-      <div class="plan-name" data-i18n="price.p3_name">3 sites</div>
-      <div class="plan-amt"><span class="grad" data-i18n="price.p3_amt">193 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
-      <a href="#demo" class="btn ghost" data-pay="3" data-i18n="price.choose">Choisir</a>
-    </div>
-    <div class="plan">
-      <div class="plan-name" data-i18n="price.p10_name">10 sites</div>
-      <div class="plan-amt"><span class="grad" data-i18n="price.p10_amt">293 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
-      <a href="#demo" class="btn ghost" data-pay="10" data-i18n="price.choose">Choisir</a>
-    </div>
-  </div>
-
-  <div class="pricecard" style="max-width:620px;margin-top:36px">
-    <div class="pricefrom" data-i18n="price.incl_head">Inclus dans chaque forfait</div>
-    <div class="pricelist">
-      <div data-i18n="price.f1">Blogue à votre marque, hébergé et géré</div>
-      <div data-i18n="price.f2">Articles en français optimisés Google + IA</div>
-      <div data-i18n="price.f3">Schema, IndexNow, llms.txt : configuration technique incluse</div>
-      <div data-i18n="price.f4">Liens vers votre fiche Google</div>
-      <div data-i18n="price.f5">Tableau de bord : vues + clics Google</div>
-      <div data-i18n="price.f6">Sans engagement · annulez en tout temps</div>
-    </div>
-    <div class="anchor" data-i18n="price.anchor">≈ 3 $/jour. Moins qu'une seule table tranquille, vs 1 500 $+/mois pour une agence SEO.</div>
   </div>
 </div></section>
 
@@ -654,7 +655,7 @@ const I18N = {
     "out.statcap":"AI citations · this month",
     "price.eyebrow":"Simple pricing","price.h2":"Clear pricing. No catch.",
     "price.f1":"Branded blog, hosted and managed","price.f2":"French articles optimized for Google + AI","price.f3":"Schema, IndexNow, llms.txt: technical setup included","price.f4":"Links to your Google profile","price.f5":"Dashboard: views + Google clicks","price.f6":"No contract · cancel anytime",
-    "price.anchor":"≈ $3/day. Less than one slow table, vs $1,500+/mo for an SEO agency.","price.sub":"Pay monthly, no commitment. Or take a year in advance and save big.","price.promo_badge":"⭐ Best value · 1-year offer","price.promo_title":"20 sites · 1 year, paid up front","price.promo_desc":"Book 20 sites for a full year and get 35% off. Pay once and you're set for 12 months.","price.promo_i1":"20 branded sites, fully managed","price.promo_i2":"Everything in every plan, included","price.promo_i3":"A full year paid up front","price.promo_off":"35% off","price.was":"Regular price <s>$7,032</s>","price.now":"$4,571","price.promo_per":"/yr","price.promo_eff":"≈ $381/mo · billed once for 12 months","price.save":"You save $2,461","price.promo_cta":"Get the 1-year offer","price.monthly_head":"Or monthly, no commitment","price.p1_name":"1 site","price.p1_amt":"$97","price.p3_name":"3 sites","price.p3_amt":"$193","price.p10_name":"10 sites","price.p10_amt":"$293","price.permo":"/mo","price.choose":"Choose","price.incl_head":"Included in every plan",
+    "price.anchor":"≈ $3/day. Less than one slow table, vs $1,500+/mo for an SEO agency.","price.sub":"Pay monthly, no commitment. Or take a year in advance and save big.","price.promo_badge":"⭐ Best value · 1-year offer","price.promo_title":"20 sites · 1 year, paid up front","price.promo_desc":"Book 20 sites for a full year and get 35% off. Pay once and you're set for 12 months.","price.promo_i1":"20 branded sites, fully managed","price.promo_i2":"Everything in every plan, included","price.promo_i3":"A full year paid up front","price.promo_off":"35% off","price.was":"Regular price <s>$7,032</s>","price.now":"$4,571","price.promo_per":"/yr","price.promo_eff":"≈ $381/mo · billed once for 12 months","price.save":"You save $2,461","price.promo_cta":"Get the 1-year offer","price.monthly_head":"Monthly, no commitment","price.promo_head":"Or save with the 1-year offer","price.p1_name":"1 site","price.p1_amt":"$97","price.p3_name":"3 sites","price.p3_amt":"$193","price.p10_name":"10 sites","price.p10_amt":"$293","price.permo":"/mo","price.choose":"Choose","price.incl_head":"Included in every plan",
     "guar.badge":"🛡️ 60-day guarantee","guar.h2":"Try it risk-free. Cancel anytime.","guar.body":"Month-to-month, no contract. Not satisfied? You're refunded within 60 days. You stay in control, and you see the results yourself in the dashboard.",
     "guar.disc":"SEO ramps over 3 to 6 months and stabilizes around 6 to 12 months. Results vary by location, cuisine, competition and market. Individual results, not a guarantee.",
     "faq.eyebrow":"FAQ","faq.h2":"You're probably wondering…",
