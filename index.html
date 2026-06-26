@@ -163,6 +163,32 @@ addEventListener('pageshow',function(){
   .pricetiers{display:flex;gap:8px 14px;flex-wrap:wrap;justify-content:center;margin:16px 0 2px}
   .pricetiers span{border:1px solid var(--line2);border-radius:999px;padding:6px 13px;font-size:13px;color:rgba(246,243,254,.85)}
   .pricetiers b{color:#fff}
+  .price-sub{text-align:center;color:var(--mut);max-width:560px;margin:0 auto 30px;font-size:15.5px}
+  .promo{position:relative;max-width:920px;margin:0 auto;border:1px solid var(--lilac);border-radius:24px;padding:clamp(24px,3.4vw,40px);background:linear-gradient(150deg,rgba(124,58,237,.18),rgba(21,14,42,.78) 55%,rgba(10,8,20,.9));box-shadow:0 50px 140px -55px rgba(124,58,237,.9);overflow:hidden}
+  .promo::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 80% at 86% 8%,rgba(232,64,155,.16),transparent 70%);pointer-events:none}
+  .promo-badge{position:relative;display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(120deg,var(--royal),var(--flare));padding:7px 14px;border-radius:999px}
+  .promo-grid{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(20px,3vw,38px);align-items:center;margin-top:20px}
+  .promo-main h3{font-family:var(--serif);font-weight:700;font-size:clamp(23px,3.1vw,33px);line-height:1.14;margin:0}
+  .promo-main p{color:rgba(246,243,254,.82);font-size:14.5px;margin:12px 0 0}
+  .promo-incl{display:grid;gap:8px;margin-top:16px}
+  .promo-incl div{display:flex;gap:9px;font-size:13.5px;color:rgba(246,243,254,.82)}
+  .promo-incl div::before{content:"✓";color:var(--lilac2);font-weight:700}
+  .promo-price{border:1px solid var(--line2);border-radius:18px;padding:22px 20px;background:rgba(7,6,13,.5);text-align:center}
+  .promo-off{display:inline-block;background:var(--flare);color:#fff;font-weight:700;font-size:12.5px;padding:5px 12px;border-radius:999px;margin-bottom:12px;letter-spacing:.02em}
+  .promo-price .was{color:var(--mut);font-size:14px}
+  .promo-price .was s{color:var(--mut2)}
+  .promo-price .now{font-family:var(--serif);font-weight:800;font-size:clamp(40px,6.5vw,58px);line-height:1.05;margin:2px 0 0}
+  .promo-price .now-per{font-family:var(--sans);font-weight:600;font-size:17px;color:var(--lilac2)}
+  .promo-eff{color:var(--mut);font-size:12.5px;margin:6px 0 12px}
+  .save{display:inline-block;background:rgba(124,58,237,.16);border:1px solid var(--line2);color:var(--lilac2);font-weight:700;font-size:13.5px;padding:6px 13px;border-radius:999px}
+  .planhead{text-align:center;color:var(--mut);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;margin:40px 0 16px}
+  .pricegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:740px;margin:0 auto}
+  .plan{border:1px solid var(--line);border-radius:18px;padding:24px 18px;background:linear-gradient(180deg,#0c0a18,#08060f);text-align:center}
+  .plan-name{font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--lilac2);font-weight:600}
+  .plan-amt{font-family:var(--serif);font-weight:800;font-size:clamp(32px,5vw,44px);line-height:1;margin:10px 0 18px}
+  .plan-amt .permo{font-family:var(--sans);font-weight:600;font-size:14px;color:var(--mut)}
+  .plan .btn{width:100%}
+  @media(max-width:720px){ .promo-grid{grid-template-columns:1fr} .pricegrid{grid-template-columns:1fr;max-width:360px} }
   .roistrip{height:90px;margin:22px 0 0;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
 
   /* guarantee */
@@ -408,9 +434,52 @@ addEventListener('pageshow',function(){
 <section class="pricing sec" id="pricing"><div class="wrap">
   <div class="sechead" style="text-align:center;margin:0 auto 40px"><div class="eyebrow" data-i18n="price.eyebrow">Tarif simple</div>
     <h2 data-i18n="price.h2">Tarif clair. Aucun piège.</h2></div>
-  <div class="pricecard">
-    <div class="pricefrom" data-i18n="price.from">À partir de</div>
-    <div class="amt grad">97 $</div><div class="per" data-i18n="price.per">par mois · selon le nombre de sites</div>
+  <p class="price-sub" data-i18n="price.sub">Payez au mois, sans engagement. Ou prenez une année d'avance et économisez gros.</p>
+
+  <div class="promo">
+    <div class="promo-badge" data-i18n="price.promo_badge">⭐ Meilleure valeur · Offre 1 an</div>
+    <div class="promo-grid">
+      <div class="promo-main">
+        <h3 data-i18n="price.promo_title">20 sites · 1 an, payé d'avance</h3>
+        <p data-i18n="price.promo_desc">Réservez 20 sites pour une année complète et profitez de 35 % de rabais. Vous payez une seule fois et vous êtes tranquille pour 12 mois.</p>
+        <div class="promo-incl">
+          <div data-i18n="price.promo_i1">20 sites à votre marque, gérés pour vous</div>
+          <div data-i18n="price.promo_i2">Tout ce qui est inclus dans chaque forfait</div>
+          <div data-i18n="price.promo_i3">Une année complète payée d'avance</div>
+        </div>
+      </div>
+      <div class="promo-price">
+        <div class="promo-off" data-i18n="price.promo_off">35 % de rabais</div>
+        <div class="was" data-i18n="price.was">Prix normal <s>7 032 $</s></div>
+        <div class="now"><span class="grad" data-i18n="price.now">4 571 $</span><span class="now-per" data-i18n="price.promo_per">/an</span></div>
+        <div class="promo-eff" data-i18n="price.promo_eff">≈ 381 $/mois · facturé une fois pour 12 mois</div>
+        <div class="save" data-i18n="price.save">Vous économisez 2 461 $</div>
+        <a href="#demo" class="btn primary lg" data-pay="20yr" style="width:100%;margin-top:16px" data-i18n="price.promo_cta">Profiter de l'offre 1 an</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="planhead" data-i18n="price.monthly_head">Ou au mois, sans engagement</div>
+  <div class="pricegrid">
+    <div class="plan">
+      <div class="plan-name" data-i18n="price.p1_name">1 site</div>
+      <div class="plan-amt"><span class="grad" data-i18n="price.p1_amt">97 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
+      <a href="#demo" class="btn ghost" data-pay="1" data-i18n="price.choose">Choisir</a>
+    </div>
+    <div class="plan">
+      <div class="plan-name" data-i18n="price.p3_name">3 sites</div>
+      <div class="plan-amt"><span class="grad" data-i18n="price.p3_amt">193 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
+      <a href="#demo" class="btn ghost" data-pay="3" data-i18n="price.choose">Choisir</a>
+    </div>
+    <div class="plan">
+      <div class="plan-name" data-i18n="price.p10_name">10 sites</div>
+      <div class="plan-amt"><span class="grad" data-i18n="price.p10_amt">293 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
+      <a href="#demo" class="btn ghost" data-pay="10" data-i18n="price.choose">Choisir</a>
+    </div>
+  </div>
+
+  <div class="pricecard" style="max-width:620px;margin-top:36px">
+    <div class="pricefrom" data-i18n="price.incl_head">Inclus dans chaque forfait</div>
     <div class="pricelist">
       <div data-i18n="price.f1">Blogue à votre marque, hébergé et géré</div>
       <div data-i18n="price.f2">Articles en français optimisés Google + IA</div>
@@ -419,8 +488,6 @@ addEventListener('pageshow',function(){
       <div data-i18n="price.f5">Tableau de bord : vues + clics Google</div>
       <div data-i18n="price.f6">Sans engagement · annulez en tout temps</div>
     </div>
-    <div class="pricetiers"><span data-i18n="price.t1">1 site · <b>97 $</b>/mois</span><span data-i18n="price.t3">3 sites · <b>193 $</b>/mois</span><span data-i18n="price.t10">10 sites · <b>293 $</b>/mois</span></div>
-    <a href="#demo" class="btn primary lg" style="width:100%;margin-top:18px" data-i18n="price.cta">Commencer maintenant</a>
     <div class="anchor" data-i18n="price.anchor">≈ 3 $/jour. Moins qu'une seule table tranquille, vs 1 500 $+/mois pour une agence SEO.</div>
   </div>
 </div></section>
@@ -585,9 +652,9 @@ const I18N = {
     "out.o3t":"Recommended by AI before competitors","out.o3b":"you own a door almost nobody optimizes for yet.",
     "out.o4t":"Zero effort, transparent proof","out.o4b":"100% done-for-you. Open the dashboard, watch the numbers climb.",
     "out.statcap":"AI citations · this month",
-    "price.eyebrow":"Simple pricing","price.h2":"Clear pricing. No catch.","price.per":"per month · based on the number of sites","price.from":"From","price.t1":"1 site · <b>$97</b>/mo","price.t3":"3 sites · <b>$193</b>/mo","price.t10":"10 sites · <b>$293</b>/mo",
+    "price.eyebrow":"Simple pricing","price.h2":"Clear pricing. No catch.",
     "price.f1":"Branded blog, hosted and managed","price.f2":"French articles optimized for Google + AI","price.f3":"Schema, IndexNow, llms.txt: technical setup included","price.f4":"Links to your Google profile","price.f5":"Dashboard: views + Google clicks","price.f6":"No contract · cancel anytime",
-    "price.cta":"Get started now","price.anchor":"≈ $3/day. Less than one slow table, vs $1,500+/mo for an SEO agency.",
+    "price.anchor":"≈ $3/day. Less than one slow table, vs $1,500+/mo for an SEO agency.","price.sub":"Pay monthly, no commitment. Or take a year in advance and save big.","price.promo_badge":"⭐ Best value · 1-year offer","price.promo_title":"20 sites · 1 year, paid up front","price.promo_desc":"Book 20 sites for a full year and get 35% off. Pay once and you're set for 12 months.","price.promo_i1":"20 branded sites, fully managed","price.promo_i2":"Everything in every plan, included","price.promo_i3":"A full year paid up front","price.promo_off":"35% off","price.was":"Regular price <s>$7,032</s>","price.now":"$4,571","price.promo_per":"/yr","price.promo_eff":"≈ $381/mo · billed once for 12 months","price.save":"You save $2,461","price.promo_cta":"Get the 1-year offer","price.monthly_head":"Or monthly, no commitment","price.p1_name":"1 site","price.p1_amt":"$97","price.p3_name":"3 sites","price.p3_amt":"$193","price.p10_name":"10 sites","price.p10_amt":"$293","price.permo":"/mo","price.choose":"Choose","price.incl_head":"Included in every plan",
     "guar.badge":"🛡️ 60-day guarantee","guar.h2":"Try it risk-free. Cancel anytime.","guar.body":"Month-to-month, no contract. Not satisfied? You're refunded within 60 days. You stay in control, and you see the results yourself in the dashboard.",
     "guar.disc":"SEO ramps over 3 to 6 months and stabilizes around 6 to 12 months. Results vary by location, cuisine, competition and market. Individual results, not a guarantee.",
     "faq.eyebrow":"FAQ","faq.h2":"You're probably wondering…",
@@ -681,6 +748,9 @@ addEventListener('scroll', ()=>{ const y=scrollY;
 /* ---------------- chips + lead form + checkout ---------------- */
 const LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzLawKgUNxG-jwSqV_er_kepAFJe5fl7XVbtwlOf_e1AYdAMCYqu6VqWnc3E57aafk/exec";
 const CHECKOUT_URL = ""; // <-- paste your Whop checkout URL here (see WHOP-SETUP-SOP.md). Empty = not wired yet.
+// Whop checkout link per pricing plan. Paste each plan's Whop product/checkout URL to enable direct payment.
+// Leave a value empty and that plan's button falls back to the lead form (#demo) so nothing breaks.
+const WHOP_LINKS = { '1':'', '3':'', '10':'', '20yr':'' };
 
 // chip toggles: single-select when data-single="1", else multi-select; value(s) -> sibling hidden input
 document.querySelectorAll('.fchips').forEach(group=>{
@@ -697,6 +767,8 @@ document.querySelectorAll('.fchips').forEach(group=>{
 
 // info tooltips: hover/focus on desktop, tap to toggle on mobile
 document.querySelectorAll('.info').forEach(ic=>ic.addEventListener('click',e=>{e.stopPropagation();ic.classList.toggle('open');}));
+// pricing pay buttons -> Whop checkout (or fall back to the lead form when that plan's link is empty)
+document.querySelectorAll('[data-pay]').forEach(function(b){ b.addEventListener('click',function(e){ var u=WHOP_LINKS[b.getAttribute('data-pay')]; if(u){ e.preventDefault(); location.href=u; } }); });
 document.addEventListener('click',()=>document.querySelectorAll('.info.open').forEach(i=>i.classList.remove('open')));
 const form=document.getElementById('leadform');
 const checkout=document.getElementById('checkout');
