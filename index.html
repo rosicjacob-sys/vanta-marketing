@@ -792,7 +792,12 @@ const LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzLawKgUNxG-jwSq
 const CHECKOUT_URL = ""; // <-- paste your Whop checkout URL here (see WHOP-SETUP-SOP.md). Empty = not wired yet.
 // Whop checkout link per pricing plan. Paste each plan's Whop product/checkout URL to enable direct payment.
 // Leave a value empty and that plan's button falls back to the lead form (#demo) so nothing breaks.
-const WHOP_LINKS = { '1':'', '3':'', '10':'', '20yr':'' };
+const WHOP_LINKS = {
+  '1':    'https://whop.com/checkout/plan_tjj836szyQVby',   // 1 site  · $97/mo
+  '3':    'https://whop.com/checkout/plan_csZ2sADys69zZ',   // 3 sites · $193/mo
+  '10':   'https://whop.com/checkout/plan_WWsUQCeUHJGwd',   // 10 sites · $293/mo
+  '20yr': '',                                               // 1-year promo — no plan yet, falls back to lead form
+};
 
 // chip toggles: single-select when data-single="1", else multi-select; value(s) -> sibling hidden input
 document.querySelectorAll('.fchips').forEach(group=>{
