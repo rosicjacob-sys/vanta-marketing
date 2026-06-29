@@ -345,18 +345,21 @@ addEventListener('pageshow',function(){
   .chat-head span{display:block;font-size:11.5px;color:rgba(255,255,255,.85);margin-top:3px}
   .chat-x{margin-left:auto;background:transparent;border:none;color:rgba(255,255,255,.85);font-size:16px;cursor:pointer;line-height:1;padding:2px 4px}
   .chat-x:hover{color:#fff}
-  .chat-body{padding:16px 18px}
-  .chat-intro{margin:0 0 12px;font-size:13.5px;color:var(--mut)}
-  #chatForm{display:grid;gap:9px}
-  #chatForm input,#chatForm textarea{font:inherit;font-size:15px;color:var(--white);background:rgba(255,255,255,.07);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;outline:none;width:100%;resize:vertical}
-  #chatForm input:focus,#chatForm textarea:focus{border-color:#34D27B}
-  #chatForm input::placeholder,#chatForm textarea::placeholder{color:var(--mut2)}
-  .chat-send{font:inherit;font-weight:600;font-size:15px;color:#fff;background:linear-gradient(145deg,#34D27B,#15A34A);border:none;border-radius:10px;padding:12px;cursor:pointer;transition:.15s}
-  .chat-send:hover{filter:brightness(1.07)}
-  .chat-done{padding:30px 22px;text-align:center}
-  .chat-done .chat-check{width:46px;height:46px;border-radius:50%;background:rgba(52,210,123,.18);color:#34D27B;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 12px}
-  .chat-done b{display:block;font-size:16px;color:#fff}
-  .chat-done span{display:block;font-size:13.5px;color:var(--mut);margin-top:6px}
+  .chat-body{padding:0}
+  .chat-thread{max-height:300px;min-height:130px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
+  .chat-thread .b{max-width:82%;padding:9px 12px;border-radius:13px;font-size:13.5px;line-height:1.42;white-space:pre-wrap;word-break:break-word}
+  .chat-thread .b.them{align-self:flex-start;background:rgba(255,255,255,.07);color:var(--white)}
+  .chat-thread .b.you{align-self:flex-end;background:linear-gradient(145deg,#34D27B,#15A34A);color:#fff}
+  .chat-thread .b.note{align-self:center;background:transparent;color:var(--mut2);font-size:11.5px;max-width:100%;text-align:center;padding:2px}
+  .chat-start{padding:4px 16px 0;display:grid;gap:8px}
+  .chat-start.hide{display:none}
+  .chat-start input{font:inherit;font-size:14px;color:var(--white);background:rgba(255,255,255,.07);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;outline:none;width:100%}
+  .chat-start input:focus{border-color:#34D27B}
+  .chat-composer{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+  .chat-composer textarea{flex:1;resize:none;font:inherit;font-size:14px;color:var(--white);background:rgba(255,255,255,.07);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;outline:none;max-height:88px;min-height:42px}
+  .chat-composer textarea:focus{border-color:#34D27B}
+  .chat-composer button{width:44px;flex:none;border:none;border-radius:10px;background:linear-gradient(145deg,#34D27B,#15A34A);color:#fff;font-size:17px;cursor:pointer}
+  .chat-start input::placeholder,.chat-composer textarea::placeholder{color:var(--mut2)}
   @media(max-width:560px){ #chatw{right:14px;bottom:14px} .chat-fab{width:54px;height:54px} }
 </style>
 </head>
@@ -638,19 +641,16 @@ addEventListener('pageshow',function(){
       <button class="chat-x" id="chatClose" aria-label="Fermer">✕</button>
     </div>
     <div class="chat-body" id="chatBody">
-      <p class="chat-intro" data-i18n="chat.intro">Laissez vos coordonnées et votre message, on vous revient vite.</p>
-      <form id="chatForm">
-        <input name="nom" required placeholder="Votre nom" data-ph="chat.name" autocomplete="name" />
-        <input name="restaurant" required placeholder="Nom du restaurant" data-ph="chat.resto" autocomplete="organization" />
-        <input name="courriel" type="email" required placeholder="Courriel" data-ph="chat.email" autocomplete="email" />
-        <textarea name="message" required rows="3" placeholder="Votre message" data-ph="chat.msg"></textarea>
-        <button type="submit" class="chat-send" data-i18n="chat.send">Envoyer le message</button>
+      <div class="chat-thread" id="chatThread"></div>
+      <div class="chat-start" id="chatStart">
+        <input id="cNom" placeholder="Votre nom" data-ph="chat.name" autocomplete="name" />
+        <input id="cResto" placeholder="Nom du restaurant" data-ph="chat.resto" autocomplete="organization" />
+        <input id="cMail" type="email" placeholder="Courriel" data-ph="chat.email" autocomplete="email" />
+      </div>
+      <form class="chat-composer" id="chatForm">
+        <textarea id="cMsg" rows="1" placeholder="Votre message" data-ph="chat.msg"></textarea>
+        <button type="submit" aria-label="Envoyer">&#10148;</button>
       </form>
-    </div>
-    <div class="chat-done" id="chatDone" style="display:none">
-      <div class="chat-check">✓</div>
-      <b data-i18n="chat.thanks">Message envoyé, merci !</b>
-      <span data-i18n="chat.thanks2">On vous répond en 2 à 4 heures. Surveillez votre courriel.</span>
     </div>
   </div>
   <button class="chat-fab" id="chatFab" aria-label="Discuter avec nous">
@@ -928,18 +928,39 @@ document.getElementById('loginform').addEventListener('submit', e=>{ e.preventDe
 
 updatePrice();
 
-/* ---- floating chat widget ---- */
+/* ---- floating two-way chat (messages live in the Google Sheet) ---- */
 (function(){
   var w=document.getElementById('chatw'); if(!w) return;
-  var fab=document.getElementById('chatFab'), x=document.getElementById('chatClose'), cf=document.getElementById('chatForm'), body=document.getElementById('chatBody'), done=document.getElementById('chatDone');
-  fab.addEventListener('click', function(){ w.classList.toggle('open'); });
-  x.addEventListener('click', function(){ w.classList.remove('open'); });
+  var fab=document.getElementById('chatFab'), x=document.getElementById('chatClose'), cf=document.getElementById('chatForm');
+  var thread=document.getElementById('chatThread'), start=document.getElementById('chatStart');
+  var nomI=document.getElementById('cNom'), restoI=document.getElementById('cResto'), mailI=document.getElementById('cMail'), msgI=document.getElementById('cMsg');
+  var K_CID='vanta_chat_cid', K_INFO='vanta_chat_info', K_LOG='vanta_chat_log', K_SEEN='vanta_chat_seen';
+  var cid=localStorage.getItem(K_CID)||'', info=null, logArr=[], seen=parseInt(localStorage.getItem(K_SEEN)||'0',10)||0, poll=null, opened=false;
+  try{ info=JSON.parse(localStorage.getItem(K_INFO)||'null'); }catch(_){}
+  try{ logArr=JSON.parse(localStorage.getItem(K_LOG)||'[]'); }catch(_){}
+  function persist(){ try{ localStorage.setItem(K_LOG,JSON.stringify(logArr.slice(-60))); localStorage.setItem(K_SEEN,String(seen)); }catch(_){} }
+  function bubble(text, who){ var d=document.createElement('div'); d.className='b '+(who==='admin'?'them':(who==='note'?'note':'you')); d.textContent=text; thread.appendChild(d); thread.scrollTop=thread.scrollHeight; }
+  function paint(){ thread.innerHTML=''; bubble(lang==='fr'?'Bonjour ! Une question ? On repond a la plupart des messages en 2 a 4 heures.':'Hi! Have a question? We answer most messages within 2 to 4 hours.','note'); for(var i=0;i<logArr.length;i++) bubble(logArr[i].t, logArr[i].s==='admin'?'admin':'you'); if(info) start.classList.add('hide'); else start.classList.remove('hide'); }
+  function jsonp(params){ return new Promise(function(res){ var cb='__vc'+Date.now()+Math.floor(Math.random()*1e6); var s=document.createElement('script'); var to=setTimeout(function(){ fin(null); },9000); function fin(v){ clearTimeout(to); try{ delete window[cb]; }catch(_){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); res(v); } window[cb]=function(d){ fin(d); }; s.onerror=function(){ fin(null); }; params.callback=cb; s.src=LEADS_ENDPOINT+'?'+new URLSearchParams(params).toString(); document.body.appendChild(s); }); }
+  function doPoll(){ if(!cid) return; jsonp({action:'chat_poll', cid:cid, since:seen}).then(function(r){ if(!r||!r.messages) return; for(var i=0;i<r.messages.length;i++){ if(r.messages[i].sender==='admin'){ logArr.push({s:'admin',t:r.messages[i].text}); bubble(r.messages[i].text,'admin'); } } if(typeof r.head==='number') seen=r.head; persist(); }); }
+  function startPoll(){ if(poll) return; poll=setInterval(function(){ if(opened) doPoll(); }, 7000); }
+  fab.addEventListener('click', function(){ var willOpen=!w.classList.contains('open'); w.classList.toggle('open'); opened=willOpen; if(willOpen){ paint(); if(cid){ startPoll(); doPoll(); } setTimeout(function(){ (info?msgI:nomI).focus(); },60); } });
+  x.addEventListener('click', function(){ w.classList.remove('open'); opened=false; });
+  msgI.addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); cf.requestSubmit(); } });
   cf.addEventListener('submit', function(e){
     e.preventDefault();
-    var nom=cf.nom.value.trim(), resto=cf.restaurant.value.trim(), em=cf.courriel.value.trim(), msg=cf.message.value.trim();
-    if(!nom||!resto||!em||!msg){ cf.reportValidity&&cf.reportValidity(); return; }
-    saveLead({ ts:new Date().toISOString(), type:'chat', nom:nom, restaurant:resto, courriel:em, message:msg, langue:lang, page:'vanta-landing' });
-    body.style.display='none'; done.style.display='block';
+    var msg=msgI.value.trim(); if(!msg) return;
+    if(!info){
+      var nom=nomI.value.trim(), resto=restoI.value.trim(), em=mailI.value.trim();
+      if(!nom||!resto||!em){ start.classList.remove('hide'); (nom?(resto?mailI:restoI):nomI).focus(); return; }
+      info={nom:nom,restaurant:resto,courriel:em}; try{ localStorage.setItem(K_INFO,JSON.stringify(info)); }catch(_){}
+      cid='c'+Date.now()+Math.floor(Math.random()*1e5); try{ localStorage.setItem(K_CID,cid); }catch(_){}
+      start.classList.add('hide');
+    }
+    msgI.value='';
+    logArr.push({s:'you',t:msg}); bubble(msg,'you'); persist();
+    saveLead({ action:'chat_send', cid:cid, type:'chat', nom:info.nom, restaurant:info.restaurant, courriel:info.courriel, message:msg, langue:lang, page:'vanta-landing' });
+    startPoll();
   });
 })();
 </script>
