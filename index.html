@@ -329,6 +329,35 @@ addEventListener('pageshow',function(){
     .btn.primary:hover::after{left:140%}
   }
   @media(prefers-reduced-motion:reduce){ .reveal{opacity:1;transform:none;transition:none} .btn.primary::after{display:none} }
+  /* floating chat */
+  #chatw{position:fixed;right:20px;bottom:20px;z-index:500;font-family:var(--sans)}
+  .chat-fab{position:relative;width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(145deg,#34D27B,#15A34A);box-shadow:0 12px 30px -8px rgba(34,197,94,.7),0 4px 12px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;transition:transform .18s}
+  .chat-fab:hover{transform:scale(1.06)}
+  .chat-fab svg{width:30px;height:30px;fill:#fff}
+  .chat-fab::before{content:"";position:absolute;inset:0;border-radius:50%;background:#22C55E;opacity:.55;animation:chatpulse 2.4s ease-out infinite;z-index:-1}
+  @keyframes chatpulse{0%{transform:scale(1);opacity:.55}70%{transform:scale(1.75);opacity:0}100%{opacity:0}}
+  @media(prefers-reduced-motion:reduce){ .chat-fab::before{animation:none} }
+  .chat-fab .chat-fab-dot{position:absolute;top:-1px;right:-1px;width:15px;height:15px;border-radius:50%;background:#E8409B;border:2px solid #07060D}
+  .chat-panel{position:absolute;bottom:74px;right:0;width:min(350px,calc(100vw - 32px));border:1px solid var(--line2);border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#140e29,#0a0816);box-shadow:0 30px 80px -24px rgba(0,0,0,.85);opacity:0;transform:translateY(12px) scale(.98);transform-origin:bottom right;pointer-events:none;transition:.2s}
+  #chatw.open .chat-panel{opacity:1;transform:none;pointer-events:auto}
+  .chat-head{display:flex;align-items:flex-start;gap:10px;padding:15px 18px;background:linear-gradient(120deg,#15A34A,#0E7A38)}
+  .chat-head b{display:block;font-size:15px;color:#fff;font-weight:700;line-height:1.25}
+  .chat-head span{display:block;font-size:11.5px;color:rgba(255,255,255,.85);margin-top:3px}
+  .chat-x{margin-left:auto;background:transparent;border:none;color:rgba(255,255,255,.85);font-size:16px;cursor:pointer;line-height:1;padding:2px 4px}
+  .chat-x:hover{color:#fff}
+  .chat-body{padding:16px 18px}
+  .chat-intro{margin:0 0 12px;font-size:13.5px;color:var(--mut)}
+  #chatForm{display:grid;gap:9px}
+  #chatForm input,#chatForm textarea{font:inherit;font-size:15px;color:var(--white);background:rgba(255,255,255,.07);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;outline:none;width:100%;resize:vertical}
+  #chatForm input:focus,#chatForm textarea:focus{border-color:#34D27B}
+  #chatForm input::placeholder,#chatForm textarea::placeholder{color:var(--mut2)}
+  .chat-send{font:inherit;font-weight:600;font-size:15px;color:#fff;background:linear-gradient(145deg,#34D27B,#15A34A);border:none;border-radius:10px;padding:12px;cursor:pointer;transition:.15s}
+  .chat-send:hover{filter:brightness(1.07)}
+  .chat-done{padding:30px 22px;text-align:center}
+  .chat-done .chat-check{width:46px;height:46px;border-radius:50%;background:rgba(52,210,123,.18);color:#34D27B;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 12px}
+  .chat-done b{display:block;font-size:16px;color:#fff}
+  .chat-done span{display:block;font-size:13.5px;color:var(--mut);margin-top:6px}
+  @media(max-width:560px){ #chatw{right:14px;bottom:14px} .chat-fab{width:54px;height:54px} }
 </style>
 </head>
 <body>
@@ -601,6 +630,34 @@ addEventListener('pageshow',function(){
   </div>
   <p class="footlegal" data-i18n="footer.legal">© 2026 Vanta Marketing. 97 $/mois, par restaurant, sans engagement, annulable en tout temps, garantie de remboursement 60 jours. Vanta améliore la visibilité et les clics vers votre profil Google ; nous ne garantissons aucun classement, trafic ou volume de ventes précis. Le référencement progresse généralement sur 3 à 6 mois et se stabilise vers 6 à 12 mois. Les résultats varient selon l'emplacement, la cuisine, la concurrence et le marché. Résultats individuels, non garantis. Les chiffres du tableau de bord présentés ici sont illustratifs.</p>
 </div></footer>
+<!-- floating chat -->
+<div id="chatw">
+  <div class="chat-panel">
+    <div class="chat-head">
+      <div><b data-i18n="chat.title">Une question ? Écrivez-nous</b><span data-i18n="chat.sla">On répond à la plupart des messages en 2 à 4 heures.</span></div>
+      <button class="chat-x" id="chatClose" aria-label="Fermer">✕</button>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <p class="chat-intro" data-i18n="chat.intro">Laissez vos coordonnées et votre message, on vous revient vite.</p>
+      <form id="chatForm">
+        <input name="nom" required placeholder="Votre nom" data-ph="chat.name" autocomplete="name" />
+        <input name="restaurant" required placeholder="Nom du restaurant" data-ph="chat.resto" autocomplete="organization" />
+        <input name="courriel" type="email" required placeholder="Courriel" data-ph="chat.email" autocomplete="email" />
+        <textarea name="message" required rows="3" placeholder="Votre message" data-ph="chat.msg"></textarea>
+        <button type="submit" class="chat-send" data-i18n="chat.send">Envoyer le message</button>
+      </form>
+    </div>
+    <div class="chat-done" id="chatDone" style="display:none">
+      <div class="chat-check">✓</div>
+      <b data-i18n="chat.thanks">Message envoyé, merci !</b>
+      <span data-i18n="chat.thanks2">On vous répond en 2 à 4 heures. Surveillez votre courriel.</span>
+    </div>
+  </div>
+  <button class="chat-fab" id="chatFab" aria-label="Discuter avec nous">
+    <span class="chat-fab-dot"></span>
+    <svg viewBox="0 0 24 24"><path d="M12 3C6.5 3 2 6.8 2 11.5c0 2.2 1 4.2 2.7 5.7-.1 1-.5 2.4-1.3 3.6 1.6-.2 3.2-.8 4.4-1.6 1.3.5 2.7.8 4.2.8 5.5 0 10-3.8 10-8.5S17.5 3 12 3z"/></svg>
+  </button>
+</div>
 
 <!-- CHECKOUT / MILESTONE OVERLAY (shown after lead is saved, before payment) -->
 <div class="checkout" id="checkout" aria-hidden="true">
@@ -721,6 +778,7 @@ const I18N = {
     "co.per":"/month · cancel anytime · 60-day guarantee","co.followup":"We'll email you more information within 1 to 2 days. No payment now.","co.go":"Perfect, talk soon!","co.note":"Your details are saved. Watch your inbox.",
     "footer.made":"Made in Québec · Local SEO + AI visibility for restaurants",
     "footer.legal":"© 2026 Vanta Marketing. $97/month, per restaurant, no contract, cancel anytime, 60-day money-back guarantee. Vanta improves visibility and clicks to your Google profile; we do not guarantee any specific ranking, traffic or sales volume. SEO typically ramps over 3 to 6 months and stabilizes around 6 to 12 months. Results vary by location, cuisine, competition and market. Individual results, not a guarantee. Dashboard numbers shown here are illustrative.",
+    "chat.title":"Have a question? Message us","chat.sla":"We answer most messages within 2 to 4 hours.","chat.intro":"Leave your details and your message, and we\u2019ll get back to you fast.","chat.name":"Your name","chat.resto":"Restaurant name","chat.email":"Email","chat.msg":"Your message","chat.send":"Send message","chat.thanks":"Message sent, thank you!","chat.thanks2":"We\u2019ll reply within 2 to 4 hours. Watch your inbox.",
   }
 };
 // snapshot FR defaults from the DOM so toggling back restores them
@@ -869,6 +927,21 @@ document.getElementById('loginform').addEventListener('submit', e=>{ e.preventDe
 });
 
 updatePrice();
+
+/* ---- floating chat widget ---- */
+(function(){
+  var w=document.getElementById('chatw'); if(!w) return;
+  var fab=document.getElementById('chatFab'), x=document.getElementById('chatClose'), cf=document.getElementById('chatForm'), body=document.getElementById('chatBody'), done=document.getElementById('chatDone');
+  fab.addEventListener('click', function(){ w.classList.toggle('open'); });
+  x.addEventListener('click', function(){ w.classList.remove('open'); });
+  cf.addEventListener('submit', function(e){
+    e.preventDefault();
+    var nom=cf.nom.value.trim(), resto=cf.restaurant.value.trim(), em=cf.courriel.value.trim(), msg=cf.message.value.trim();
+    if(!nom||!resto||!em||!msg){ cf.reportValidity&&cf.reportValidity(); return; }
+    saveLead({ ts:new Date().toISOString(), type:'chat', nom:nom, restaurant:resto, courriel:em, message:msg, langue:lang, page:'vanta-landing' });
+    body.style.display='none'; done.style.display='block';
+  });
+})();
 </script>
 
 <script>
