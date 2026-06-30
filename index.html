@@ -946,6 +946,7 @@ updatePrice();
   function startPoll(){ if(poll) return; poll=setInterval(function(){ if(opened) doPoll(); }, 7000); }
   fab.addEventListener('click', function(){ var willOpen=!w.classList.contains('open'); w.classList.toggle('open'); opened=willOpen; if(willOpen){ paint(); if(cid){ startPoll(); doPoll(); } setTimeout(function(){ (info?msgI:nomI).focus(); },60); } });
   x.addEventListener('click', function(){ w.classList.remove('open'); opened=false; });
+  var ltog=document.getElementById('langtog'); if(ltog) ltog.addEventListener('click', function(){ if(opened) setTimeout(paint, 0); });
   msgI.addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); cf.requestSubmit(); } });
   cf.addEventListener('submit', function(e){
     e.preventDefault();
