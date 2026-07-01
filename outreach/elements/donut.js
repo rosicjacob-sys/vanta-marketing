@@ -57,7 +57,7 @@ const ROYAL = {
 
 /* ---- channel slices (Québec restaurant local-SEO copy) --------------------
  * Values are illustrative shares of "Citations IA / découverte" this month. */
-let CHANNELS = [
+const CHANNELS = [
   { label: "Google",     value: 38 },
   { label: "ChatGPT",    value: 22 },
   { label: "Perplexity", value: 15 },
@@ -80,7 +80,6 @@ const lerp = (a, b, t) => a + (b - a) * t;
 
 export function mount(container, opts = {}) {
   const tokens = opts.tokens || {};
-  if (opts.sources && opts.sources.length) CHANNELS = opts.sources;
   const C = {
     void: tokens.void || ROYAL.void,
     panel: tokens.panel || ROYAL.panel,
@@ -791,7 +790,7 @@ export function mount(container, opts = {}) {
   capEl.style.cssText =
     "font-weight:600;letter-spacing:.14em;text-transform:uppercase;" +
     "color:" + C.haloB + ";opacity:0;transition:opacity .4s;";
-  capEl.textContent = "Discovery sources";
+  capEl.textContent = "Citations IA";
   numWrap.appendChild(capEl);
 
   // ---- right-side legend (FR labels + mini count-ups + gradient hairlines) ----
@@ -854,7 +853,7 @@ export function mount(container, opts = {}) {
   noteEl.style.cssText =
     "position:absolute;font-weight:500;letter-spacing:.06em;" +
     "color:" + C.haloA + "99;opacity:0;transition:opacity .5s;";
-  noteEl.textContent = "+23% this month · illustrative";
+  noteEl.textContent = "+23 % ce mois · données illustratives";
   overlay.appendChild(noteEl);
 
   // -- layout / sizing of all DOM bits (called on boot + resize) --
@@ -1184,7 +1183,7 @@ export function mount(container, opts = {}) {
     if (settle) slotMachineSettle(ch.value);
     else setDigits(ch.value, true);
     displayedNum = ch.value;
-    // centre sublabel becomes the channel NAME (replaces the static "Discovery sources")
+    // centre sublabel becomes the channel NAME (replaces the static "Citations IA")
     capEl.textContent = ch.label.toUpperCase();
     // top-left tag mirrors "Google · 38 %"
     tagEl.innerHTML =
@@ -1595,7 +1594,7 @@ export function mount(container, opts = {}) {
     appliedHighlight = -2;
     appliedHighlightPrev = -1;
     cycleTimer = 0;
-    capEl.textContent = "Discovery sources";
+    capEl.textContent = "Citations IA";
     for (const m of slices) {
       m.userData.grow = 0;
       m.userData.hover = 0;

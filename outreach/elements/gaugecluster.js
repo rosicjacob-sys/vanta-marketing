@@ -120,7 +120,7 @@ export function mount(container, opts = {}) {
 
   // Each gauge: French restaurant metric. value 0..1 is the resting needle pos.
   // redline gauges carry the magenta hot zone (only ONE is true → the one flare).
-  const GAUGES = opts.gauges || [
+  const GAUGES = [
     { label: "VUES DU BLOGUE", unit: "vues", max: 2000, val: 1213, redline: false, big: true },
     { label: "CLICS GOOGLE", unit: "clics", max: 300, val: 176, redline: false, big: false },
     { label: "CITATIONS IA", unit: "cit.", max: 16, val: 13, redline: true, big: false },
@@ -276,7 +276,7 @@ export function mount(container, opts = {}) {
     dctx.font = "700 11px 'Inter',system-ui,sans-serif";
     dctx.textBaseline = "alphabetic";
     dctx.fillStyle = hexA(tokens.white, 0.92);
-    dctx.fillText("VANTA · DASHBOARD", Math.max(10, W * 0.04), Math.max(16, H * 0.05));
+    dctx.fillText("VANTA · TABLEAU DE BORD", Math.max(10, W * 0.04), Math.max(16, H * 0.05));
   }
 
   // one gauge's static face: bezel, ink dial, tick ring, numerals, redline zone, label

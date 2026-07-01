@@ -237,8 +237,8 @@ export function mount(container, opts = {}) {
   })();
 
   /* ---- data ----------------------------------------------------------- */
-  const GOAL = (opts.goal != null) ? opts.goal : 9540;
-  const VALUE = (opts.value != null) ? opts.value : 7418;
+  const GOAL = 9540;            // illustrative, non-round goal
+  const VALUE = 7418;            // illustrative, non-round
   const TARGET = VALUE / GOAL;   // 0.778 -> Math.round = 78 %
 
   /* ---- bubble pool (soft additive sprites) ---------------------------- */
@@ -746,7 +746,7 @@ export function mount(container, opts = {}) {
     // metric label — pure white, crisp/legible
     g.fillStyle = "#FFFFFF";
     g.font = `600 ${R * 0.1}px "Helvetica Neue", Arial, sans-serif`;
-    g.fillText("Blog views · this month", 0, R * 0.38);
+    g.fillText("Vues du blogue · ce mois", 0, R * 0.38);
     g.restore();
   }
 

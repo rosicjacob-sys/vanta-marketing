@@ -209,8 +209,8 @@ export function mount(container, opts = {}) {
   const MONTHS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
   // Illustrative "Vues du blogue" — trends up to the record month (Octobre).
   // Realistic, non-round monthly figures; record month ~7 418 vues.
-  const RAW = (opts.series && opts.series.length === 12) ? opts.series : [3142, 2876, 3611, 3389, 4057, 3724, 4388, 4703, 5061, 7418, 6094, 6437];
-  const RECORD = (opts.record != null) ? opts.record : 9;
+  const RAW = [3142, 2876, 3611, 3389, 4057, 3724, 4388, 4703, 5061, 7418, 6094, 6437];
+  const RECORD = 9; // Octobre — the bar that breaks the skyline
   const N = RAW.length;
   const MAXV = Math.max.apply(null, RAW);
 
@@ -824,8 +824,8 @@ export function mount(container, opts = {}) {
 
   // ---- labels (tabular value + landing flash) ----
   const MONTH_NAMES = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
   ];
 
   function paintLabels() {
@@ -858,7 +858,7 @@ export function mount(container, opts = {}) {
       const yTop = barTopY(i, liveH[i]);
       const v = Math.round(dispVal[i]);
       const popA = clamp(crownPop, 0, 1);
-      const valStr = formatFR(v) + " views";
+      const valStr = formatFR(v) + " vues";
 
       // measure the chip so it fits the value + caption snugly (tabular value)
       ctx.font = recordValFont();
@@ -948,12 +948,12 @@ export function mount(container, opts = {}) {
     ctx.fillText("VANTA", geo.padX * 0.55, H * 0.1);
     ctx.font = "600 10px 'Inter',system-ui,sans-serif";
     ctx.fillStyle = hexA(tokens.white, 0.92);
-    ctx.fillText("Blog views · 2026", geo.padX * 0.55, H * 0.1 + 14);
+    ctx.fillText("Vues du blogue · 2026", geo.padX * 0.55, H * 0.1 + 14);
 
     ctx.textAlign = "right";
     ctx.font = "500 10px 'Inter',system-ui,sans-serif";
     ctx.fillStyle = hexA(tokens.white, 0.7);
-    ctx.fillText("illustrative", W - geo.padX * 0.55, H * 0.1);
+    ctx.fillText("illustratif", W - geo.padX * 0.55, H * 0.1);
   }
 
   // total advance of a tabular string (digits = fixed slot, others natural).
@@ -1407,7 +1407,7 @@ export function mount(container, opts = {}) {
     const v = formatFR(Math.round(dispVal[i] > 1 ? RAW[i] : dispVal[i]));
     tip.innerHTML =
       '<div style="font:700 13px Inter,system-ui,sans-serif;color:#FFFFFF' +
-      ';letter-spacing:.2px">' + v + ' views</div>' +
+      ';letter-spacing:.2px">' + v + ' vues</div>' +
       '<div style="font:500 10px Inter,system-ui,sans-serif;color:' +
       hexA(tokens.lilacHi, 0.95) + ';margin-top:1px">' + monthFull +
       (i === RECORD ? ' · record' : '') + '</div>';

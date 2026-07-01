@@ -1,0 +1,1011 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<script>/* sub-path-proof base: resolves relative assets at site root AND under /vantamarketing (slash or not) */
+(function(){var p=location.pathname,last=p.split('/').pop();
+var dir=last===''?p:(last.indexOf('.')>=0?p.replace(/[^\/]*$/,''):p+'/');
+var b=document.createElement('base');b.href=location.origin+dir;document.head.appendChild(b);})();</script>
+<script>/* always (re)load at the very top, even on mobile; never restore the prior scroll position */
+if('scrollRestoration' in history) history.scrollRestoration='manual';
+addEventListener('pageshow',function(){
+  document.body.style.overflow='';                                   // never leave scroll locked from an overlay
+  ['checkout','login'].forEach(function(id){var el=document.getElementById(id); if(el) el.classList.remove('show');});
+  if(!location.hash) window.scrollTo({top:0,left:0,behavior:'instant'});
+});</script>
+<title>Vanta Marketing · Soyez trouvé partout sur Google et l'IA</title>
+<meta name="description" content="Un blogue clé en main pour votre restaurant qui vous fait remonter dans Google et dans les réponses IA, et qui envoie ces clients vers votre fiche Google. 97 $/mois." />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#07060D; --ink:#0E0A1C; --panel:#150E2A; --royal:#7C3AED; --deep:#4C1D95;
+    --lilac:#A855F7; --lilac2:#C4B5FD; --white:#F6F3FE; --mut:rgba(246,243,254,.62); --mut2:rgba(246,243,254,.42);
+    --flare:#E8409B; --line:rgba(168,85,247,.18); --line2:rgba(168,85,247,.34);
+    --serif:"Playfair Display",Georgia,serif; --sans:"Inter","Helvetica Neue",Arial,system-ui,sans-serif;
+    --wrap:1180px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;overflow-x:clip;scroll-padding-top:76px}
+  body{margin:0;padding-top:64px;background:var(--void);color:var(--white);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:clip;max-width:100vw}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:200;opacity:.045;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--wrap);margin:0 auto;padding-left:max(clamp(22px,5.5vw,44px),env(safe-area-inset-left));padding-right:max(clamp(22px,5.5vw,44px),env(safe-area-inset-right))}
+  section{position:relative}
+  h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.07;margin:0}
+  .eyebrow{font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:var(--lilac2);font-weight:600}
+  .lead{color:var(--mut);font-size:clamp(15px,1.5vw,18px)}
+  .grad{background:linear-gradient(110deg,var(--white) 10%,var(--lilac2) 50%,var(--royal));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* live 3D element host */
+  .el{position:relative;width:100%;height:100%}
+  .el.bg{position:absolute;inset:0;width:auto;height:auto;z-index:0;pointer-events:none}
+  .el-ph{position:absolute;inset:0;background:radial-gradient(80% 80% at 50% 35%,rgba(124,58,237,.18),transparent 70%)}
+
+  /* nav */
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(14px);background:linear-gradient(180deg,rgba(7,6,13,.9),rgba(7,6,13,.55));border-bottom:1px solid var(--line);transition:transform .32s cubic-bezier(.4,0,.2,1);will-change:transform}
+  nav.nav-hidden{transform:translateY(-100%)}
+  nav .row{display:flex;align-items:center;gap:18px;height:64px}
+  .logo{font-family:var(--serif);font-weight:700;font-size:20px;letter-spacing:.02em}
+  .logo b{color:var(--lilac2)}
+  .navspace{flex:1}
+  .langtog{display:flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden;font-size:12px;font-weight:600}
+  .langtog button{background:transparent;border:0;color:var(--mut);padding:9px 15px;cursor:pointer;font:inherit}
+  .langtog button.on{background:linear-gradient(120deg,var(--royal),var(--deep));color:#fff}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;border-radius:12px;padding:12px 20px;border:1px solid transparent;transition:.18s;white-space:nowrap}
+  .btn.primary{background:linear-gradient(120deg,var(--royal),var(--deep));color:#fff;box-shadow:0 10px 30px -10px rgba(124,58,237,.8)}
+  .btn.primary:hover{transform:translateY(-1px);box-shadow:0 16px 40px -12px rgba(124,58,237,.95)}
+  .btn.ghost{background:rgba(124,58,237,.08);border-color:var(--line2);color:var(--white)}
+  .btn.ghost:hover{border-color:var(--lilac)}
+  .btn.lg{padding:15px 26px;font-size:15px}
+  nav .btn{padding:9px 16px}
+  .navmenu{display:flex;align-items:center;gap:18px}
+  .navburger{display:none;width:42px;height:42px;border:1px solid var(--line2);border-radius:11px;background:rgba(124,58,237,.08);cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:0}
+  .navburger span{display:block;width:18px;height:2px;background:var(--white);border-radius:2px;transition:.25s cubic-bezier(.4,0,.2,1)}
+  .navburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  .navburger.open span:nth-child(2){opacity:0}
+  .navburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+  @media(max-width:560px){ nav .logo span{display:none} nav .row{gap:10px} }
+  @media(max-width:640px){
+    .navburger{display:flex}
+    .navmenu{position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;gap:6px;padding:14px 18px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#0a0814,#0c0918);border-bottom:1px solid var(--line2);transform:translateY(-10px);opacity:0;pointer-events:none;transition:.26s cubic-bezier(.16,1,.3,1);box-shadow:0 30px 60px -24px rgba(0,0,0,.9)}
+    .navmenu.open{transform:none;opacity:1;pointer-events:auto}
+    .navmenu .navlink{padding:14px 12px;font-size:15.5px;border-radius:11px;border:1px solid transparent}
+    .navmenu .navlink:hover{background:rgba(124,58,237,.12);border-color:var(--line2)}
+    .navmenu .navcta{width:100%;margin-top:6px;padding:14px}
+  }
+
+  /* hero */
+  .hero{position:relative;min-height:clamp(620px,92vh,860px);min-height:clamp(620px,92svh,860px);display:flex;align-items:center;overflow:hidden;border-bottom:1px solid var(--line);
+    background:radial-gradient(95% 70% at 50% -8%,rgba(124,58,237,.30),transparent 58%),radial-gradient(70% 50% at 85% 15%,rgba(168,85,247,.16),transparent 60%),#07060D}
+  .hero .el.bg{opacity:1;mix-blend-mode:screen;mask-image:linear-gradient(180deg,#000 60%,transparent)}
+  .hero .inner{position:relative;z-index:2;padding-top:80px;padding-bottom:70px;max-width:820px}
+  .hero h1{font-size:clamp(34px,6vw,68px);font-weight:800;margin:18px 0 0;letter-spacing:-.01em}
+  .hero .sub{margin:22px 0 0;max-width:620px;font-size:clamp(16px,1.7vw,20px);color:rgba(246,243,254,.78)}
+  .hero .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+  .trust{display:flex;gap:8px 18px;flex-wrap:wrap;margin-top:26px;font-size:12.5px;color:var(--mut)}
+  .trust span{display:inline-flex;align-items:center;gap:7px}
+  .trust span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--lilac);box-shadow:0 0 8px var(--lilac)}
+  .price-chip{display:inline-block;margin-top:8px;font-size:13px;color:var(--lilac2);border:1px solid var(--line2);border-radius:999px;padding:5px 13px}
+
+  /* generic section spacing */
+  .sec{padding:clamp(64px,9vw,120px) 0}
+  .sechead{max-width:720px;margin-bottom:44px}
+  .sechead h2{font-size:clamp(26px,3.6vw,46px);margin:12px 0 0}
+  .sechead .lead{margin-top:16px}
+
+  /* shift / split two doors */
+  .shift{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#08060f,#0b0818)}
+  .twocol{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,5vw,64px);align-items:center}
+  .doorcards{display:grid;gap:16px}
+  .card{border:1px solid var(--line);border-radius:16px;padding:22px;background:linear-gradient(180deg,rgba(21,14,42,.7),rgba(10,8,20,.7))}
+  .card h3{font-family:var(--sans);font-weight:700;font-size:17px}
+  .card p{margin:8px 0 0;color:var(--mut);font-size:14.5px}
+  .visualbox{position:relative;height:clamp(320px,42vw,460px);border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#07060D}
+  @media(max-width:840px){.twocol{grid-template-columns:1fr}.visualbox{order:-1;height:300px}}
+
+  /* pillars */
+  .pillars{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .pillar{position:relative;border:1px solid var(--line);border-radius:20px;padding:30px;overflow:hidden;background:linear-gradient(180deg,#0c0a18,#08060f);min-height:230px}
+  .pillar .tag{font-size:12px;color:var(--lilac2);letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+  .pillar h3{font-size:clamp(20px,2.4vw,28px);margin:10px 0 0}
+  .pillar p{color:var(--mut);margin-top:12px;font-size:15px;max-width:42ch}
+  .pillar .el.bg{opacity:.95;mix-blend-mode:screen;mask-image:radial-gradient(92% 96% at 76% 44%,#000 34%,transparent 86%)}
+  .pillar .tag,.pillar h3,.pillar p{position:relative;z-index:1}
+  @media(max-width:780px){.pillars{grid-template-columns:1fr}}
+
+  /* how */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:s}
+  .step{border:1px solid var(--line);border-radius:18px;padding:26px;background:linear-gradient(180deg,#0c0a18,#08060f);position:relative;overflow:hidden}
+  .step::before{counter-increment:s;content:"0" counter(s);font-family:var(--serif);font-size:42px;color:var(--royal);opacity:.5;font-weight:700}
+  .step h3{font-family:var(--sans);font-size:18px;margin:6px 0 0}
+  .step p{color:var(--mut);font-size:14.5px;margin-top:10px}
+  .step .mini{height:120px;margin-top:16px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+  .howviz{position:relative;margin-top:22px;height:clamp(220px,26vw,300px);border:1px solid var(--line2);border-radius:18px;overflow:hidden;background:#07060D}
+  .howviz .howcap{position:absolute;top:12px;left:16px;z-index:3;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);font-weight:600;pointer-events:none}
+  @media(max-width:780px){.steps{grid-template-columns:1fr}}
+
+  /* dashboard */
+  .dash{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:radial-gradient(120% 80% at 50% 0%,rgba(76,29,149,.22),transparent 60%),#08060f}
+  .dashframe{border:1px solid var(--line2);border-radius:22px;background:linear-gradient(180deg,#0b0818,#070610);box-shadow:0 40px 120px -50px rgba(124,58,237,.6);overflow:hidden}
+  .dashbar{display:flex;align-items:center;gap:8px;padding:13px 18px;border-bottom:1px solid var(--line)}
+  .dashbar .dot{width:10px;height:10px;border-radius:50%;background:#2a2440}
+  .dashbar .dot.r{background:var(--flare)} .dashbar .dot.y{background:var(--lilac)} .dashbar .dot.g{background:#5bd6a0}
+  .dashbar .t{margin-left:10px;font-size:13px;color:var(--mut);font-weight:600}
+  .dashbar .live{margin-left:auto;font-size:11px;color:var(--lilac2);display:inline-flex;align-items:center;gap:6px}
+  .dashbar .live::before{content:"";width:7px;height:7px;border-radius:50%;background:#5bd6a0;box-shadow:0 0 8px #5bd6a0}
+  .dashgrid{display:grid;grid-template-columns:2fr 1fr;gap:14px;padding:16px}
+  .dashgrid .colstack{display:grid;gap:14px}
+  .tile{border:1px solid var(--line);border-radius:14px;background:#07060D;overflow:hidden;position:relative}
+  .tile .cap{position:absolute;top:10px;left:12px;z-index:3;font-size:11px;letter-spacing:.04em;color:var(--mut);text-transform:uppercase;font-weight:600;pointer-events:none}
+  .tile .elh{height:100%;width:100%}
+  .tile.big .elh{height:300px} .tile.sm .elh{height:170px} .tile.md .elh{height:clamp(250px,27vw,310px)} .tile.xl .elh{height:clamp(240px,26vw,320px)}
+  .dashbody{display:grid;gap:14px;padding:16px}
+  .dashbody .dashrow{padding:0}
+  .dashrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 16px 16px}
+  .samp{padding:0 18px 18px;font-size:11.5px;color:var(--mut2)}
+  @media(max-width:820px){.dashgrid{grid-template-columns:1fr}.dashrow{grid-template-columns:1fr}.tile.big .elh{height:240px}}
+
+  /* included / outcomes */
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .feat .f{border:1px solid var(--line);border-radius:16px;padding:22px;background:linear-gradient(180deg,#0c0a18,#08060f)}
+  .feat .f .ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:rgba(124,58,237,.16);border:1px solid var(--line2);color:var(--lilac2);font-size:17px}
+  .feat .f h3{font-family:var(--sans);font-size:15.5px;margin:14px 0 0}
+  .feat .f p{color:var(--mut);font-size:14px;margin-top:7px}
+  @media(max-width:820px){.feat{grid-template-columns:1fr}}
+  .outwrap{display:grid;grid-template-columns:1fr .85fr;gap:clamp(24px,5vw,56px);align-items:center}
+  .outlist{display:grid;gap:14px}
+  .outlist .o{display:flex;gap:13px;align-items:flex-start}
+  .outlist .o .chk{flex:none;width:24px;height:24px;border-radius:7px;background:linear-gradient(120deg,var(--royal),var(--deep));display:grid;place-items:center;color:#fff;font-size:13px;margin-top:2px}
+  .outlist .o b{font-weight:600} .outlist .o p{margin:3px 0 0;color:var(--mut);font-size:14px}
+  .statbox{position:relative;height:clamp(300px,38vw,400px);border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#07060D}
+  @media(max-width:820px){.outwrap{grid-template-columns:1fr}}
+
+  /* pricing */
+  .pricing{background:linear-gradient(180deg,#0b0818,#08060f);border-top:1px solid var(--line)}
+  .pricecard{max-width:560px;margin:0 auto;border:1px solid var(--line2);border-radius:24px;padding:clamp(26px,4vw,42px);background:linear-gradient(180deg,rgba(21,14,42,.7),rgba(10,8,20,.85));box-shadow:0 40px 120px -55px rgba(124,58,237,.7);text-align:center;position:relative;overflow:hidden}
+  .pricecard .amt{font-family:var(--serif);font-weight:800;font-size:clamp(52px,9vw,84px);line-height:1}
+  .pricecard .per{color:var(--mut);font-size:15px}
+  .pricelist{display:grid;gap:11px;text-align:left;margin:26px 0;max-width:400px;margin-left:auto;margin-right:auto}
+  .pricelist div{display:flex;gap:11px;font-size:14.5px;color:rgba(246,243,254,.85)}
+  .pricelist div::before{content:"✓";color:var(--lilac2);font-weight:700}
+  .anchor{color:var(--mut);font-size:13px;margin-top:16px}
+  .pricefrom{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--lilac2);font-weight:600;margin-bottom:2px}
+  .pricetiers{display:flex;gap:8px 14px;flex-wrap:wrap;justify-content:center;margin:16px 0 2px}
+  .pricetiers span{border:1px solid var(--line2);border-radius:999px;padding:6px 13px;font-size:13px;color:rgba(246,243,254,.85)}
+  .pricetiers b{color:#fff}
+  .price-sub{text-align:center;color:var(--mut);max-width:560px;margin:0 auto 30px;font-size:15.5px}
+  .promo{position:relative;max-width:920px;margin:0 auto;border:1px solid var(--lilac);border-radius:24px;padding:clamp(24px,3.4vw,40px);background:linear-gradient(150deg,rgba(124,58,237,.18),rgba(21,14,42,.78) 55%,rgba(10,8,20,.9));box-shadow:0 50px 140px -55px rgba(124,58,237,.9);overflow:hidden}
+  .promo::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 80% at 86% 8%,rgba(232,64,155,.16),transparent 70%);pointer-events:none}
+  .promo-badge{position:relative;display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(120deg,var(--royal),var(--flare));padding:7px 14px;border-radius:999px}
+  .promo-grid{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(20px,3vw,38px);align-items:center;margin-top:20px}
+  .promo-main h3{font-family:var(--serif);font-weight:700;font-size:clamp(23px,3.1vw,33px);line-height:1.14;margin:0}
+  .promo-main p{color:rgba(246,243,254,.82);font-size:14.5px;margin:12px 0 0}
+  .promo-incl{display:grid;gap:8px;margin-top:16px}
+  .promo-incl div{display:flex;gap:9px;font-size:13.5px;color:rgba(246,243,254,.82)}
+  .promo-incl div::before{content:"✓";color:var(--lilac2);font-weight:700}
+  .promo-price{border:1px solid var(--line2);border-radius:18px;padding:22px 20px;background:rgba(7,6,13,.5);text-align:center}
+  .promo-off{display:inline-block;background:var(--flare);color:#fff;font-weight:700;font-size:12.5px;padding:5px 12px;border-radius:999px;margin-bottom:12px;letter-spacing:.02em}
+  .promo-price .was{color:var(--mut);font-size:14px}
+  .promo-price .was s{color:var(--mut2)}
+  .promo-price .now{font-family:var(--serif);font-weight:800;font-size:clamp(40px,6.5vw,58px);line-height:1.05;margin:2px 0 0}
+  .promo-price .now-per{font-family:var(--sans);font-weight:600;font-size:17px;color:var(--lilac2)}
+  .promo-eff{color:var(--mut);font-size:12.5px;margin:6px 0 12px}
+  .save{display:inline-block;background:rgba(124,58,237,.16);border:1px solid var(--line2);color:var(--lilac2);font-weight:700;font-size:13.5px;padding:6px 13px;border-radius:999px}
+  .planhead{text-align:center;color:var(--mut);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;margin:40px 0 16px}
+  .pricegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:740px;margin:0 auto}
+  .plan{border:1px solid var(--line);border-radius:18px;padding:24px 18px;background:linear-gradient(180deg,#0c0a18,#08060f);text-align:center}
+  .plan-name{font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--lilac2);font-weight:600}
+  .plan-amt{font-family:var(--serif);font-weight:800;font-size:clamp(32px,5vw,44px);line-height:1;margin:10px 0 18px}
+  .plan-amt .permo{font-family:var(--sans);font-weight:600;font-size:14px;color:var(--mut)}
+  .plan .btn{width:100%}
+  .price-cta{text-align:center;margin-top:44px}
+  .price-cta .btn{min-width:240px}
+  .price-cta-note{color:var(--mut);font-size:13px;margin-top:12px}
+  @media(max-width:720px){ .promo-grid{grid-template-columns:1fr} .pricegrid{grid-template-columns:1fr;max-width:360px} }
+  .roistrip{height:90px;margin:22px 0 0;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+
+  /* guarantee */
+  .guar{border-top:1px solid var(--line);background:#08060f}
+  .guarwrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:clamp(24px,5vw,56px);align-items:center}
+  .seal{position:relative;height:clamp(280px,36vw,380px);border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#07060D}
+  .badge60{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line2);border-radius:999px;padding:8px 16px;font-size:13px;color:var(--lilac2);font-weight:600;background:rgba(124,58,237,.08)}
+  @media(max-width:820px){.guarwrap{grid-template-columns:1fr}.seal{height:240px}}
+
+  /* faq */
+  .faq{border-top:1px solid var(--line)}
+  .qa{border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden;background:#0a0816}
+  .qa summary{list-style:none;cursor:pointer;padding:18px 20px;font-weight:600;font-size:16px;display:flex;justify-content:space-between;gap:16px;align-items:center}
+  .qa summary::-webkit-details-marker{display:none}
+  .qa summary::after{content:"+";color:var(--lilac2);font-size:22px;font-weight:400;transition:.2s}
+  .qa[open] summary::after{transform:rotate(45deg)}
+  .qa .a{padding:0 20px 18px;color:var(--mut);font-size:14.5px}
+
+  /* CTA + form */
+  .cta-final{position:relative;border-top:1px solid var(--line);overflow:hidden}
+  .cta-final .el.bg{opacity:.7;mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent)}
+  .formwrap{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1.15fr;gap:clamp(28px,5vw,64px);align-items:center}
+  .formcard{border:1px solid var(--line2);border-radius:22px;padding:clamp(22px,3vw,34px);background:linear-gradient(180deg,rgba(14,10,28,.92),rgba(8,6,16,.96));backdrop-filter:blur(8px);box-shadow:0 40px 120px -50px rgba(124,58,237,.6)}
+  .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field.full{grid-column:1/-1}
+  .field label{font-size:12px;color:var(--mut);font-weight:600}
+  .field input,.field select{font:inherit;font-size:14px;color:var(--white);background:rgba(255,255,255,.08);border:1px solid var(--line2);border-radius:10px;padding:11px 12px;outline:none;transition:.15s}
+  .field input:focus,.field select:focus{border-color:var(--lilac);box-shadow:0 0 0 3px rgba(124,58,237,.18)}
+  .field input::placeholder{color:var(--mut2)}
+  .field select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--lilac2) 50%),linear-gradient(135deg,var(--lilac2) 50%,transparent 50%);background-position:calc(100% - 18px) 18px,calc(100% - 13px) 18px;background-size:5px 5px;background-repeat:no-repeat}
+  .formcard .btn{width:100%;margin-top:4px}
+  .formnote{font-size:11.5px;color:var(--mut2);margin-top:12px;line-height:1.5}
+  .success{display:none;text-align:center;padding:30px 10px}
+  .success.show{display:block} .formgrid.hide,.formnote.hide{display:none}
+  .success .big{font-family:var(--serif);font-size:28px;margin:10px 0}
+  /* chip selectors + hint */
+  .fchips{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+  .chipbtn{font:inherit;font-size:13.5px;color:rgba(246,243,254,.82);background:rgba(255,255,255,.08);border:1px solid var(--line2);border-radius:11px;padding:11px 16px;cursor:pointer;transition:.15s}
+  .chipbtn:hover{border-color:var(--lilac);color:#fff}
+  .chipbtn.on{background:linear-gradient(120deg,var(--royal),var(--deep));border-color:var(--lilac);color:#fff;box-shadow:0 6px 18px -8px rgba(124,58,237,.9)}
+  .hint{font-size:11.5px;color:var(--mut2);margin-top:6px;line-height:1.45}
+  .lblrow{display:flex;align-items:center;gap:8px}
+  .info{position:relative;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line2);color:var(--lilac2);font:italic 700 11px var(--serif);cursor:help;flex:none}
+  .info::after{content:"";position:absolute;inset:-10px;border-radius:50%}  /* ~38px touch target without changing the visible icon */
+  .info:hover,.info:focus{border-color:var(--lilac);color:#fff;outline:none}
+  .info .tip{position:absolute;bottom:calc(100% + 9px);right:0;left:auto;width:min(320px,78vw);background:#150E2A;border:1px solid var(--line2);border-radius:10px;padding:11px 13px;font:400 12.5px/1.5 var(--sans);letter-spacing:0;text-transform:none;color:rgba(246,243,254,.88);opacity:0;pointer-events:none;transform:translateY(4px);transition:.18s;z-index:30;box-shadow:0 16px 44px -16px rgba(0,0,0,.95)}
+  .info:hover .tip,.info:focus .tip,.info.open .tip{opacity:1;transform:translateY(0)}
+  .field textarea{font:inherit;font-size:14px;color:var(--white);background:rgba(255,255,255,.08);border:1px solid var(--line2);border-radius:10px;padding:11px 12px;outline:none;resize:vertical;min-height:88px;width:100%;transition:.15s}
+  @media(max-width:680px){ .field input,.field select,.field textarea{font-size:16px} }  /* >=16px stops iOS zoom-on-focus on mobile */
+  .field textarea:focus{border-color:var(--lilac);box-shadow:0 0 0 3px rgba(124,58,237,.18)}
+  .field textarea::placeholder{color:var(--mut2)}
+  /* checkout / milestone overlay */
+  .checkout{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(7,6,13,.88);backdrop-filter:blur(12px);overflow-y:auto}
+  .checkout.show{display:flex}
+  .checkout-card{position:relative;max-width:520px;width:100%;border:1px solid var(--line2);border-radius:22px;background:linear-gradient(180deg,#0e0a1c,#08060f);padding:clamp(24px,4vw,40px);box-shadow:0 40px 120px -40px rgba(124,58,237,.75);margin:auto}
+  .checkout-card h2{font-size:clamp(22px,3vw,32px);margin:10px 0 0}
+  .checkout-close{position:absolute;top:14px;right:16px;background:transparent;border:0;color:var(--mut);font-size:19px;cursor:pointer;line-height:1}
+  .timeline{list-style:none;padding:0;margin:22px 0;display:grid;gap:14px}
+  .timeline li{display:flex;gap:14px;align-items:flex-start}
+  .timeline li .d{flex:none;min-width:62px;font-weight:700;color:var(--lilac2);font-size:13px;letter-spacing:.03em;padding-top:1px}
+  .timeline li span:last-child{color:rgba(246,243,254,.85);font-size:14.5px;line-height:1.45}
+  .co-price{display:flex;align-items:baseline;gap:9px;margin:6px 0 18px;flex-wrap:wrap}
+  .co-price .amt{font-family:var(--serif);font-weight:800;font-size:40px;line-height:1}
+  .co-price span:last-child{color:var(--mut);font-size:12.5px}
+  .checkout-card .btn{width:100%}
+  .co-note{font-size:11.5px;color:var(--mut2);margin-top:12px;text-align:center}
+  .co-followup{color:rgba(246,243,254,.9);font-size:15px;line-height:1.55;margin:10px 0 18px}
+  /* nav login link */
+  .navlink{font:inherit;font-size:14px;font-weight:600;color:var(--mut);cursor:pointer;padding:9px 13px;border-radius:10px;transition:.15s;white-space:nowrap;border:1px solid transparent}
+  .navlink:hover{color:#fff;background:rgba(124,58,237,.12);border-color:var(--line2)}
+  /* login overlay */
+  .login{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(7,6,13,.92);backdrop-filter:blur(14px);overflow-y:auto}
+  .login.show{display:flex;animation:loginFade .25s ease}
+  @keyframes loginFade{from{opacity:0}to{opacity:1}}
+  .login-inner{position:relative;max-width:1080px;width:100%;margin:auto;border:1px solid var(--line2);border-radius:24px;background:linear-gradient(180deg,#0e0a1c,#08060f);box-shadow:0 50px 140px -50px rgba(124,58,237,.8);overflow:hidden;animation:loginPop .42s cubic-bezier(.2,.8,.2,1)}
+  @keyframes loginPop{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+  .login-grid{display:grid;grid-template-columns:.82fr 1.18fr}
+  .login-form{padding:clamp(26px,3.4vw,44px);display:flex;flex-direction:column;border-right:1px solid var(--line)}
+  .login-form .logo{font-family:var(--serif);font-weight:700;font-size:20px;margin-bottom:18px}
+  .login-form .logo b{color:var(--lilac2)}
+  .login-form h2{font-size:clamp(24px,3vw,32px);margin:0}
+  .login-form .lead{margin:8px 0 20px}
+  .login-form form{display:grid;gap:13px}
+  .login-form .btn{width:100%}
+  .login-link{font-size:12.5px;color:var(--lilac2);margin-top:14px;text-decoration:none}
+  .login-link:hover{color:#fff}
+  .login-foot{font-size:13px;color:var(--mut);margin-top:auto;padding-top:22px}
+  .login-foot a{color:var(--lilac2);font-weight:600}
+  .login-preview{padding:clamp(18px,2.3vw,26px);background:radial-gradient(120% 90% at 72% 0%,rgba(76,29,149,.24),transparent 60%),#0a0816;display:flex;flex-direction:column}
+  .lp-head{display:flex;align-items:center;gap:8px;padding:0 2px 14px}
+  .lp-head .lp-t{margin-left:10px;font-size:12.5px;color:var(--mut);font-weight:600}
+  .lp-head .live{margin-left:auto}
+  .lp-tile{border:1px solid var(--line);border-radius:14px;background:#07060D;overflow:hidden;position:relative}
+  .lp-tile .el{width:100%;height:100%}
+  .lp-tile.xl{height:clamp(170px,20vw,210px)}
+  .lp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  .lp-row .lp-tile{height:clamp(150px,17vw,180px)}
+  .lp-feats{list-style:none;padding:0;margin:16px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:9px 16px}
+  .lp-feats li{position:relative;padding-left:20px;font-size:13px;color:rgba(246,243,254,.82)}
+  .lp-feats li::before{content:"✓";position:absolute;left:0;color:var(--lilac2);font-weight:700}
+  @media(max-width:820px){.login-grid{grid-template-columns:1fr}.login-form{border-right:0;border-bottom:1px solid var(--line)}.lp-feats{grid-template-columns:1fr}}
+  @media(max-width:880px){.formwrap{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}}
+
+  footer{border-top:1px solid var(--line);padding:40px 0 60px;color:var(--mut)}
+  .foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+  .footlegal{font-size:11.5px;color:var(--mut2);max-width:760px;margin-top:22px;line-height:1.6}
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+  /* ── enhancement layer: scroll reveals + hover micro-interactions (additive) ── */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);will-change:opacity,transform}
+  .reveal.d1{transition-delay:.07s}.reveal.d2{transition-delay:.14s}.reveal.d3{transition-delay:.21s}
+  .reveal.in{opacity:1;transform:none}
+  .card,.feat .f,.step,.pillar,.plan{transition:transform .32s cubic-bezier(.16,1,.3,1),border-color .32s,box-shadow .32s}
+  .btn.primary{position:relative;overflow:hidden}
+  .btn.primary::after{content:"";position:absolute;top:0;left:-120%;width:55%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.25),transparent);transform:skewX(-18deg);transition:left .6s cubic-bezier(.16,1,.3,1);pointer-events:none}
+  @media(hover:hover){
+    .card:hover,.feat .f:hover,.step:hover{transform:translateY(-4px);border-color:var(--line2)}
+    .pillar:hover{transform:translateY(-5px);border-color:var(--lilac)}
+    .plan:hover{transform:translateY(-5px);border-color:var(--lilac);box-shadow:0 26px 60px -32px rgba(124,58,237,.7)}
+    .qa:hover{border-color:var(--line2)}
+    .btn.primary:hover::after{left:140%}
+  }
+  @media(prefers-reduced-motion:reduce){ .reveal{opacity:1;transform:none;transition:none} .btn.primary::after{display:none} }
+  /* floating chat */
+  #chatw{position:fixed;right:20px;bottom:20px;z-index:500;font-family:var(--sans)}
+  .chat-fab{position:relative;width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(145deg,#34D27B,#15A34A);box-shadow:0 12px 30px -8px rgba(34,197,94,.7),0 4px 12px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;transition:transform .18s}
+  .chat-fab:hover{transform:scale(1.06)}
+  .chat-fab svg{width:30px;height:30px;fill:#fff}
+  .chat-fab::before{content:"";position:absolute;inset:0;border-radius:50%;background:#22C55E;opacity:.55;animation:chatpulse 2.4s ease-out infinite;z-index:-1}
+  @keyframes chatpulse{0%{transform:scale(1);opacity:.55}70%{transform:scale(1.75);opacity:0}100%{opacity:0}}
+  @media(prefers-reduced-motion:reduce){ .chat-fab::before{animation:none} }
+  .chat-fab .chat-fab-dot{position:absolute;top:-1px;right:-1px;width:15px;height:15px;border-radius:50%;background:#E8409B;border:2px solid #07060D}
+  .chat-panel{position:absolute;bottom:74px;right:0;width:min(350px,calc(100vw - 32px));border:1px solid var(--line2);border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#140e29,#0a0816);box-shadow:0 30px 80px -24px rgba(0,0,0,.85);opacity:0;transform:translateY(12px) scale(.98);transform-origin:bottom right;pointer-events:none;transition:.2s}
+  #chatw.open .chat-panel{opacity:1;transform:none;pointer-events:auto}
+  .chat-head{display:flex;align-items:flex-start;gap:10px;padding:15px 18px;background:linear-gradient(120deg,#15A34A,#0E7A38)}
+  .chat-head b{display:block;font-size:15px;color:#fff;font-weight:700;line-height:1.25}
+  .chat-head span{display:block;font-size:11.5px;color:rgba(255,255,255,.85);margin-top:3px}
+  .chat-x{margin-left:auto;background:transparent;border:none;color:rgba(255,255,255,.85);font-size:16px;cursor:pointer;line-height:1;padding:2px 4px}
+  .chat-x:hover{color:#fff}
+  .chat-body{padding:0}
+  .chat-thread{max-height:300px;min-height:130px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
+  .chat-thread .b{max-width:82%;padding:9px 12px;border-radius:13px;font-size:13.5px;line-height:1.42;white-space:pre-wrap;word-break:break-word}
+  .chat-thread .b.them{align-self:flex-start;background:rgba(255,255,255,.07);color:var(--white)}
+  .chat-thread .b.you{align-self:flex-end;background:linear-gradient(145deg,#34D27B,#15A34A);color:#fff}
+  .chat-thread .b.note{align-self:center;background:transparent;color:var(--mut2);font-size:11.5px;max-width:100%;text-align:center;padding:2px}
+  .chat-start{padding:4px 16px 0;display:grid;gap:8px}
+  .chat-start.hide{display:none}
+  .chat-start input{font:inherit;font-size:14px;color:var(--white);background:rgba(255,255,255,.07);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;outline:none;width:100%}
+  .chat-start input:focus{border-color:#34D27B}
+  .chat-composer{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+  .chat-composer textarea{flex:1;resize:none;font:inherit;font-size:14px;color:var(--white);background:rgba(255,255,255,.07);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;outline:none;max-height:88px;min-height:42px}
+  .chat-composer textarea:focus{border-color:#34D27B}
+  .chat-composer button{width:44px;flex:none;border:none;border-radius:10px;background:linear-gradient(145deg,#34D27B,#15A34A);color:#fff;font-size:17px;cursor:pointer}
+  .chat-start input::placeholder,.chat-composer textarea::placeholder{color:var(--mut2)}
+  @media(max-width:560px){ #chatw{right:14px;bottom:14px} .chat-fab{width:54px;height:54px} }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap row">
+  <div class="logo">VANTA<b>.</b> <span data-i18n="logosub" style="font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--mut);text-transform:uppercase;font-weight:600">Marketing</span></div>
+  <div class="navspace"></div>
+  <div class="navmenu" id="navmenu">
+    <a href="#pricing" class="navlink" data-i18n="nav.pricing">Tarifs</a>
+    <a href="#" id="loginOpen" class="navlink" data-i18n="nav.login">Connexion</a>
+    <a href="#demo" class="btn primary navcta" data-i18n="nav.cta">Commencer</a>
+  </div>
+  <div class="langtog" id="langtog"><button data-lang="fr">FR</button><button data-lang="en" class="on">EN</button></div>
+  <button class="navburger" id="navburger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</div></nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="el bg" data-el="godrays"></div>
+  <div class="wrap inner">
+    <div class="eyebrow" data-i18n="hero.eyebrow">SEO local + visibilité IA · Restaurants du Québec</div>
+    <h1><span data-i18n="hero.h1a">Gagnez en visibilité sur Google</span> <span class="grad" data-i18n="hero.h1b">et la recherche par l'IA, en continu.</span></h1>
+    <p class="sub" data-i18n="hero.sub">Un blogue clé en main pour votre restaurant qui vous fait remonter dans Google et dans ChatGPT, Gemini et Perplexity, et qui envoie ces clients droit vers votre fiche Google.</p>
+    <div class="price-chip"><b data-i18n="hero.price">97 $/mois</b> · <span data-i18n="hero.chip">sans engagement · annulez en tout temps</span></div>
+    <div class="cta">
+      <a href="#demo" class="btn primary lg" data-i18n="hero.cta1">Commencer</a>
+      <a href="#dashboard" class="btn ghost lg" data-i18n="hero.cta2">Voir le tableau de bord</a>
+    </div>
+    <div class="trust">
+      <span data-i18n="trust.1">Sans engagement</span><span data-i18n="trust.2">Annulez en tout temps</span>
+      <span data-i18n="trust.3">Garantie 60 jours</span><span data-i18n="trust.4">Fait au Québec</span>
+    </div>
+  </div>
+</header>
+
+<!-- THE SHIFT -->
+<section class="shift sec" id="shift"><div class="wrap">
+  <div class="twocol">
+    <div>
+      <div class="eyebrow" data-i18n="shift.eyebrow">Le grand virage</div>
+      <h2 style="font-size:clamp(26px,3.6vw,46px);margin-top:12px"><span data-i18n="shift.h2">La recherche s'est dédoublée. Deux portes d'entrée.</span></h2>
+      <p class="lead" style="margin-top:16px" data-i18n="shift.body">Vos futurs clients cherchent encore « meilleur resto près d'ici » sur Google. Mais de plus en plus, ils demandent aussi à une IA où manger. La plupart des restaurants sont invisibles dans cette seconde porte. C'est exactement là que Vanta vous place.</p>
+      <div class="doorcards" style="margin-top:24px">
+        <div class="card"><h3 data-i18n="shift.c1t">🔍 Porte nº1 · Google &amp; Maps</h3><p data-i18n="shift.c1b">Du contenu local et frais, optimisé en français, vous fait monter dans la recherche locale et le « pack » de cartes.</p></div>
+        <div class="card"><h3 data-i18n="shift.c2t">🤖 Porte nº2 · Réponses IA</h3><p data-i18n="shift.c2b">Un contenu structuré que ChatGPT, Gemini et Perplexity peuvent citer quand on leur demande où manger. Presque personne ne l'optimise encore.</p></div>
+      </div>
+    </div>
+    <div class="visualbox"><div class="el bg" data-el="globe"></div></div>
+  </div>
+</div></section>
+
+<!-- PILLARS -->
+<section class="sec" id="pillars"><div class="wrap">
+  <div class="sechead"><div class="eyebrow" data-i18n="pillars.eyebrow">Deux moteurs, un seul abonnement</div>
+    <h2 data-i18n="pillars.h2">Ce que Vanta fait pour vous, en continu</h2></div>
+  <div class="pillars">
+    <div class="pillar">
+      <div class="el bg" data-el="crowncore" style="mask-image:radial-gradient(92% 96% at 76% 44%,#000 34%,transparent 86%)"></div>
+      <div class="tag" data-i18n="pillars.p1tag">Pilier 1 · SEO local</div>
+      <h3 data-i18n="pillars.p1t">Remontez sur Google</h3>
+      <p data-i18n="pillars.p1b">Des articles locaux, en français, publiés régulièrement, les signaux que Google récompense pour vous classer et garder votre fiche active.</p>
+    </div>
+    <div class="pillar">
+      <div class="el bg" data-el="aurora" style="opacity:.8;mask-image:radial-gradient(100% 100% at 78% 42%,#000 45%,transparent 92%)"></div>
+      <div class="tag" data-i18n="pillars.p2tag">Pilier 2 · Visibilité IA (AEO)</div>
+      <h3 data-i18n="pillars.p2t">Soyez recommandé par l'IA</h3>
+      <p data-i18n="pillars.p2b">Un contenu riche et structuré que les moteurs IA citent, pour apparaître quand un client demande à ChatGPT où souper ce soir.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- HOW IT WORKS -->
+<section class="sec" id="how" style="background:linear-gradient(180deg,#08060f,#0b0818);border-top:1px solid var(--line);border-bottom:1px solid var(--line)"><div class="wrap">
+  <div class="sechead"><div class="eyebrow" data-i18n="how.eyebrow">Comment ça marche</div>
+    <h2 data-i18n="how.h2">Trouvé → cliqué → assis. Zéro effort de votre part.</h2></div>
+  <div class="steps">
+    <div class="step"><h3 data-i18n="how.s1t">On publie</h3><p data-i18n="how.s1b">On écrit et publie un flux d'articles locaux optimisés Google + IA sur votre blogue de marque. Vous ne touchez à rien.</p></div>
+    <div class="step"><h3 data-i18n="how.s2t">On vous trouve</h3><p data-i18n="how.s2b">Votre restaurant remonte dans la recherche locale Google et dans les réponses des assistants IA.</p></div>
+    <div class="step"><h3 data-i18n="how.s3t">Les clients cliquent</h3><p data-i18n="how.s3b">Les lecteurs cliquent droit vers votre fiche Google : appel, itinéraire, menu, réservation, commande.</p></div>
+  </div>
+</div></section>
+
+<!-- DASHBOARD -->
+<section class="dash sec" id="dashboard"><div class="wrap">
+  <div class="sechead"><div class="eyebrow" data-i18n="dash.eyebrow">Le tableau de bord</div>
+    <h2 data-i18n="dash.h2">La preuve, chiffres à l'appui.</h2>
+    <p class="lead" data-i18n="dash.sub">Pas de rapport de 40 pages. Un écran, deux chiffres qui comptent : combien de gens vous ont lu, et combien ont cliqué vers votre fiche Google.</p></div>
+  <div class="dashframe">
+    <div class="dashbar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="t" data-i18n="dash.bord">Vanta · Tableau de bord · un restaurant local</span>
+      <span class="live" data-i18n="dash.livelabel">En direct</span></div>
+    <div class="dashbody">
+      <div class="tile xl"><div class="elh"><div class="el" data-el="skyline"></div></div></div>
+      <div class="dashrow">
+        <div class="tile md"><div class="elh"><div class="el" data-el="liquidgauge"></div></div></div>
+        <div class="tile md"><div class="elh"><div class="el" data-el="gaugecluster"></div></div></div>
+      </div>
+      <div class="dashrow">
+        <div class="tile md"><span class="cap" data-i18n="dash.t_constellation">Votre réseau de découverte</span><div class="elh"><div class="el" data-el="constellation"></div></div></div>
+        <div class="tile md"><div class="elh"><div class="el" data-el="donut"></div></div></div>
+      </div>
+    </div>
+    <div class="samp" data-i18n="dash.sample">Données illustratives. Non représentatives d'un résultat client.</div>
+  </div>
+</div></section>
+
+<!-- INCLUDED -->
+<section class="sec" id="included"><div class="el bg" data-el="crowncore" style="opacity:.3;mask-image:radial-gradient(58% 70% at 86% 32%,#000,transparent)"></div><div class="wrap" style="position:relative;z-index:1">
+  <div class="sechead"><div class="eyebrow" data-i18n="incl.eyebrow">Tout est inclus</div>
+    <h2 data-i18n="incl.h2">Ce que vous recevez chaque mois</h2></div>
+  <div class="feat">
+    <div class="f"><div class="ic">✍️</div><h3 data-i18n="incl.i1t">Blogue clé en main</h3><p data-i18n="incl.i1b">Site de blogue à votre marque, hébergé et géré. Rien à installer, rien à gérer.</p></div>
+    <div class="f"><div class="ic">📝</div><h3 data-i18n="incl.i2t">Articles en français</h3><p data-i18n="incl.i2b">Du contenu local frais, optimisé à la fois pour Google et pour la découverte par l'IA.</p></div>
+    <div class="f"><div class="ic">🧩</div><h3 data-i18n="incl.i3t">Données structurées</h3><p data-i18n="incl.i3b">Schema local + IA (LocalBusiness, Restaurant, Menu, FAQ) pour être bien compris partout.</p></div>
+    <div class="f"><div class="ic">🔗</div><h3 data-i18n="incl.i4t">Liens vers votre fiche Google</h3><p data-i18n="incl.i4b">Chaque article devient une porte de plus vers vos appels, itinéraires et réservations.</p></div>
+    <div class="f"><div class="ic">⚡</div><h3 data-i18n="incl.i5t">Indexation instantanée</h3><p data-i18n="incl.i5b">IndexNow pousse chaque nouveauté vers Bing, ChatGPT Search et DuckDuckGo en minutes.</p></div>
+    <div class="f"><div class="ic">📊</div><h3 data-i18n="incl.i6t">Tableau de bord clair</h3><p data-i18n="incl.i6b">Vues du blogue + clics vers votre profil Google, suivis dans le temps. En clair.</p></div>
+  </div>
+</div></section>
+
+<!-- OUTCOMES -->
+<section class="sec" id="outcomes" style="background:linear-gradient(180deg,#0b0818,#08060f);border-top:1px solid var(--line);border-bottom:1px solid var(--line)"><div class="wrap">
+  <div class="outwrap">
+    <div>
+      <div class="eyebrow" data-i18n="out.eyebrow">Ce que ça vous rapporte</div>
+      <h2 style="font-size:clamp(26px,3.6vw,42px);margin-top:12px" data-i18n="out.h2">Plus de clients qui vous trouvent. La preuve qui suit.</h2>
+      <div class="outlist" style="margin-top:26px">
+        <div class="o"><div class="chk">✓</div><div><b data-i18n="out.o1t">Plus de nouveaux clients locaux</b><p data-i18n="out.o1b">qui vous découvrent dans Google et dans les réponses IA.</p></div></div>
+        <div class="o"><div class="chk">✓</div><div><b data-i18n="out.o2t">Plus de clics vers votre fiche Google</b><p data-i18n="out.o2b">appels, itinéraires, réservations, commandes : les actions qui remplissent les tables.</p></div></div>
+        <div class="o"><div class="chk">✓</div><div><b data-i18n="out.o3t">Recommandé par l'IA avant vos concurrents</b><p data-i18n="out.o3b">vous occupez une porte que presque personne n'optimise encore.</p></div></div>
+        <div class="o"><div class="chk">✓</div><div><b data-i18n="out.o4t">Zéro effort, preuve transparente</b><p data-i18n="out.o4b">100 % clé en main. Vous ouvrez le tableau de bord, vous voyez les chiffres monter.</p></div></div>
+      </div>
+    </div>
+    <div class="statbox"><div class="el" data-el="donut"></div></div>
+  </div>
+</div></section>
+
+<!-- PRICING -->
+<section class="onp sec" id="industries"><div class="wrap"><div id="outreachNiches"></div></div></section>
+<section class="pricing sec" id="pricing"><div class="wrap">
+  <div class="sechead" style="text-align:center;margin:0 auto 40px"><div class="eyebrow" data-i18n="price.eyebrow">Tarif simple</div>
+    <h2 data-i18n="price.h2">Tarif clair. Aucun piège.</h2></div>
+  <p class="price-sub" data-i18n="price.sub">Payez au mois, sans engagement. Ou prenez une année d'avance et économisez gros.</p>
+
+  <div class="pricecard" style="max-width:620px">
+    <div class="pricefrom" data-i18n="price.incl_head">Inclus dans chaque forfait</div>
+    <div class="pricelist">
+      <div data-i18n="price.f1">Blogue à votre marque, hébergé et géré</div>
+      <div data-i18n="price.f2">Articles en français optimisés Google + IA</div>
+      <div data-i18n="price.f3">Schema, IndexNow, llms.txt : configuration technique incluse</div>
+      <div data-i18n="price.f4">Liens vers votre fiche Google</div>
+      <div data-i18n="price.f5">Tableau de bord : vues + clics Google</div>
+      <div data-i18n="price.f6">Sans engagement · annulez en tout temps</div>
+    </div>
+    <div class="anchor" data-i18n="price.anchor">≈ 3 $/jour. Moins qu'une seule table tranquille, vs 1 500 $+/mois pour une agence SEO.</div>
+  </div>
+
+  <div class="planhead" data-i18n="price.monthly_head">Au mois, sans engagement</div>
+  <div class="pricegrid">
+    <div class="plan">
+      <div class="plan-name" data-i18n="price.p1_name">1 site</div>
+      <div class="plan-amt"><span class="grad" data-i18n="price.p1_amt">97 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
+      <a href="#demo" class="btn ghost" data-pay="1" data-i18n="price.choose">Choisir</a>
+    </div>
+    <div class="plan">
+      <div class="plan-name" data-i18n="price.p3_name">3 sites</div>
+      <div class="plan-amt"><span class="grad" data-i18n="price.p3_amt">193 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
+      <a href="#demo" class="btn ghost" data-pay="3" data-i18n="price.choose">Choisir</a>
+    </div>
+    <div class="plan">
+      <div class="plan-name" data-i18n="price.p10_name">10 sites</div>
+      <div class="plan-amt"><span class="grad" data-i18n="price.p10_amt">293 $</span><span class="permo" data-i18n="price.permo">/mois</span></div>
+      <a href="#demo" class="btn ghost" data-pay="10" data-i18n="price.choose">Choisir</a>
+    </div>
+  </div>
+
+  <div class="planhead" data-i18n="price.promo_head">Ou économisez avec l'offre 1 an</div>
+  <div class="promo">
+    <div class="promo-badge" data-i18n="price.promo_badge">⭐ Meilleure valeur · Offre 1 an</div>
+    <div class="promo-grid">
+      <div class="promo-main">
+        <h3 data-i18n="price.promo_title">10 sites · 1 an, payé d'avance</h3>
+        <p data-i18n="price.promo_desc">Réservez 10 sites pour une année complète et profitez de 35 % de rabais. Vous payez une seule fois et vous êtes tranquille pour 12 mois.</p>
+        <div class="promo-incl">
+          <div data-i18n="price.promo_i1">10 sites à votre marque, gérés pour vous</div>
+          <div data-i18n="price.promo_i2">Tout ce qui est inclus dans chaque forfait</div>
+          <div data-i18n="price.promo_i3">Une année complète payée d'avance</div>
+        </div>
+      </div>
+      <div class="promo-price">
+        <div class="promo-off" data-i18n="price.promo_off">35 % de rabais</div>
+        <div class="was" data-i18n="price.was">Prix normal <s>3 516 $</s></div>
+        <div class="now"><span class="grad" data-i18n="price.now">2 285 $</span><span class="now-per" data-i18n="price.promo_per">/an</span></div>
+        <div class="promo-eff" data-i18n="price.promo_eff">≈ 190 $/mois · facturé une fois pour 12 mois</div>
+        <div class="save" data-i18n="price.save">Vous économisez 1 231 $</div>
+        <a href="#demo" class="btn primary lg" data-pay="10yr" style="width:100%;margin-top:16px" data-i18n="price.promo_cta">Profiter de l'offre 1 an</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="price-cta">
+    <a href="#demo" class="btn primary lg" data-i18n="price.getstarted">Commencer</a>
+    <div class="price-cta-note" data-i18n="price.cta_note">Sans engagement · Garantie 60 jours · Annulez en tout temps</div>
+  </div>
+</div></section>
+
+<!-- GUARANTEE -->
+<section class="guar sec" id="guarantee"><div class="wrap">
+  <div class="guarwrap">
+    <div class="seal"><div class="el" data-el="liquidgauge"></div></div>
+    <div>
+      <div class="badge60" data-i18n="guar.badge">🛡️ Garantie 60 jours</div>
+      <h2 style="font-size:clamp(26px,3.6vw,42px);margin:16px 0 0" data-i18n="guar.h2">Essayez sans risque. Annulez en tout temps.</h2>
+      <p class="lead" style="margin-top:16px" data-i18n="guar.body">Mois par mois, aucun contrat. Si vous n'êtes pas satisfait, vous êtes remboursé dans les 60 jours. Vous gardez le contrôle, et vous voyez les résultats vous-même dans le tableau de bord.</p>
+      <p class="lead" style="margin-top:14px;font-size:13px;color:var(--mut2)" data-i18n="guar.disc">Le référencement progresse sur 3 à 6 mois et se stabilise vers 6 à 12 mois. Les résultats varient selon l'emplacement, la cuisine, la concurrence et le marché. Résultats individuels, non garantis.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- FAQ -->
+<section class="faq sec" id="faq"><div class="wrap" style="max-width:840px">
+  <div class="sechead" style="text-align:center;margin:0 auto 36px"><div class="eyebrow" data-i18n="faq.eyebrow">Questions fréquentes</div>
+    <h2 data-i18n="faq.h2">Vous vous demandez sûrement…</h2></div>
+  <details class="qa"><summary data-i18n="faq.q1">J'ai déjà un site web.</summary><div class="a" data-i18n="faq.a1">Aucun problème, et vous n'avez rien à refaire. Vanta s'ajoute à votre site existant : c'est un moteur de découverte qui aide Google et les outils d'IA à vous trouver, et qui ramène les visiteurs vers votre fiche Google.</div></details>
+  <details class="qa"><summary data-i18n="faq.q2">Est-ce que les gens lisent les blogues de resto ?</summary><div class="a" data-i18n="faq.a2">Honnêtement, peu les lisent au complet, et ce n'est pas le but. Ce contenu sert surtout à être repéré : c'est ce que Google et les assistants IA vont chercher pour vous recommander. Le tableau de bord vous montre les clics que ça génère.</div></details>
+  <details class="qa"><summary data-i18n="faq.q3">Je n'ai pas le temps.</summary><div class="a" data-i18n="faq.a3">C'est justement pour ça qu'on existe. On s'occupe de tout : la rédaction, la publication, l'optimisation. De votre côté, un coup d'œil au tableau de bord quand ça vous tente, et c'est tout.</div></details>
+  <details class="qa"><summary data-i18n="faq.q4">En quoi est-ce différent d'une agence ?</summary><div class="a" data-i18n="faq.a4">On a voulu retirer ce qui frustre souvent avec les agences : pas de contrat, pas de rapports compliqués, pas de jargon. Un prix clair, un tableau de bord simple, et de vrais clics vers votre fiche Google que vous pouvez suivre vous-même.</div></details>
+  <details class="qa"><summary data-i18n="faq.q5">97 $, où est le piège ?</summary><div class="a" data-i18n="faq.a5">Il n'y en a pas, promis. C'est mois par mois, annulable en tout temps, avec une garantie de 60 jours. À ce prix, une seule réservation de plus dans le mois couvre l'abonnement.</div></details>
+  <details class="qa"><summary data-i18n="faq.q6">L'IA, ça compte vraiment pour mon resto ?</summary><div class="a" data-i18n="faq.a6">De plus en plus, oui. Beaucoup de gens demandent maintenant à ChatGPT ou aux aperçus IA de Google où manger. Y apparaître dès maintenant vous donne une longueur d'avance, pendant que la plupart des restos n'y sont pas encore.</div></details>
+</div></section>
+
+<!-- CTA + FORM -->
+<section class="cta-final sec" id="demo"><div class="el bg" data-el="godrays"></div><div class="wrap">
+  <div class="formwrap">
+    <div>
+      <div class="eyebrow" data-i18n="form.eyebrow">Lancez votre blogue</div>
+      <h2 style="font-size:clamp(28px,4vw,48px);margin:14px 0 0"><span data-i18n="form.h2a">Soyez le restaurant que Google met en avant</span> <span class="grad" data-i18n="form.h2b">et que l'IA recommande.</span></h2>
+      <p class="lead" style="margin-top:18px" data-i18n="form.sub">Entrez vos infos, on s'occupe de tout le reste. 97 $/mois, annulez en tout temps, garantie 60 jours.</p>
+      <div class="trust" style="margin-top:22px">
+        <span data-i18n="trust.1">Sans engagement</span><span data-i18n="trust.3">Garantie 60 jours</span><span data-i18n="trust.4">Fait au Québec</span>
+      </div>
+    </div>
+    <div class="formcard">
+      <form id="leadform" class="formgrid" novalidate>
+        <div class="field full"><label data-i18n="form.resto">Nom du restaurant *</label><input name="resto_name" required autocomplete="organization" placeholder="Le nom de votre restaurant" data-ph="form.restoph" /></div>
+        <div class="field full"><label data-i18n="form.owner">Nom du propriétaire *</label><input name="owner_name" required autocomplete="name" placeholder="Votre nom" data-ph="form.ownerph" /></div>
+        <div class="field full"><label data-i18n="form.email">Courriel *</label><input name="courriel" type="email" required autocomplete="email" /></div>
+        <div class="field full"><label data-i18n="form.sms">Cellulaire (SMS)</label><input name="sms" type="tel" autocomplete="tel" /><span class="hint" data-i18n="form.smshint">On ne vous appellera jamais. On communique seulement par texto : c'est plus clair, et ça évite de vous déranger pendant le service. Juste un message pour confirmer quand vous êtes prêt à démarrer.</span></div>
+        <div class="field full"><label data-i18n="form.nresto">Combien de restaurants ?</label>
+          <div class="fchips" data-single="1"><button type="button" class="chipbtn" data-val="1">1</button><button type="button" class="chipbtn" data-val="2-3">2-3</button><button type="button" class="chipbtn" data-val="4-10">4-10</button><button type="button" class="chipbtn" data-val="10+">10+</button></div>
+          <input type="hidden" name="nb_restaurants" /></div>
+        <div class="field full"><label data-i18n="form.nsites">Combien de sites voulez-vous ?</label>
+          <div class="fchips" data-single="1"><button type="button" class="chipbtn" data-val="1" data-i18n="form.s1">1 site</button><button type="button" class="chipbtn" data-val="3" data-i18n="form.s3">3 sites</button><button type="button" class="chipbtn" data-val="10" data-i18n="form.s10">10 sites</button></div>
+          <input type="hidden" name="nb_sites" /></div>
+        <div class="field full"><label data-i18n="form.contact">Meilleur moyen de vous joindre</label>
+          <div class="fchips"><button type="button" class="chipbtn" data-val="Texto" data-i18n="form.c_text">Texto</button><button type="button" class="chipbtn" data-val="Courriel" data-i18n="form.c_email">Courriel</button></div>
+          <input type="hidden" name="contact_pref" /></div>
+        <div class="field full"><div class="lblrow"><label data-i18n="form.focus">Sur quoi mettre l'accent ? Ce qui vous rend unique</label><span class="info" tabindex="0" role="button" aria-label="Exemples">i<span class="tip" data-i18n="form.focustip">Ex. : votre spécialité (pizza au feu de bois, tartares, brunch), votre quartier, votre ambiance, vos plats signatures, votre histoire ou votre chef, vos événements (5 à 7, soirées thématiques)… Plus vous nous en dites, plus vos blogues vous ressemblent.</span></span></div>
+          <textarea name="focus_resto" rows="3" placeholder="Dites-nous ce qui vous distingue…" data-ph="form.focusph"></textarea></div>
+        <div class="field full"><button type="submit" class="btn primary lg" id="submitBtn" data-i18n="form.submit">Obtenir plus d'informations</button></div>
+      </form>
+      <p class="formnote" id="formnote" data-i18n="form.note">En soumettant, vous acceptez d'être contacté au sujet de Vanta. Les résultats varient selon l'emplacement, la cuisine, la concurrence et le marché. Résultats individuels, non garantis.</p>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="foot">
+    <div class="logo">VANTA<b>.</b> <span style="font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--mut);text-transform:uppercase">Marketing</span></div>
+    <div style="font-size:13px" data-i18n="footer.made">Fait au Québec · SEO local + visibilité IA pour restaurants</div>
+  </div>
+  <p class="footlegal" data-i18n="footer.legal">© 2026 Vanta Marketing. 97 $/mois, par restaurant, sans engagement, annulable en tout temps, garantie de remboursement 60 jours. Vanta améliore la visibilité et les clics vers votre profil Google ; nous ne garantissons aucun classement, trafic ou volume de ventes précis. Le référencement progresse généralement sur 3 à 6 mois et se stabilise vers 6 à 12 mois. Les résultats varient selon l'emplacement, la cuisine, la concurrence et le marché. Résultats individuels, non garantis. Les chiffres du tableau de bord présentés ici sont illustratifs.</p>
+</div></footer>
+<!-- floating chat -->
+<div id="chatw">
+  <div class="chat-panel">
+    <div class="chat-head">
+      <div><b data-i18n="chat.title">Une question ? Écrivez-nous</b><span data-i18n="chat.sla">On répond à la plupart des messages en 2 à 4 heures.</span></div>
+      <button class="chat-x" id="chatClose" aria-label="Fermer">✕</button>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <div class="chat-thread" id="chatThread"></div>
+      <div class="chat-start" id="chatStart">
+        <input id="cNom" placeholder="Votre nom" data-ph="chat.name" autocomplete="name" />
+        <input id="cResto" placeholder="Nom du restaurant" data-ph="chat.resto" autocomplete="organization" />
+        <input id="cMail" type="email" placeholder="Courriel" data-ph="chat.email" autocomplete="email" />
+      </div>
+      <form class="chat-composer" id="chatForm">
+        <textarea id="cMsg" rows="1" placeholder="Votre message" data-ph="chat.msg"></textarea>
+        <button type="submit" aria-label="Envoyer">&#10148;</button>
+      </form>
+    </div>
+  </div>
+  <button class="chat-fab" id="chatFab" aria-label="Discuter avec nous">
+    <span class="chat-fab-dot"></span>
+    <svg viewBox="0 0 24 24"><path d="M12 3C6.5 3 2 6.8 2 11.5c0 2.2 1 4.2 2.7 5.7-.1 1-.5 2.4-1.3 3.6 1.6-.2 3.2-.8 4.4-1.6 1.3.5 2.7.8 4.2.8 5.5 0 10-3.8 10-8.5S17.5 3 12 3z"/></svg>
+  </button>
+</div>
+
+<!-- CHECKOUT / MILESTONE OVERLAY (shown after lead is saved, before payment) -->
+<div class="checkout" id="checkout" aria-hidden="true">
+  <div class="checkout-card">
+    <button class="checkout-close" id="checkoutClose" aria-label="Fermer">✕</button>
+    <div class="eyebrow" data-i18n="co.eyebrow">Vous y êtes presque</div>
+    <h2 data-i18n="co.h2">Voici ce qui se passe ensuite</h2>
+    <ol class="timeline">
+      <li><span class="d" data-i18n="co.d1n">Jour 1</span><span data-i18n="co.d1">Inscription. On reçoit tout ce qu'il faut pour démarrer.</span></li>
+      <li><span class="d" data-i18n="co.d2n">Jour 2</span><span data-i18n="co.d2">La logique de votre blogue est créée.</span></li>
+      <li><span class="d" data-i18n="co.d3n">Jour 3</span><span data-i18n="co.d3">Vos premiers articles sont en production.</span></li>
+      <li><span class="d" data-i18n="co.d4n">Jour 7</span><span data-i18n="co.d4">Tout est prêt. On publie chaque semaine.</span></li>
+    </ol>
+    <p class="co-followup" data-i18n="co.followup">On vous envoie plus d'informations par courriel d'ici 1 à 2 jours. Aucun paiement maintenant.</p>
+    <button class="btn primary lg" id="checkoutGo" data-i18n="co.go">Parfait, à bientôt !</button>
+    <p class="co-note" data-i18n="co.note">Vos informations sont enregistrées. Surveillez votre courriel.</p>
+  </div>
+</div>
+
+<!-- LOGIN OVERLAY (existing customers) + inside-dashboard preview -->
+<div class="login" id="login" aria-hidden="true">
+  <div class="login-inner">
+    <button class="checkout-close" id="loginClose" aria-label="Fermer">✕</button>
+    <div class="login-grid">
+      <div class="login-form">
+        <div class="logo">VANTA<b>.</b> <span style="font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--mut);text-transform:uppercase;font-weight:600">Marketing</span></div>
+        <h2 data-i18n="login.h2">Bon retour</h2>
+        <p class="lead" data-i18n="login.sub">Connectez-vous pour suivre vos chiffres en temps réel.</p>
+        <form id="loginform" novalidate>
+          <div class="field full"><label data-i18n="login.email">Courriel</label><input type="email" name="login_email" autocomplete="email" /></div>
+          <div class="field full"><label data-i18n="login.pass">Mot de passe</label><input type="password" name="login_pass" autocomplete="current-password" /></div>
+          <div class="field full"><button class="btn primary lg" type="submit" data-i18n="login.btn">Se connecter</button></div>
+        </form>
+        <a class="login-link" href="#" data-i18n="login.forgot">Mot de passe oublié ?</a>
+        <p class="login-foot"><span data-i18n="login.noacct">Pas encore client ?</span> <a href="#demo" id="loginToSignup" data-i18n="login.start">Commencez ici</a></p>
+      </div>
+      <div class="login-preview">
+        <div class="lp-head"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="lp-t" data-i18n="login.preview">Aperçu de votre tableau de bord</span><span class="live" data-i18n="dash.livelabel">En direct</span></div>
+        <div class="lp-tile xl"><div class="el" data-el="skyline"></div></div>
+        <div class="lp-row">
+          <div class="lp-tile"><div class="el" data-el="gaugecluster"></div></div>
+          <div class="lp-tile"><div class="el" data-el="donut"></div></div>
+        </div>
+        <ul class="lp-feats">
+          <li data-i18n="login.f1">Vues du blogue, mois après mois</li>
+          <li data-i18n="login.f2">Clics vers votre fiche Google</li>
+          <li data-i18n="login.f3">Citations IA et sources de découverte</li>
+          <li data-i18n="login.f4">Vos articles publiés et à venir</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/vanta-nav.js"></script>
+<script src="/outreach-niches.js"></script>
+<script type="module">
+/* ---------------- i18n ---------------- */
+const I18N = {
+  fr: {}, // FR is authored inline in the HTML (default); EN overrides below
+  en: {
+    "logosub":"Marketing","nav.cta":"Get started","nav.login":"Login","nav.pricing":"Pricing","price.getstarted":"Get started","price.cta_note":"No commitment · 60-day guarantee · Cancel anytime",
+    "login.h2":"Welcome back","login.sub":"Log in to track your numbers in real time.","login.email":"Email","login.pass":"Password","login.btn":"Log in","login.forgot":"Forgot password?","login.noacct":"Not a client yet?","login.start":"Start here","login.preview":"A preview of your dashboard","login.f1":"Blog views, month over month","login.f2":"Clicks to your Google profile","login.f3":"AI citations and discovery sources","login.f4":"Your published and upcoming articles",
+    "hero.eyebrow":"Local SEO + AI visibility · Québec restaurants",
+    "hero.h1a":"Achieve visibility across Google","hero.h1b":"and AI-powered search, consistently.",
+    "hero.sub":"A done-for-you blog for your restaurant that lifts you in Google and in ChatGPT, Gemini & Perplexity, and funnels those diners straight to your Google profile.",
+    "hero.chip":"no contract · cancel anytime","hero.price":"$97/mo","hero.cta1":"Get started","hero.cta2":"See the dashboard",
+    "trust.1":"No contract","trust.2":"Cancel anytime","trust.3":"60-day guarantee","trust.4":"Made in Québec",
+    "shift.eyebrow":"The big shift","shift.h2":"Search just split in two. Two front doors.",
+    "shift.body":"Your future customers still Google “best restaurant near me”. But more and more, they also ask an AI where to eat. Most restaurants are invisible in that second door. That's exactly where Vanta puts you.",
+    "shift.c1t":"🔍 Door #1 · Google & Maps","shift.c1b":"Fresh, French, locally-optimized content lifts you in local search and the map 3-pack.",
+    "shift.c2t":"🤖 Door #2 · AI answers","shift.c2b":"Structured content ChatGPT, Gemini & Perplexity can cite when asked where to eat. Almost nobody optimizes for it yet.",
+    "pillars.eyebrow":"Two engines, one subscription","pillars.h2":"What Vanta does for you consistently",
+    "pillars.p1tag":"Pillar 1 · Local SEO","pillars.p1t":"Climb on Google","pillars.p1b":"Local, French articles published regularly, the signals Google rewards to rank you and keep your profile active.",
+    "pillars.p2tag":"Pillar 2 · AI visibility (AEO)","pillars.p2t":"Get recommended by AI","pillars.p2b":"Rich, structured content AI engines cite, so you show up when a diner asks ChatGPT where to eat tonight.",
+    "how.eyebrow":"How it works","how.h2":"Found → clicked → seated. Zero effort on your end.",
+    "how.s1t":"We publish","how.s1b":"We write and publish a steady stream of local, Google + AI-optimized articles on your branded blog. You touch nothing.",
+    "how.s2t":"You get found","how.s2b":"Your restaurant climbs in Google local search and in AI assistants' answers.",
+    "how.s3t":"Diners click","how.s3b":"Readers click straight to your Google profile: call, directions, menu, reservation, order.",
+    "how.vizcap":"Blog views, month over month (illustrative)",
+    "dash.eyebrow":"The dashboard","dash.h2":"Proof, in plain numbers.","dash.sub":"No 40-page report. One screen, the two numbers that matter: how many people read you, and how many clicked to your Google profile.",
+    "dash.livelabel":"Live","dash.bord":"Vanta · Dashboard · a local restaurant","dash.t_constellation":"Your discovery network","dash.sample":"Illustrative data. Not representative of a client result.",
+    "incl.eyebrow":"Everything included","incl.h2":"What you get every month",
+    "incl.i1t":"Done-for-you blog","incl.i1b":"A branded blog site, hosted and managed. Nothing to install, nothing to manage.",
+    "incl.i2t":"Articles in French","incl.i2b":"Fresh local content, optimized for both Google and AI discovery.",
+    "incl.i3t":"Structured data","incl.i3b":"Local + AI schema (LocalBusiness, Restaurant, Menu, FAQ) so you're understood everywhere.",
+    "incl.i4t":"Links to your Google profile","incl.i4b":"Every article becomes another doorway to your calls, directions and reservations.",
+    "incl.i5t":"Instant indexing","incl.i5b":"IndexNow pushes every update to Bing, ChatGPT Search and DuckDuckGo within minutes.",
+    "incl.i6t":"A clear dashboard","incl.i6b":"Blog views + clicks to your Google profile, tracked over time. In plain language.",
+    "out.eyebrow":"What it gets you","out.h2":"More customers finding you. The proof that follows.",
+    "out.o1t":"More new local customers","out.o1b":"discovering you in Google and in AI answers.",
+    "out.o2t":"More clicks to your Google profile","out.o2b":"calls, directions, reservations, orders: the actions that fill tables.",
+    "out.o3t":"Recommended by AI before competitors","out.o3b":"you own a door almost nobody optimizes for yet.",
+    "out.o4t":"Zero effort, transparent proof","out.o4b":"100% done-for-you. Open the dashboard, watch the numbers climb.",
+    "out.statcap":"AI citations · this month",
+    "price.eyebrow":"Simple pricing","price.h2":"Clear pricing. No catch.",
+    "price.f1":"Branded blog, hosted and managed","price.f2":"French articles optimized for Google + AI","price.f3":"Schema, IndexNow, llms.txt: technical setup included","price.f4":"Links to your Google profile","price.f5":"Dashboard: views + Google clicks","price.f6":"No contract · cancel anytime",
+    "price.anchor":"≈ $3/day. Less than one slow table, vs $1,500+/mo for an SEO agency.","price.sub":"Pay monthly, no commitment. Or take a year in advance and save big.","price.promo_badge":"⭐ Best value · 1-year offer","price.promo_title":"10 sites · 1 year, paid up front","price.promo_desc":"Book 10 sites for a full year and get 35% off. Pay once and you're set for 12 months.","price.promo_i1":"10 branded sites, fully managed","price.promo_i2":"Everything in every plan, included","price.promo_i3":"A full year paid up front","price.promo_off":"35% off","price.was":"Regular price <s>$3,516</s>","price.now":"$2,285","price.promo_per":"/yr","price.promo_eff":"≈ $190/mo · billed once for 12 months","price.save":"You save $1,231","price.promo_cta":"Get the 1-year offer","price.monthly_head":"Monthly, no commitment","price.promo_head":"Or save with the 1-year offer","price.p1_name":"1 site","price.p1_amt":"$97","price.p3_name":"3 sites","price.p3_amt":"$193","price.p10_name":"10 sites","price.p10_amt":"$293","price.permo":"/mo","price.choose":"Choose","price.incl_head":"Included in every plan",
+    "guar.badge":"🛡️ 60-day guarantee","guar.h2":"Try it risk-free. Cancel anytime.","guar.body":"Month-to-month, no contract. Not satisfied? You're refunded within 60 days. You stay in control, and you see the results yourself in the dashboard.",
+    "guar.disc":"SEO ramps over 3 to 6 months and stabilizes around 6 to 12 months. Results vary by location, cuisine, competition and market. Individual results, not a guarantee.",
+    "faq.eyebrow":"FAQ","faq.h2":"You're probably wondering…",
+    "faq.q1":"I already have a website.","faq.a1":"No problem, and you don't have to redo anything. Vanta adds onto your existing site: a discovery engine that helps Google and AI tools find you, and sends visitors to your Google profile.",
+    "faq.q2":"Do people even read restaurant blogs?","faq.a2":"Honestly, few read them end to end, and that's not the point. This content is mainly there to get you found: it's what Google and AI assistants pull from to recommend you. The dashboard shows you the clicks it brings.",
+    "faq.q3":"I have no time.","faq.a3":"That's exactly why we exist. We handle it all: writing, publishing, optimizing. On your side, a quick glance at the dashboard whenever you feel like it, and that's it.",
+    "faq.q4":"How is this different from an agency?","faq.a4":"We built it to remove what's often frustrating about agencies: no contract, no complicated reports, no jargon. A clear price, a simple dashboard, and real clicks to your Google profile you can track yourself.",
+    "faq.q5":"$97, what's the catch?","faq.a5":"There isn't one, promise. It's month to month, cancel anytime, with a 60-day guarantee. At this price, a single extra booking in the month covers it.",
+    "faq.q6":"Does AI really matter for my restaurant?","faq.a6":"More and more, yes. Lots of people now ask ChatGPT or Google's AI overviews where to eat. Showing up there now gives you a head start, while most restaurants aren't there yet.",
+    "form.eyebrow":"Launch your blog","form.h2a":"Be the restaurant Google features","form.h2b":"and AI recommends.",
+    "form.sub":"Enter your details, we handle the rest. $97/mo, cancel anytime, 60-day guarantee.",
+    "form.email":"Email *","form.resto":"Restaurant name *","form.restoph":"Your restaurant's name","form.owner":"Owner's name *","form.ownerph":"Your name","form.sms":"Mobile (SMS)","form.smshint":"We'll never call you. We only communicate by text: it's clearer, and it won't disturb you during service. Just a quick message to confirm when you're ready to start.",
+    "form.nresto":"How many restaurants?","form.nsites":"How many sites do you want?","form.contact":"Best way to reach you","form.time":"Best time to reach you",
+    "form.focus":"What should we highlight? What makes you unique","form.focusph":"Tell us what sets you apart…","form.focustip":"E.g. your specialty (wood-fired pizza, tartares, brunch), your neighbourhood, your vibe, signature dishes, your story or chef, your events (happy hour, themed nights)… The more you tell us, the more your blog sounds like you.",
+    "form.choose":"Choose…","form.s1":"1 site","form.s3":"3 sites","form.s10":"10 sites","form.sx":"Not sure yet",
+    "form.c_phone":"Phone","form.c_email":"Email","form.c_text":"Text","form.t_morn":"Morning","form.t_aft":"Afternoon","form.t_eve":"Evening",
+    "form.submit":"Get more information","form.note":"By submitting, you agree to be contacted about Vanta. Results vary by location, cuisine, competition and market. Individual results, not a guarantee.",
+    "co.eyebrow":"You're almost in","co.h2":"Here's what happens next",
+    "co.d1n":"Day 1","co.d1":"Sign-up. We get everything we need to start.",
+    "co.d2n":"Day 2","co.d2":"Your blog's logic is built.","co.d3n":"Day 3","co.d3":"Your first articles go into production.",
+    "co.d4n":"Day 7","co.d4":"Everything's ready. We publish every week.",
+    "co.per":"/month · cancel anytime · 60-day guarantee","co.followup":"We'll email you more information within 1 to 2 days. No payment now.","co.go":"Perfect, talk soon!","co.note":"Your details are saved. Watch your inbox.",
+    "footer.made":"Made in Québec · Local SEO + AI visibility for restaurants",
+    "footer.legal":"© 2026 Vanta Marketing. $97/month, per restaurant, no contract, cancel anytime, 60-day money-back guarantee. Vanta improves visibility and clicks to your Google profile; we do not guarantee any specific ranking, traffic or sales volume. SEO typically ramps over 3 to 6 months and stabilizes around 6 to 12 months. Results vary by location, cuisine, competition and market. Individual results, not a guarantee. Dashboard numbers shown here are illustrative.",
+    "chat.title":"Have a question? Message us","chat.sla":"We answer most messages within 2 to 4 hours.","chat.intro":"Leave your details and your message, and we\u2019ll get back to you fast.","chat.name":"Your name","chat.resto":"Restaurant name","chat.email":"Email","chat.msg":"Your message","chat.send":"Send message","chat.thanks":"Message sent, thank you!","chat.thanks2":"We\u2019ll reply within 2 to 4 hours. Watch your inbox.",
+  }
+};
+// snapshot FR defaults from the DOM so toggling back restores them
+(function(){ document.querySelectorAll('[data-i18n]').forEach(el=>{ I18N.fr[el.getAttribute('data-i18n')] = el.innerHTML; });
+  document.querySelectorAll('[data-ph]').forEach(el=>{ I18N.fr[el.getAttribute('data-ph')] = el.getAttribute('placeholder')||''; }); })();
+let lang='en';
+function applyLang(l){
+  lang=l; try{localStorage.setItem('vanta_lang',l);}catch(e){} document.documentElement.lang=l;
+  const d=I18N[l]; if(!d) return;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(d[k]!=null) el.innerHTML=d[k]; });
+  document.querySelectorAll('[data-ph]').forEach(el=>{ const k=el.getAttribute('data-ph'); if(d[k]!=null) el.setAttribute('placeholder', d[k]); });
+  document.querySelectorAll('#langtog button').forEach(b=>b.classList.toggle('on',b.dataset.lang===l));
+  if(window.__updatePrice) window.__updatePrice();
+  if(window.__renderOutreachNiches) window.__renderOutreachNiches(l);
+}
+document.getElementById('langtog').addEventListener('click',e=>{const b=e.target.closest('button');if(b)applyLang(b.dataset.lang);});
+window.applyLang=applyLang; try{ applyLang(localStorage.getItem('vanta_lang')||'en'); }catch(e){ applyLang('en'); }
+
+/* ---------------- live element mount manager (lazy mount + destroy offscreen) ---------------- */
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TOKENS={void:'#07060D',ink:'#150E2A',royal:'#7C3AED',deep:'#4C1D95',lilac:'#A855F7',lilac2:'#C4B5FD',white:'#F6F3FE',flare:'#E8409B'};
+const hosts=[...document.querySelectorAll('.el[data-el]')];
+const state=new WeakMap();
+// hide ONLY text-bearing overlay layers when an element is used as a background (keep canvas + glow/grain)
+function hideBgText(host){
+  const pass=()=>{ host.querySelectorAll('*').forEach(x=>{
+    if(x.tagName==='CANVAS' || x.querySelector('canvas')) return;
+    if((x.textContent||'').replace(/\s/g,'')!=='') x.style.setProperty('display','none','important');
+  }); };
+  pass(); setTimeout(pass,140); setTimeout(pass,800);
+}
+async function mountHost(host){
+  let st=state.get(host); if(st&&st.handle) return;
+  if(!st){st={};state.set(host,st);}
+  if(st.loading) return; st.loading=true;
+  const name=host.getAttribute('data-el');
+  try{
+    st.mod = st.mod || await import(`./elements/${name}.js`);
+    if(typeof st.mod.mount==='function'){ st.handle = st.mod.mount(host,{reducedMotion:reduce,tokens:TOKENS}); if(host.classList.contains('bg')) hideBgText(host); }
+  }catch(err){ host.classList.add('el-ph'); /* never blank */ }
+  finally{ st.loading=false; }
+}
+function unmountHost(host){ const st=state.get(host); if(st&&st.handle){ try{st.handle.destroy&&st.handle.destroy();}catch(_){}}; if(st){st.handle=null;} }
+// rect-based mount manager (robust where IntersectionObserver doesn't fire)
+let ticking=false;
+function refresh(){
+  const vh=innerHeight||document.documentElement.clientHeight, margin=420;
+  for(const host of hosts){
+    const r=host.getBoundingClientRect();
+    const near = r.bottom > -margin && r.top < vh+margin && r.width>2 && r.height>2;
+    if(near) mountHost(host); else unmountHost(host);
+  }
+}
+function onScroll(){ if(ticking) return; ticking=true; requestAnimationFrame(()=>{ ticking=false; refresh(); }); }
+addEventListener('scroll', onScroll, {passive:true});
+addEventListener('resize', onScroll);
+refresh(); setTimeout(refresh,250); setTimeout(refresh,1000);
+// IntersectionObserver as a bonus trigger where supported
+try{ const io=new IntersectionObserver(es=>es.forEach(e=>{e.isIntersecting?mountHost(e.target):unmountHost(e.target);}),{rootMargin:'420px 0px 420px 0px',threshold:0.01}); hosts.forEach(h=>io.observe(h)); }catch(_){}
+
+// nav: hide on scroll down, reveal on scroll up
+const navEl=document.querySelector('nav'); let lastNavY=scrollY;
+addEventListener('scroll', ()=>{ const y=scrollY;
+  if(y>lastNavY && y>120) navEl.classList.add('nav-hidden');
+  else if(y<lastNavY) navEl.classList.remove('nav-hidden');
+  lastNavY=y;
+}, {passive:true});
+
+/* ---------------- chips + lead form + checkout ---------------- */
+const LEADS_ENDPOINT = "https://script.google.com/macros/s/AKfycbxfu3u1SU4CKFUy2vfdmXCRflmyvXBRCbw7YsSgDhk-uR6Y2-D0f03YdvqFmpgvvykr/exec";
+const CHECKOUT_URL = ""; // <-- paste your Whop checkout URL here (see WHOP-SETUP-SOP.md). Empty = not wired yet.
+// Whop checkout link per pricing plan. Paste each plan's Whop product/checkout URL to enable direct payment.
+// Leave a value empty and that plan's button falls back to the lead form (#demo) so nothing breaks.
+const WHOP_LINKS = {
+  '1':    'https://whop.com/checkout/plan_WWsUQCeUHJGwd',   // 1 site  · $97/mo
+  '3':    'https://whop.com/checkout/plan_csZ2sADys69zZ',   // 3 sites · $193/mo
+  '10':   'https://whop.com/checkout/plan_tjj836szyQVby',   // 10 sites · $293/mo
+  '10yr': 'https://whop.com/checkout/plan_0BCR9EdmqpqPQ',   // 10 sites · 1 year · $2,285/yr (35% off)
+};
+
+// chip toggles: single-select when data-single="1", else multi-select; value(s) -> sibling hidden input
+document.querySelectorAll('.fchips').forEach(group=>{
+  const single = group.dataset.single==='1';
+  const hidden = group.parentElement.querySelector('input[type=hidden]');
+  group.addEventListener('click', ev=>{
+    const b=ev.target.closest('.chipbtn'); if(!b) return;
+    if(single){ [...group.children].forEach(c=>c.classList.toggle('on', c===b)); }
+    else { b.classList.toggle('on'); }
+    if(hidden) hidden.value=[...group.querySelectorAll('.chipbtn.on')].map(c=>c.dataset.val).join(', ');
+    if(window.__updatePrice) window.__updatePrice();
+  });
+});
+
+// info tooltips: hover/focus on desktop, tap to toggle on mobile
+document.querySelectorAll('.info').forEach(ic=>ic.addEventListener('click',e=>{e.stopPropagation();ic.classList.toggle('open');}));
+// pricing pay buttons -> Whop checkout (or fall back to the lead form when that plan's link is empty)
+document.querySelectorAll('[data-pay]').forEach(function(b){ b.addEventListener('click',function(e){ var u=WHOP_LINKS[b.getAttribute('data-pay')]; if(u){ e.preventDefault(); location.href=u; } }); });
+document.addEventListener('click',()=>document.querySelectorAll('.info.open').forEach(i=>i.classList.remove('open')));
+const form=document.getElementById('leadform');
+const checkout=document.getElementById('checkout');
+const SITE_PRICES={'1':97,'3':193,'10':293};
+const submitBtn=document.getElementById('submitBtn');
+const coAmt=document.getElementById('coAmt');
+function currentPrice(){ return SITE_PRICES[form.nb_sites.value] || 97; }
+function updatePrice(){ const p=currentPrice();
+  if(coAmt) coAmt.textContent = (lang==='fr') ? (p+' $') : ('$'+p);
+}
+window.__updatePrice=updatePrice;
+let lastLead=null;
+function saveLead(data){
+  try{
+    if(LEADS_ENDPOINT){ return fetch(LEADS_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(data).toString()}).catch(()=>{}); }
+    const k='vanta_leads'; const a=JSON.parse(localStorage.getItem(k)||'[]'); a.push(data); localStorage.setItem(k,JSON.stringify(a));
+  }catch(_){}
+}
+form.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const rn=form.resto_name.value.trim(), on=form.owner_name.value.trim(), em=form.courriel.value.trim(), sms=form.sms.value.trim();
+  if(!rn||!on||!em){ form.reportValidity&&form.reportValidity(); return; }
+  const data={ ts:new Date().toISOString(), nom:on, restaurant:rn, courriel:em, telephone:sms,
+    nb_restaurants:form.nb_restaurants.value||'', nb_sites:form.nb_sites.value||'', contact_pref:form.contact_pref.value||'',
+    focus:(form.focus_resto.value||'').trim(), langue:lang, page:'vanta-landing', enrolled:'non' };
+  lastLead=data;
+  saveLead(data);                 // save the lead FIRST (background) so it's kept even if they abandon payment
+  checkout.classList.add('show'); document.body.style.overflow='hidden';   // open milestone overlay immediately
+});
+function closeCheckout(){ checkout.classList.remove('show'); document.body.style.overflow=''; }
+document.getElementById('checkoutClose').addEventListener('click', closeCheckout);
+checkout.addEventListener('click', e=>{ if(e.target===checkout) closeCheckout(); });
+document.getElementById('checkoutGo').addEventListener('click', closeCheckout);
+
+/* ---------------- login overlay (existing customers) ---------------- */
+const LOGIN_URL = ""; // <-- your customer dashboard/app login URL when ready (empty = "coming soon")
+const login=document.getElementById('login');
+const loginEls=()=>[...login.querySelectorAll('.el[data-el]')];
+function openLogin(e){ if(e)e.preventDefault(); login.classList.add('show'); document.body.style.overflow='hidden';
+  hosts.forEach(h=>{ if(!login.contains(h)) unmountHost(h); });   // free page WebGL contexts
+  loginEls().forEach(h=>mountHost(h));                            // mount the dashboard preview
+}
+function closeLogin(){ login.classList.remove('show'); document.body.style.overflow=''; loginEls().forEach(h=>unmountHost(h)); refresh(); }
+document.getElementById('loginOpen').addEventListener('click', openLogin);
+document.getElementById('loginClose').addEventListener('click', closeLogin);
+login.addEventListener('click', e=>{ if(e.target===login) closeLogin(); });
+document.getElementById('loginToSignup').addEventListener('click', closeLogin);
+document.getElementById('loginform').addEventListener('submit', e=>{ e.preventDefault();
+  if(LOGIN_URL){ location.href=LOGIN_URL; }
+  else { alert(lang==='fr' ? 'Espace client bientôt disponible.' : 'Customer portal coming soon.'); }
+});
+
+updatePrice();
+
+/* ---- floating two-way chat (messages live in the Google Sheet) ---- */
+(function(){
+  var w=document.getElementById('chatw'); if(!w) return;
+  var fab=document.getElementById('chatFab'), x=document.getElementById('chatClose'), cf=document.getElementById('chatForm');
+  var thread=document.getElementById('chatThread'), start=document.getElementById('chatStart');
+  var nomI=document.getElementById('cNom'), restoI=document.getElementById('cResto'), mailI=document.getElementById('cMail'), msgI=document.getElementById('cMsg');
+  var K_CID='vanta_chat_cid', K_INFO='vanta_chat_info', K_LOG='vanta_chat_log', K_SEEN='vanta_chat_seen';
+  var cid=localStorage.getItem(K_CID)||'', info=null, logArr=[], seen=parseInt(localStorage.getItem(K_SEEN)||'0',10)||0, poll=null, opened=false;
+  try{ info=JSON.parse(localStorage.getItem(K_INFO)||'null'); }catch(_){}
+  try{ logArr=JSON.parse(localStorage.getItem(K_LOG)||'[]'); }catch(_){}
+  function persist(){ try{ localStorage.setItem(K_LOG,JSON.stringify(logArr.slice(-60))); localStorage.setItem(K_SEEN,String(seen)); }catch(_){} }
+  function bubble(text, who){ var d=document.createElement('div'); d.className='b '+(who==='admin'?'them':(who==='note'?'note':'you')); d.textContent=text; thread.appendChild(d); thread.scrollTop=thread.scrollHeight; }
+  function paint(){ thread.innerHTML=''; bubble(lang==='fr'?'Bonjour ! Une question ? On répond à la plupart des messages en 2 à 4 heures.':'Hi! Have a question? We answer most messages within 2 to 4 hours.','note'); for(var i=0;i<logArr.length;i++) bubble(logArr[i].t, logArr[i].s==='admin'?'admin':'you'); if(info) start.classList.add('hide'); else start.classList.remove('hide'); }
+  function jsonp(params){ return new Promise(function(res){ var cb='__vc'+Date.now()+Math.floor(Math.random()*1e6); var s=document.createElement('script'); var to=setTimeout(function(){ fin(null); },9000); function fin(v){ clearTimeout(to); try{ delete window[cb]; }catch(_){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); res(v); } window[cb]=function(d){ fin(d); }; s.onerror=function(){ fin(null); }; params.callback=cb; s.src=LEADS_ENDPOINT+'?'+new URLSearchParams(params).toString(); document.body.appendChild(s); }); }
+  function doPoll(){ if(!cid) return; jsonp({action:'chat_poll', cid:cid, since:seen}).then(function(r){ if(!r||!r.messages) return; for(var i=0;i<r.messages.length;i++){ if(r.messages[i].sender==='admin'){ logArr.push({s:'admin',t:r.messages[i].text}); bubble(r.messages[i].text,'admin'); } } if(typeof r.head==='number') seen=r.head; persist(); }); }
+  function startPoll(){ if(poll) return; poll=setInterval(function(){ if(opened) doPoll(); }, 7000); }
+  fab.addEventListener('click', function(){ var willOpen=!w.classList.contains('open'); w.classList.toggle('open'); opened=willOpen; if(willOpen){ paint(); if(cid){ startPoll(); doPoll(); } setTimeout(function(){ (info?msgI:nomI).focus(); },60); } });
+  x.addEventListener('click', function(){ w.classList.remove('open'); opened=false; });
+  var ltog=document.getElementById('langtog'); if(ltog) ltog.addEventListener('click', function(){ if(opened) setTimeout(paint, 0); });
+  msgI.addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); cf.requestSubmit(); } });
+  cf.addEventListener('submit', function(e){
+    e.preventDefault();
+    var msg=msgI.value.trim(); if(!msg) return;
+    if(!info){
+      var nom=nomI.value.trim(), resto=restoI.value.trim(), em=mailI.value.trim();
+      if(!nom||!resto||!em){ start.classList.remove('hide'); (nom?(resto?mailI:restoI):nomI).focus(); return; }
+      info={nom:nom,restaurant:resto,courriel:em}; try{ localStorage.setItem(K_INFO,JSON.stringify(info)); }catch(_){}
+      cid='c'+Date.now()+Math.floor(Math.random()*1e5); try{ localStorage.setItem(K_CID,cid); }catch(_){}
+      start.classList.add('hide');
+    }
+    msgI.value='';
+    logArr.push({s:'you',t:msg}); bubble(msg,'you'); persist();
+    saveLead({ action:'chat_send', cid:cid, type:'chat', nom:info.nom, restaurant:info.restaurant, courriel:info.courriel, message:msg, langue:lang, page:'vanta-landing' });
+    startPoll();
+  });
+})();
+</script>
+
+<script>
+/* ── enhancement layer: mobile nav menu + scroll reveals (additive, progressive) ── */
+(function(){
+  // mobile hamburger dropdown
+  var burger=document.getElementById('navburger'), navmenu=document.getElementById('navmenu');
+  if(burger&&navmenu){
+    var close=function(){ navmenu.classList.remove('open'); burger.classList.remove('open'); burger.setAttribute('aria-expanded','false'); };
+    burger.addEventListener('click', function(e){ e.stopPropagation(); var open=!navmenu.classList.contains('open'); navmenu.classList.toggle('open',open); burger.classList.toggle('open',open); burger.setAttribute('aria-expanded',open?'true':'false'); });
+    navmenu.addEventListener('click', function(e){ if(e.target.closest('a')) close(); });
+    document.addEventListener('click', function(e){ if(!e.target.closest('nav')) close(); });
+    addEventListener('scroll', close, {passive:true});
+    addEventListener('pageshow', close);
+  }
+
+  // scroll reveals on below-hero content
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var sel = '.sechead, .card, .pillar, .step, .feat .f, .plan, .promo, .pricecard, .price-sub, .planhead, .outlist .o, .qa, .formcard';
+  var els = [].slice.call(document.querySelectorAll(sel)).filter(function(el){
+    return !el.closest('.hero') && !el.closest('.el') && !el.querySelector('canvas');
+  });
+  els.forEach(function(el){ el.classList.add('reveal'); });
+  // light per-group stagger based on preceding same-set siblings
+  els.forEach(function(el){
+    var prev=0, s=el.previousElementSibling;
+    while(s){ if(els.indexOf(s)>=0) prev++; s=s.previousElementSibling; }
+    if(prev===1) el.classList.add('d1'); else if(prev===2) el.classList.add('d2'); else if(prev>=3) el.classList.add('d3');
+  });
+  if(reduce){ els.forEach(function(el){ el.classList.add('in'); }); return; }
+  var showAll=function(){ els.forEach(function(el){ el.classList.add('in'); }); };
+  try{
+    var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, {threshold:0.12, rootMargin:'0px 0px -6% 0px'});
+    els.forEach(function(el){ io.observe(el); });
+  }catch(_){ showAll(); }
+  setTimeout(showAll, 3500); // failsafe: content can never stay hidden
+})();
+</script>
+</body>
+</html>
