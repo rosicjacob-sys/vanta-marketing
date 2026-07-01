@@ -10,7 +10,7 @@ var nav=document.createElement('nav');nav.className='vn';document.body.insertBef
 function render(){var lang=gl();var lh=PORTAL_URL||'/#/login';var lt=PORTAL_URL?' target="_blank" rel="noopener"':'';
  nav.innerHTML='<div class="vn-wrap"><a class="vn-logo" href="/">VANTA<b>.</b></a><div class="vn-sp"></div>'
  +'<div class="vn-item vn-has-mega"><button class="vn-link vn-mega-btn">'+T[lang].what+' <span class="vn-caret">&#9662;</span></button><div class="vn-mega">'+mega(lang)+'</div></div>'
- +'<a class="vn-link vn-hideS" href="/outreach/">'+T[lang].outreach+'</a>'
+ 
  +'<a class="vn-link" id="vnLogin" href="'+lh+'"'+lt+'>'+T[lang].login+'</a>'
  +'<a class="vn-cta" id="navCta" href="/#/book">'+T[lang].book+'</a>'
  +'<div class="vn-tog"><button class="vn-lang'+(lang==='en'?' on':'')+'" data-lang="en">EN</button><button class="vn-lang'+(lang==='fr'?' on':'')+'" data-lang="fr">FR</button></div></div>';
