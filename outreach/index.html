@@ -607,8 +607,8 @@ addEventListener('pageshow',function(){
       <form id="leadform" class="formgrid" novalidate>
         <div class="field full"><label data-i18n="form.resto">Nom du restaurant *</label><input name="resto_name" required autocomplete="organization" placeholder="Le nom de votre restaurant" data-ph="form.restoph" /></div>
         <div class="field full"><label data-i18n="form.owner">Nom du propriétaire *</label><input name="owner_name" required autocomplete="name" placeholder="Votre nom" data-ph="form.ownerph" /></div>
+        <div class="field full"><label data-i18n="form.sms">Cellulaire (SMS) *</label><input name="sms" type="tel" required autocomplete="tel" /><span class="hint" data-i18n="form.smshint">On ne vous appellera jamais. On communique seulement par texto : c'est plus clair, et ça évite de vous déranger pendant le service. Juste un message pour confirmer quand vous êtes prêt à démarrer.</span></div>
         <div class="field full"><label data-i18n="form.email">Courriel *</label><input name="courriel" type="email" required autocomplete="email" /></div>
-        <div class="field full"><label data-i18n="form.sms">Cellulaire (SMS)</label><input name="sms" type="tel" autocomplete="tel" /><span class="hint" data-i18n="form.smshint">On ne vous appellera jamais. On communique seulement par texto : c'est plus clair, et ça évite de vous déranger pendant le service. Juste un message pour confirmer quand vous êtes prêt à démarrer.</span></div>
         <div class="field full"><label data-i18n="form.nresto">Combien de restaurants ?</label>
           <div class="fchips" data-single="1"><button type="button" class="chipbtn" data-val="1">1</button><button type="button" class="chipbtn" data-val="2-3">2-3</button><button type="button" class="chipbtn" data-val="4-10">4-10</button><button type="button" class="chipbtn" data-val="10+">10+</button></div>
           <input type="hidden" name="nb_restaurants" /></div>
@@ -768,7 +768,7 @@ const I18N = {
     "faq.q6":"Does AI really matter for my restaurant?","faq.a6":"More and more, yes. Lots of people now ask ChatGPT or Google's AI overviews where to eat. Showing up there now gives you a head start, while most restaurants aren't there yet.",
     "form.eyebrow":"Launch your blog","form.h2a":"Be the restaurant Google features","form.h2b":"and AI recommends.",
     "form.sub":"Enter your details, we handle the rest. $97/mo, cancel anytime, 60-day guarantee.",
-    "form.email":"Email *","form.resto":"Restaurant name *","form.restoph":"Your restaurant's name","form.owner":"Owner's name *","form.ownerph":"Your name","form.sms":"Mobile (SMS)","form.smshint":"We'll never call you. We only communicate by text: it's clearer, and it won't disturb you during service. Just a quick message to confirm when you're ready to start.",
+    "form.email":"Email *","form.resto":"Restaurant name *","form.restoph":"Your restaurant's name","form.owner":"Owner's name *","form.ownerph":"Your name","form.sms":"Mobile (SMS) *","form.smshint":"We'll never call you. We only communicate by text: it's clearer, and it won't disturb you during service. Just a quick message to confirm when you're ready to start.",
     "form.nresto":"How many restaurants?","form.nsites":"How many sites do you want?","form.contact":"Best way to reach you","form.time":"Best time to reach you",
     "form.focus":"What should we highlight? What makes you unique","form.focusph":"Tell us what sets you apart…","form.focustip":"E.g. your specialty (wood-fired pizza, tartares, brunch), your neighbourhood, your vibe, signature dishes, your story or chef, your events (happy hour, themed nights)… The more you tell us, the more your blog sounds like you.",
     "form.choose":"Choose…","form.s1":"1 site","form.s3":"3 sites","form.s10":"10 sites","form.sx":"Not sure yet",
@@ -900,7 +900,7 @@ function saveLead(data){
 form.addEventListener('submit', (e)=>{
   e.preventDefault();
   const rn=form.resto_name.value.trim(), on=form.owner_name.value.trim(), em=form.courriel.value.trim(), sms=form.sms.value.trim();
-  if(!rn||!on||!em){ form.reportValidity&&form.reportValidity(); return; }
+  if(!rn||!on||!em||!sms){ form.reportValidity&&form.reportValidity(); return; }
   const data={ ts:new Date().toISOString(), nom:on, restaurant:rn, courriel:em, telephone:sms,
     nb_restaurants:form.nb_restaurants.value||'', nb_sites:form.nb_sites.value||'', contact_pref:form.contact_pref.value||'',
     focus:(form.focus_resto.value||'').trim(), langue:lang, page:'vanta-landing', enrolled:'non' };
