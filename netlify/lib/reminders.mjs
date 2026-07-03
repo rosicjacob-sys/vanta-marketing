@@ -1,11 +1,19 @@
 // Core subscription sweep: send renewal reminders before expiry and an expiry
 // notice once a plan lapses. Idempotent per billing cycle (won't re-fire for
 // the same expiry date). Shared by the daily cron and the admin "Run now".
-import { listUsers, putUser } from './store.mjs';
+import { listUsers, putUser, getPlans } from './store.mjs';
 import { notifyClient, notifyAdmin } from './notify.mjs';
 import { loadSettings, fillTemplate } from './settings.mjs';
 
 const DAY = 24 * 60 * 60 * 1000;
+
+// The client's plan checkout link ({link} in templates), or the login page
+// as a safe fallback so the email never has an empty/broken link.
+function renewLink(client, plans, loginUrl) {
+  const match = (plans || []).find(p => (typeof p === 'string' ? p : p.name) === client.plan);
+  const link = match && typeof match === 'object' ? (match.link || '') : '';
+  return link || loginUrl;
+}
 
 function pad(n) { return String(n).padStart(2, '0'); }
 function toStr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
@@ -22,6 +30,10 @@ function expiryOf(user) {
 export async function runReminders() {
   const settings = await loadSettings();
   const lead = Number(settings.reminderLeadDays) || Number(process.env.REMINDER_LEAD_DAYS) || 3;
+  let plans = [];
+  try { plans = await getPlans(); } catch (e) { plans = []; }
+  const siteUrl = (process.env.URL || 'https://vantamarketing.io').replace(/\/$/, '');
+  const loginUrl = siteUrl + '/#/login';
   const clients = await listUsers();
   let scanned = 0, reminders = 0, expiries = 0;
 
@@ -35,6 +47,7 @@ export async function runReminders() {
     const vars = {
       name: c.name || c.email, plan: c.plan || 'plan', date: ymd,
       days: days + ' day' + (days === 1 ? '' : 's'), brand: settings.brandName || 'Vanta',
+      link: renewLink(c, plans, loginUrl),
     };
     let changed = false;
 
