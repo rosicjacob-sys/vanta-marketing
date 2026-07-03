@@ -6,7 +6,7 @@
 import { userFromRequest, hashPassword, json } from '../lib/auth.mjs';
 import {
   getUser, putUser, deleteUser, listUsers,
-  normEmail, defaultMetrics, publicUser,
+  normEmail, defaultMetrics, publicUser, addNotification,
 } from '../lib/store.mjs';
 
 function requireAdmin(req) {
@@ -45,6 +45,12 @@ export default async (req) => {
       createdAt: Date.now(),
     };
     await putUser(user);
+    try {
+      await addNotification({ audience: 'client', recipient: email, title: 'Welcome to Vanta',
+        body: 'Your client dashboard is ready. Log in any time to see your traffic, articles and plan.', type: 'welcome' });
+      await addNotification({ audience: 'admin', recipient: '', title: 'New client added',
+        body: (user.name || email) + ' was added' + (user.plan ? ' on ' + user.plan : '') + '.', type: 'client_added' });
+    } catch (e) { /* notifications are best-effort */ }
     return json({ client: publicUser(user) }, 201);
   }
 

@@ -72,6 +72,18 @@ function ensureSchema() {
       // subscription fields (added to the clients table if it already exists)
       await sql`ALTER TABLE clients ADD COLUMN IF NOT EXISTS availed_at text`;
       await sql`ALTER TABLE clients ADD COLUMN IF NOT EXISTS period text`;
+      await sql`
+        CREATE TABLE IF NOT EXISTS notifications (
+          id         bigserial PRIMARY KEY,
+          audience   text NOT NULL,
+          recipient  text NOT NULL DEFAULT '',
+          title      text NOT NULL DEFAULT '',
+          body       text NOT NULL DEFAULT '',
+          type       text NOT NULL DEFAULT '',
+          read_at    bigint,
+          created_at bigint
+        )`;
+      await sql`CREATE INDEX IF NOT EXISTS notifications_aud_idx ON notifications (audience, recipient, created_at)`;
     })();
   }
   return _schema;
@@ -247,6 +259,60 @@ async function blobGetPlans() {
 }
 async function blobSetPlans(plans) { await settingsStore().setJSON('plans', plans); return plans; }
 
+/* ===================== notifications: Postgres ===================== */
+async function pgAddNotif(n) {
+  await ensureSchema();
+  await sqlc()`INSERT INTO notifications (audience, recipient, title, body, type, created_at)
+    VALUES (${n.audience}, ${n.recipient || ''}, ${n.title || ''}, ${n.body || ''}, ${n.type || ''}, ${Date.now()})`;
+  return { ok: true };
+}
+async function pgListNotif(audience, recipient) {
+  await ensureSchema();
+  const rows = await sqlc()`SELECT id, title, body, type, read_at, created_at FROM notifications
+    WHERE audience = ${audience} AND recipient = ${recipient || ''} ORDER BY created_at DESC LIMIT 50`;
+  return rows.map(r => ({ id: Number(r.id), title: r.title, body: r.body, type: r.type, read: !!r.read_at, created_at: Number(r.created_at) }));
+}
+async function pgMarkNotif(audience, recipient) {
+  await ensureSchema();
+  await sqlc()`UPDATE notifications SET read_at = ${Date.now()} WHERE audience = ${audience} AND recipient = ${recipient || ''} AND read_at IS NULL`;
+  return { ok: true };
+}
+async function pgUnread(audience, recipient) {
+  await ensureSchema();
+  const rows = await sqlc()`SELECT count(*) AS n FROM notifications WHERE audience = ${audience} AND recipient = ${recipient || ''} AND read_at IS NULL`;
+  return Number(rows[0] && rows[0].n) || 0;
+}
+
+/* ===================== notifications: Blobs (fallback) ===================== */
+function notifStore() { return getStore({ name: 'vanta-notifications', consistency: 'strong' }); }
+function notifKey(audience, recipient) { return audience + ':' + (recipient || ''); }
+async function blobAddNotif(n) {
+  const st = notifStore();
+  const key = notifKey(n.audience, n.recipient);
+  const arr = (await st.get(key, { type: 'json' })) || [];
+  const id = arr.length ? arr[arr.length - 1].id + 1 : 1;
+  arr.push({ id, title: n.title || '', body: n.body || '', type: n.type || '', read: false, created_at: Date.now() });
+  if (arr.length > 100) arr.splice(0, arr.length - 100);
+  await st.setJSON(key, arr);
+  return { ok: true };
+}
+async function blobListNotif(audience, recipient) {
+  const arr = (await notifStore().get(notifKey(audience, recipient), { type: 'json' })) || [];
+  return arr.slice().reverse().slice(0, 50);
+}
+async function blobMarkNotif(audience, recipient) {
+  const st = notifStore();
+  const key = notifKey(audience, recipient);
+  const arr = (await st.get(key, { type: 'json' })) || [];
+  arr.forEach(function (x) { x.read = true; });
+  await st.setJSON(key, arr);
+  return { ok: true };
+}
+async function blobUnread(audience, recipient) {
+  const arr = (await notifStore().get(notifKey(audience, recipient), { type: 'json' })) || [];
+  return arr.filter(function (x) { return !x.read; }).length;
+}
+
 /* ===================== public API (dispatches) ===================== */
 export function getUser(email)  { return usePg() ? pgGet(email)  : blobGet(email); }
 export function putUser(user)   { return usePg() ? pgPut(user)   : blobPut(user); }
@@ -260,6 +326,11 @@ export function chatList()              { return usePg() ? pgChatList()         
 
 export function getPlans()        { return usePg() ? pgGetPlans()      : blobGetPlans(); }
 export function setPlans(plans)   { return usePg() ? pgSetPlans(plans) : blobSetPlans(plans); }
+
+export function addNotification(n)          { return usePg() ? pgAddNotif(n)        : blobAddNotif(n); }
+export function listNotifications(a, r)     { return usePg() ? pgListNotif(a, r)    : blobListNotif(a, r); }
+export function markNotificationsRead(a, r) { return usePg() ? pgMarkNotif(a, r)    : blobMarkNotif(a, r); }
+export function unreadCount(a, r)           { return usePg() ? pgUnread(a, r)       : blobUnread(a, r); }
 
 // Read straight from Blobs regardless of backend — used by the one-time
 // migration to copy legacy records into Postgres.

@@ -10,6 +10,8 @@
   var API = "/.netlify/functions";
   var LS = { token: "vanta_token", role: "vanta_role", name: "vanta_name" };
   var adminPoll = null; // interval handle for the admin Messages thread
+  var bellPoll = null;  // interval handle for the notifications bell
+  var bellItems = [];   // last-fetched notifications
 
   function lang() { try { return localStorage.getItem("vanta_lang") || "en"; } catch (e) { return "en"; } }
   var FR = function () { return lang() === "fr"; };
@@ -55,6 +57,9 @@
     replyPh:    { en: "Type your reply…",   fr: "Écrivez votre réponse…" },
     sendReply:  { en: "Send",               fr: "Envoyer" },
     noReplyYet: { en: "No messages.",       fr: "Aucun message." },
+    notifs:     { en: "Notifications",       fr: "Notifications" },
+    noNotifs:   { en: "No notifications yet.", fr: "Aucune notification." },
+    justNow:    { en: "just now",            fr: "à l'instant" },
     managePlans:{ en: "Manage plans",       fr: "Gérer les forfaits" },
     plansTitle: { en: "Plans",              fr: "Forfaits" },
     plansHint:  { en: "Define your plans. They appear in the client Plan dropdown; the buy link is your Whop/Stripe checkout.", fr: "Définissez vos forfaits. Ils apparaissent dans le menu Forfait du client; le lien d'achat est votre paiement Whop/Stripe." },
@@ -206,6 +211,8 @@
 
   function logout() {
     clearSession();
+    if (bellPoll) { clearInterval(bellPoll); bellPoll = null; }
+    if (adminPoll) { clearInterval(adminPoll); adminPoll = null; }
     go("#/login");
     location.hash = "#/login";
   }
@@ -222,7 +229,59 @@
     return '<div class="dash-top">' +
       '<div><div class="eyebrow">' + esc(t("welcome")) + '</div>' +
       '<h2 style="margin:6px 0 0">' + esc(title) + '</h2></div>' +
-      '<button class="btn ghost" id="vpLogout">' + esc(t("logout")) + '</button></div>';
+      '<div class="dash-top-actions">' +
+        '<div class="vp-bell-wrap"><button class="vp-bell" id="vpBell" aria-label="' + esc(t("notifs")) + '">' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
+          '<span class="vp-bell-badge" id="vpBellCount" hidden></span></button>' +
+          '<div class="vp-bell-menu" id="vpBellMenu" hidden></div></div>' +
+        '<button class="btn ghost" id="vpLogout">' + esc(t("logout")) + '</button>' +
+      "</div></div>";
+  }
+  function relTime(ms) {
+    var s = Math.floor((Date.now() - ms) / 1000);
+    if (s < 60) return t("justNow");
+    var m = Math.floor(s / 60); if (m < 60) return m + (FR() ? " min" : "m");
+    var h = Math.floor(m / 60); if (h < 24) return h + (FR() ? " h" : "h");
+    return Math.floor(h / 24) + (FR() ? " j" : "d");
+  }
+  function renderBellItems() {
+    var menu = el("vpBellMenu"); if (!menu) return;
+    menu.innerHTML = '<div class="vp-bell-head">' + esc(t("notifs")) + "</div>" +
+      (bellItems.length ? bellItems.map(function (n) {
+        return '<div class="vp-notif' + (n.read ? "" : " unread") + '"><div class="vp-notif-t">' + esc(n.title) + "</div>" +
+          (n.body ? '<div class="vp-notif-b">' + esc(n.body) + "</div>" : "") +
+          '<div class="vp-notif-time">' + esc(relTime(n.created_at)) + "</div></div>";
+      }).join("") : '<div class="vp-bell-empty">' + esc(t("noNotifs")) + "</div>");
+  }
+  function loadBell() {
+    api("/notifications").then(function (res) {
+      bellItems = (res.data && res.data.notifications) || [];
+      var unread = (res.data && res.data.unread) || 0;
+      var badge = el("vpBellCount");
+      if (badge) { if (unread > 0) { badge.textContent = unread > 9 ? "9+" : String(unread); badge.hidden = false; } else badge.hidden = true; }
+      var menu = el("vpBellMenu");
+      if (menu && !menu.hidden) renderBellItems();
+    }).catch(function () {});
+  }
+  function initBell() {
+    var bell = el("vpBell"); if (!bell) return;
+    var menu = el("vpBellMenu");
+    bell.onclick = function (e) {
+      e.stopPropagation();
+      if (!menu) return;
+      if (menu.hidden) {
+        renderBellItems(); menu.hidden = false;
+        var badge = el("vpBellCount");
+        if (badge && !badge.hidden) { api("/notifications", { method: "POST", body: { action: "read" } }).then(function () { badge.hidden = true; bellItems.forEach(function (n) { n.read = true; }); }); }
+      } else { menu.hidden = true; }
+    };
+    document.addEventListener("click", function (e) {
+      var mn = el("vpBellMenu"), bl = el("vpBell");
+      if (mn && !mn.hidden && bl && !bl.contains(e.target) && !mn.contains(e.target)) mn.hidden = true;
+    });
+    loadBell();
+    if (bellPoll) clearInterval(bellPoll);
+    bellPoll = setInterval(loadBell, 30000);
   }
 
   // ================= CLIENT DASHBOARD =================
@@ -699,6 +758,7 @@
   function wireCommon() {
     var lo = el("vpLogout");
     if (lo) lo.onclick = logout;
+    initBell();
   }
 
   // ================= boot =================
@@ -706,6 +766,19 @@
     if (el("vp-css")) return;
     var css =
     ".dash-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px;flex-wrap:wrap}" +
+    ".dash-top-actions{display:flex;align-items:center;gap:10px}" +
+    ".vp-bell-wrap{position:relative}" +
+    ".vp-bell{position:relative;width:44px;height:44px;border-radius:12px;border:1px solid var(--line2,#2a2145);background:rgba(255,255,255,.04);color:var(--white,#fff);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}" +
+    ".vp-bell:hover{background:rgba(255,255,255,.09)}" +
+    ".vp-bell-badge{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#e8409b;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}" +
+    ".vp-bell-menu{position:absolute;top:52px;right:0;width:330px;max-width:calc(100vw - 32px);max-height:min(60vh,460px);overflow-y:auto;background:#17112f;border:1px solid var(--line2,#2a2145);border-radius:14px;box-shadow:0 34px 90px -24px rgba(0,0,0,.85);z-index:1500}" +
+    ".vp-bell-head{padding:13px 15px;font-weight:700;font-size:14px;color:var(--white,#fff);border-bottom:1px solid var(--line2,#2a2145);position:sticky;top:0;background:#17112f}" +
+    ".vp-bell-empty{padding:26px 15px;text-align:center;color:var(--mut2,#77809a);font-size:13px}" +
+    ".vp-notif{padding:12px 15px;border-bottom:1px solid var(--line2,#2a2145)}" +
+    ".vp-notif.unread{background:rgba(124,58,237,.09)}" +
+    ".vp-notif-t{font-size:13.5px;font-weight:600;color:var(--white,#fff)}" +
+    ".vp-notif-b{font-size:12.5px;color:var(--mut,#9aa);margin-top:2px;line-height:1.4}" +
+    ".vp-notif-time{font-size:11px;color:var(--mut2,#77809a);margin-top:5px}" +
     ".dash-plan{color:var(--mut,#9aa);margin:-6px 0 10px;font-size:14px}" +
     ".sub-banner{display:flex;align-items:center;gap:10px;margin:0 0 18px;font-size:13.5px;color:var(--mut,#9aa)}" +
     ".sub-pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}" +
