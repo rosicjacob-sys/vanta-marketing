@@ -9,6 +9,7 @@
 
   var API = "/.netlify/functions";
   var LS = { token: "vanta_token", role: "vanta_role", name: "vanta_name" };
+  var adminPoll = null; // interval handle for the admin Messages thread
 
   function lang() { try { return localStorage.getItem("vanta_lang") || "en"; } catch (e) { return "en"; } }
   var FR = function () { return lang() === "fr"; };
@@ -47,7 +48,13 @@
     noClients:  { en: "No clients yet. Add your first one.", fr: "Aucun client. Ajoutez le premier." },
     secAccount: { en: "Account",           fr: "Compte" },
     secNumbers: { en: "Dashboard numbers",  fr: "Chiffres du tableau de bord" },
-    close:      { en: "Close",              fr: "Fermer" }
+    close:      { en: "Close",              fr: "Fermer" },
+    tabMessages:{ en: "Messages",           fr: "Messages" },
+    noMessages: { en: "No conversations yet.", fr: "Aucune conversation." },
+    selectConv: { en: "Select a conversation to read and reply.", fr: "Choisissez une conversation pour lire et répondre." },
+    replyPh:    { en: "Type your reply…",   fr: "Écrivez votre réponse…" },
+    sendReply:  { en: "Send",               fr: "Envoyer" },
+    noReplyYet: { en: "No messages.",       fr: "Aucun message." }
   };
   function t(k) { var e = T[k] || {}; return FR() ? (e.fr || e.en || k) : (e.en || k); }
 
@@ -256,6 +263,7 @@
     if (!requireRole("admin")) return;
     var host = el("view-admin");
     if (!host) return;
+    if (adminPoll) { clearInterval(adminPoll); adminPoll = null; }
     host.innerHTML = '<div class="sec"><div class="wrap"><p class="lead">…</p></div></div>';
     showView("view-admin");
 
@@ -287,10 +295,20 @@
 
     return '<div class="sec"><div class="wrap">' +
       topbar(t("adminTitle")) +
-      '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button></div>" +
-      '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
-        "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("views")) +
-        "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
+      '<div class="dash-tabs">' +
+        '<button class="dash-tab is-on" data-tab="clients">' + esc(t("clients")) + "</button>" +
+        '<button class="dash-tab" data-tab="messages">' + esc(t("tabMessages")) + "</button>" +
+      "</div>" +
+      '<div class="dash-panel" data-panel="clients">' +
+        '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button></div>" +
+        '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
+          "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("views")) +
+          "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
+      "</div>" +
+      '<div class="dash-panel" data-panel="messages" style="display:none">' +
+        '<div class="vpc-admin"><div class="vpc-list" id="vpChatList"><div class="dash-empty">…</div></div>' +
+        '<div class="vpc-pane" id="vpChatPane"><div class="vpc-empty">' + esc(t("selectConv")) + "</div></div></div>" +
+      "</div>" +
       '<div id="vpModal"></div>' +
     "</div></div>";
   }
@@ -433,6 +451,81 @@
         api("/admin-clients", { method: "DELETE", body: { email: email } }).then(function () { renderAdmin(); });
       };
     }
+
+    // ---- tabs (Clients / Messages) ----
+    var chatLoaded = false;
+    document.querySelectorAll(".dash-tab").forEach(function (tab) {
+      tab.onclick = function () {
+        var name = tab.getAttribute("data-tab");
+        document.querySelectorAll(".dash-tab").forEach(function (b) { b.classList.toggle("is-on", b === tab); });
+        document.querySelectorAll(".dash-panel").forEach(function (p) { p.style.display = p.getAttribute("data-panel") === name ? "" : "none"; });
+        if (name === "messages" && !chatLoaded) { chatLoaded = true; loadChats(); }
+      };
+    });
+
+    // ---- messages ----
+    var curCid = null, chatSeen = 0, convs = [];
+    function loadChats() {
+      var listEl = el("vpChatList");
+      api("/admin-chats").then(function (res) {
+        if (!listEl) return;
+        convs = (res.data && res.data.conversations) || [];
+        if (!convs.length) { listEl.innerHTML = '<div class="dash-empty">' + esc(t("noMessages")) + "</div>"; return; }
+        listEl.innerHTML = convs.map(function (c) {
+          return '<button class="vpc-conv" data-cid="' + esc(c.cid) + '">' +
+            '<div class="vpc-conv-name">' + esc(c.name || c.email || c.cid) + "</div>" +
+            (c.business ? '<div class="vpc-conv-sub">' + esc(c.business) + "</div>" : "") +
+            '<div class="vpc-conv-last">' + esc(c.last || "") + "</div></button>";
+        }).join("");
+        listEl.querySelectorAll(".vpc-conv").forEach(function (btn) {
+          btn.onclick = function () {
+            listEl.querySelectorAll(".vpc-conv").forEach(function (b) { b.classList.toggle("is-on", b === btn); });
+            openConv(convs.filter(function (x) { return x.cid === btn.getAttribute("data-cid"); })[0] || { cid: btn.getAttribute("data-cid") });
+          };
+        });
+      });
+    }
+    function openConv(meta) {
+      curCid = meta.cid; chatSeen = 0;
+      var pane = el("vpChatPane"); if (!pane) return;
+      pane.innerHTML =
+        '<div class="vpc-head"><b>' + esc(meta.name || meta.email || meta.cid) + "</b>" +
+        (meta.email ? "<span>" + esc(meta.email) + "</span>" : "") +
+        (meta.business ? "<span>" + esc(meta.business) + "</span>" : "") + "</div>" +
+        '<div class="vpc-thread" id="vpChatThread"></div>' +
+        '<form class="vpc-reply" id="vpReplyForm"><textarea id="vpReplyBox" rows="2" placeholder="' + esc(t("replyPh")) + '"></textarea>' +
+        '<button class="btn primary" type="submit">' + esc(t("sendReply")) + "</button></form>";
+      el("vpReplyForm").onsubmit = function (e) {
+        e.preventDefault();
+        var box = el("vpReplyBox"); var body = box.value.trim(); if (!body) return;
+        box.value = "";
+        api("/admin-chats", { method: "POST", body: { cid: curCid, message: body } }).then(function () { refreshThread(); });
+      };
+      el("vpReplyBox").addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); el("vpReplyForm").requestSubmit(); }
+      });
+      refreshThread();
+      if (adminPoll) clearInterval(adminPoll);
+      adminPoll = setInterval(function () { if (curCid) refreshThread(); }, 6000);
+    }
+    function refreshThread() {
+      var cid = curCid;
+      api("/admin-chats?cid=" + encodeURIComponent(cid) + "&after=" + (chatSeen || 0)).then(function (res) {
+        if (cid !== curCid) return;
+        var thread = el("vpChatThread"); if (!thread) return;
+        var msgs = (res.data && res.data.messages) || [];
+        msgs.forEach(function (m) {
+          var empty = thread.querySelector(".dash-empty"); if (empty) empty.remove();
+          var d = document.createElement("div");
+          d.className = "vpc-b " + (m.sender === "admin" ? "me" : "them");
+          d.textContent = m.body;
+          thread.appendChild(d);
+        });
+        if (res.data && typeof res.data.head === "number") chatSeen = res.data.head;
+        if (!thread.children.length) thread.innerHTML = '<div class="dash-empty">' + esc(t("noReplyYet")) + "</div>";
+        if (msgs.length) thread.scrollTop = thread.scrollHeight;
+      });
+    }
   }
 
   function wireCommon() {
@@ -483,6 +576,31 @@
     "body.vp-dash nav.vn,body.vp-dash footer{display:none!important}" +
     "#view-admin>.sec,#view-dashboard>.sec{padding-top:34px}" +
     ".dash-table tbody tr:hover td{background:rgba(124,58,237,.06)}" +
+    ".dash-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line2,#2a2145);margin:4px 0 18px}" +
+    ".dash-tab{font:inherit;font-size:14px;font-weight:600;color:var(--mut,#9aa);background:none;border:none;border-bottom:2px solid transparent;padding:10px 14px;margin-bottom:-1px;cursor:pointer}" +
+    ".dash-tab:hover{color:var(--white,#fff)}" +
+    ".dash-tab.is-on{color:var(--white,#fff);border-bottom-color:var(--royal,#7c3aed)}" +
+    ".vpc-admin{display:grid;grid-template-columns:300px 1fr;gap:14px;height:min(66vh,620px)}" +
+    ".vpc-list{overflow-y:auto;background:linear-gradient(180deg,var(--panel,#140e29),#0a0817);border:1px solid var(--line2,#2a2145);border-radius:16px;padding:8px}" +
+    ".vpc-conv{display:block;width:100%;text-align:left;background:none;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;color:var(--white,#fff);font:inherit}" +
+    ".vpc-conv:hover{background:rgba(255,255,255,.05)}" +
+    ".vpc-conv.is-on{background:rgba(124,58,237,.16)}" +
+    ".vpc-conv-name{font-weight:700;font-size:14px}" +
+    ".vpc-conv-sub{font-size:12px;color:var(--mut2,#77809a);margin-top:1px}" +
+    ".vpc-conv-last{font-size:12.5px;color:var(--mut,#9aa);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
+    ".vpc-pane{display:flex;flex-direction:column;background:linear-gradient(180deg,var(--panel,#140e29),#0a0817);border:1px solid var(--line2,#2a2145);border-radius:16px;overflow:hidden}" +
+    ".vpc-empty{margin:auto;color:var(--mut2,#77809a);font-size:13px;padding:20px;text-align:center}" +
+    ".vpc-head{flex:0 0 auto;padding:14px 16px;border-bottom:1px solid var(--line2,#2a2145);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}" +
+    ".vpc-head b{font-size:15px;color:var(--white,#fff)}.vpc-head span{font-size:12.5px;color:var(--mut2,#77809a)}" +
+    ".vpc-thread{flex:1 1 auto;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}" +
+    ".vpc-b{max-width:78%;padding:9px 13px;border-radius:14px;font-size:14px;line-height:1.4;white-space:pre-wrap;word-break:break-word}" +
+    ".vpc-b.them{align-self:flex-start;background:rgba(255,255,255,.07);color:var(--white,#fff);border-bottom-left-radius:5px}" +
+    ".vpc-b.me{align-self:flex-end;background:linear-gradient(120deg,#7c3aed,#4f46e5);color:#fff;border-bottom-right-radius:5px}" +
+    ".vpc-reply{flex:0 0 auto;display:flex;gap:8px;padding:12px;border-top:1px solid var(--line2,#2a2145)}" +
+    ".vpc-reply textarea{flex:1;font:inherit;font-size:14px;color:var(--white,#fff);background:rgba(255,255,255,.05);border:1px solid var(--line2,#2a2145);border-radius:10px;padding:9px 12px;outline:none;resize:none}" +
+    ".vpc-reply textarea:focus{border-color:var(--royal,#7c3aed)}" +
+    ".vpc-reply .btn{align-self:stretch}" +
+    "@media(max-width:700px){.vpc-admin{grid-template-columns:1fr;height:auto}.vpc-list{max-height:200px}.vpc-pane{height:60vh}}" +
     ".dash-modal-bg{position:fixed;inset:0;background:rgba(6,4,16,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:flex-start;justify-content:center;padding:clamp(16px,5vh,56px) 16px;z-index:2000;overflow-y:auto}" +
     ".dash-modal{width:100%;max-width:560px;display:flex;flex-direction:column;max-height:calc(100vh - 48px);background:#17112f;border:1px solid rgba(196,181,253,.18);border-radius:20px;box-shadow:0 40px 120px -30px rgba(0,0,0,.85);overflow:hidden}" +
     ".dash-modal-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line2,#2a2145);background:#17112f}" +
