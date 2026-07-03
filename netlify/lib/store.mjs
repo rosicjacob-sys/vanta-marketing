@@ -210,7 +210,8 @@ async function pgChatSend({ cid, name, email, business, body }) {
       business = CASE WHEN chat_conversations.business = '' THEN EXCLUDED.business ELSE chat_conversations.business END,
       last_at = EXCLUDED.last_at`;
   await sqlc()`INSERT INTO chat_messages (cid, sender, body, created_at) VALUES (${cid}, 'visitor', ${body}, ${t})`;
-  return { ok: true, at: t };
+  const cnt = await sqlc()`SELECT count(*) AS n FROM chat_messages WHERE cid = ${cid}`;
+  return { ok: true, at: t, firstMessage: Number(cnt[0] && cnt[0].n) === 1 };
 }
 async function pgChatReply({ cid, body }) {
   await ensureSchema();
@@ -277,7 +278,7 @@ async function blobChatSend({ cid, name, email, business, body }) {
   c.messages.push({ sender: 'visitor', body, created_at: t });
   c.lastAt = t;
   await chatStore().setJSON(cid, c);
-  return { ok: true, at: t };
+  return { ok: true, at: t, firstMessage: c.messages.length === 1 };
 }
 async function blobChatReply({ cid, body }) {
   const t = now();

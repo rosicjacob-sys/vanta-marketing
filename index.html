@@ -813,6 +813,8 @@ function wireForm(n){
 function saveLead(data){
   try{ const k='vanta_niche_leads'; const a=JSON.parse(localStorage.getItem(k)||'[]'); a.push(data); localStorage.setItem(k,JSON.stringify(a)); }catch(e){}
   if(LEADS_ENDPOINT){ try{ fetch(LEADS_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(data).toString()}).catch(()=>{});}catch(e){} }
+  // Also ping our backend so the admin gets an email + in-app alert (the Sheet stays the source of truth).
+  try{ fetch('/.netlify/functions/lead-notify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)}).catch(()=>{});}catch(e){}
 }
 window.openCo=()=>{ document.getElementById('checkout').classList.add('show'); document.body.style.overflow='hidden'; };
 window.closeCo=()=>{ document.getElementById('checkout').classList.remove('show'); document.body.style.overflow=''; };
