@@ -102,6 +102,11 @@
     ngSitesN:   { en: "Sites",                 fr: "Sites" },
     ngActiveN:  { en: "Active",                fr: "Actifs" },
     ngSeoCol:   { en: "SEO",                   fr: "SEO" },
+    ngSiteList: { en: "Your sites",            fr: "Vos sites" },
+    ngSiteCol:  { en: "Site",                  fr: "Site" },
+    ngLatestCol:{ en: "Latest post",           fr: "Dernier article" },
+    ngNoScan:   { en: "Not scanned yet",       fr: "Pas encore analysé" },
+    ngNoPost:   { en: "No posts yet",          fr: "Aucun article" },
     cdView:     { en: "View",                  fr: "Voir" },
     cdBack:     { en: "Back to clients",       fr: "Retour aux clients" },
     cdReal:     { en: "Real data",             fr: "Données réelles" },
@@ -429,9 +434,15 @@
       pNg.then(function (nres) {
         var d = nres.data || {};
         var ng = (d.configured && d.ok && d.client) ? d.client : null;
-        host.innerHTML = clientHTML(user, m, ng);
+        var ngSites = ng ? (d.sites || []) : [];
+        host.innerHTML = clientHTML(user, m, ng, ngSites);
         wireCommon();
         try { if (window.__chatIdentify) window.__chatIdentify(user.name, user.email); } catch (e) {}
+        // Auto-load this client's past chat messages into the floating chat.
+        api("/client-chat").then(function (cr) {
+          var cd = cr.data || {};
+          if (window.__chatBind && cd.cid) window.__chatBind({ cid: cd.cid, messages: cd.messages || [], name: user.name, email: user.email });
+        }).catch(function () {});
         maybeShowExpiry(user, (res.data && res.data.planLink) || "");
       });
     }).catch(function () {
@@ -446,6 +457,7 @@
   var NG_REAL_CARDS = [
     ["seo", "ngAvgSeo"], ["sites", "ngSitesN"], ["active", "ngActiveN"],
     ["posts", "cdTotalPosts"], ["rviews", "cdViews"], ["rclicks", "cdClicks"],
+    ["sitelist", "ngSiteList"],
   ];
   var NG_MANUAL_CARDS = [
     ["mviews", "views"], ["mclicks", "clicks"], ["mai", "ai"],
@@ -500,7 +512,34 @@
     try { return new Date(iso).toLocaleDateString(FR() ? "fr-CA" : "en-CA", { year: "numeric", month: "short", day: "numeric" }); }
     catch (e) { return ""; }
   }
-  function clientHTML(user, m, ng) {
+  function siteUrl(domain) {
+    var d = String(domain || "").trim();
+    if (!d) return "";
+    return /^https?:\/\//i.test(d) ? d : "https://" + d;
+  }
+  // Clickable list of the client's blog sites (domain links out to the site).
+  function clientSitesHTML(sites) {
+    sites = sites || [];
+    if (!sites.length) return "";
+    var rows = sites.map(function (s) {
+      var url = siteUrl(s.domain);
+      var name = url
+        ? '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="ng-site-link">' + esc(s.domain) + " ↗</a>"
+        : "<b>" + esc(s.domain || "—") + "</b>";
+      var score = s.seoScore == null ? '<span class="dash-muted">' + esc(t("ngNoScan")) + "</span>"
+        : '<span class="ng-score ' + seoClass(s.seoScore) + '">' + Math.round(num(s.seoScore)) + "</span>";
+      var post = s.lastPostTitle
+        ? esc(s.lastPostTitle) + (s.lastPostAt ? ' <span class="dash-muted">· ' + esc(ngDate(s.lastPostAt)) + "</span>" : "")
+        : '<span class="dash-muted">' + esc(t("ngNoPost")) + "</span>";
+      return "<tr><td>" + name + (s.platform ? ' <span class="ng-plat">' + esc(s.platform) + "</span>" : "") + "</td>" +
+        "<td>" + score + "</td><td>" + post + "</td></tr>";
+    }).join("");
+    return '<div class="dash-card"><h3>' + esc(t("ngSiteList")) + "</h3>" +
+      '<div style="overflow-x:auto"><table class="dash-table ng-table"><thead><tr><th>' + esc(t("ngSiteCol")) +
+      "</th><th>" + esc(t("ngSeoCol")) + "</th><th>" + esc(t("ngLatestCol")) +
+      "</th></tr></thead><tbody>" + rows + "</tbody></table></div></div>";
+  }
+  function clientHTML(user, m, ng, ngSites) {
     var name = user.name || getName() || "";
     var vis = user.visible;
     function show(k) { return showCard(k, vis); }
@@ -528,6 +567,9 @@
     if (show("mai")) tiles += stat(fmt(m.aiCitations), t("ai"), "");
     if (show("mpublished")) tiles += stat(fmt(m.articlesPublished), t("published"), '<span class="dash-sub">' + fmt(m.articlesUpcoming) + " " + t("upcoming") + "</span>");
     if (tiles) out += '<div class="dash-stats">' + tiles + "</div>";
+
+    // Clickable list of blog sites.
+    if (show("sitelist") && ngSites && ngSites.length) out += clientSitesHTML(ngSites);
 
     // Charts — trend and/or sources.
     var charts = [];
@@ -1450,6 +1492,8 @@
     ".ng-plat{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut2,#77809a);border:1px solid var(--line2,#2a2145);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}" +
     ".ng-table{min-width:0}" +
     ".ng-table td{font-size:13px}" +
+    ".ng-site-link{color:#c4b5fd;font-weight:700;text-decoration:none;white-space:nowrap}" +
+    ".ng-site-link:hover{text-decoration:underline}" +
     ".cd-head{margin:14px 0 16px}" +
     ".cd-head h3{margin:0;font-size:22px;color:var(--white,#fff)}" +
     ".cd-tabs{display:flex;gap:10px;margin:0 0 18px;flex-wrap:wrap}" +
