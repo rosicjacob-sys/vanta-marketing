@@ -108,8 +108,10 @@ function ensureSchema() {
           body       text NOT NULL DEFAULT '',
           status     text NOT NULL DEFAULT '',
           detail     text NOT NULL DEFAULT '',
+          audience   text NOT NULL DEFAULT '',
           created_at bigint
         )`;
+      await sql`ALTER TABLE email_log ADD COLUMN IF NOT EXISTS audience text NOT NULL DEFAULT ''`;
       await sql`CREATE INDEX IF NOT EXISTS email_log_created_idx ON email_log (created_at)`;
     })();
   }
@@ -425,17 +427,28 @@ async function blobUnread(audience, recipient) {
 /* ===================== email log: Postgres ===================== */
 async function pgLogEmail(e) {
   await ensureSchema();
-  await sqlc()`INSERT INTO email_log (to_addr, subject, body, status, detail, created_at)
-    VALUES (${e.to || ''}, ${e.subject || ''}, ${e.body || ''}, ${e.status || ''}, ${e.detail || ''}, ${Date.now()})`;
+  await sqlc()`INSERT INTO email_log (to_addr, subject, body, status, detail, audience, created_at)
+    VALUES (${e.to || ''}, ${e.subject || ''}, ${e.body || ''}, ${e.status || ''}, ${e.detail || ''}, ${e.audience || ''}, ${Date.now()})`;
   return { ok: true };
 }
 async function pgListEmails(limit) {
   await ensureSchema();
   const n = Math.min(Math.max(Number(limit) || 200, 1), 500);
-  const rows = await sqlc()`SELECT id, to_addr, subject, body, status, detail, created_at
+  const rows = await sqlc()`SELECT id, to_addr, subject, body, status, detail, audience, created_at
     FROM email_log ORDER BY created_at DESC LIMIT ${n}`;
   return rows.map(r => ({ id: Number(r.id), to: r.to_addr, subject: r.subject, body: r.body,
-    status: r.status, detail: r.detail, created_at: Number(r.created_at) }));
+    status: r.status, detail: r.detail, audience: r.audience || '', created_at: Number(r.created_at) }));
+}
+async function pgDeleteEmail(id) {
+  await ensureSchema();
+  await sqlc()`DELETE FROM email_log WHERE id = ${Number(id) || 0}`;
+  return { ok: true };
+}
+async function pgClearEmails(audience) {
+  await ensureSchema();
+  if (audience) await sqlc()`DELETE FROM email_log WHERE audience = ${audience}`;
+  else await sqlc()`DELETE FROM email_log`;
+  return { ok: true };
 }
 
 /* ===================== email log: Blobs (fallback) ===================== */
@@ -445,7 +458,7 @@ async function blobLogEmail(e) {
   const arr = (await st.get('log', { type: 'json' })) || [];
   const id = arr.length ? arr[arr.length - 1].id + 1 : 1;
   arr.push({ id, to: e.to || '', subject: e.subject || '', body: e.body || '',
-    status: e.status || '', detail: e.detail || '', created_at: Date.now() });
+    status: e.status || '', detail: e.detail || '', audience: e.audience || '', created_at: Date.now() });
   if (arr.length > 300) arr.splice(0, arr.length - 300);
   await st.setJSON('log', arr);
   return { ok: true };
@@ -453,7 +466,21 @@ async function blobLogEmail(e) {
 async function blobListEmails(limit) {
   const arr = (await emailStore().get('log', { type: 'json' })) || [];
   const n = Math.min(Math.max(Number(limit) || 200, 1), 500);
-  return arr.slice().reverse().slice(0, n);
+  return arr.slice().reverse().slice(0, n).map(x => ({ audience: '', ...x }));
+}
+async function blobDeleteEmail(id) {
+  const st = emailStore();
+  const arr = (await st.get('log', { type: 'json' })) || [];
+  const out = arr.filter(x => String(x.id) !== String(id));
+  await st.setJSON('log', out);
+  return { ok: true };
+}
+async function blobClearEmails(audience) {
+  const st = emailStore();
+  if (!audience) { await st.setJSON('log', []); return { ok: true }; }
+  const arr = (await st.get('log', { type: 'json' })) || [];
+  await st.setJSON('log', arr.filter(x => (x.audience || '') !== audience));
+  return { ok: true };
 }
 
 /* ===================== public API (dispatches) ===================== */
@@ -484,3 +511,5 @@ export function unreadCount(a, r)           { return usePg() ? pgUnread(a, r)   
 
 export function logEmail(e)                 { return usePg() ? pgLogEmail(e)        : blobLogEmail(e); }
 export function listEmails(limit)           { return usePg() ? pgListEmails(limit)  : blobListEmails(limit); }
+export function deleteEmail(id)             { return usePg() ? pgDeleteEmail(id)    : blobDeleteEmail(id); }
+export function clearEmails(audience)       { return usePg() ? pgClearEmails(audience) : blobClearEmails(audience); }

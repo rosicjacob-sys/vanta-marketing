@@ -5,11 +5,11 @@ import { sendEmail } from './email.mjs';
 
 export async function notifyClient(email, title, body, type) {
   await addNotification({ audience: 'client', recipient: email, title, body, type });
-  try { await sendEmail({ to: email, subject: title, text: body }); } catch (e) { /* best effort */ }
+  try { await sendEmail({ to: email, subject: title, text: body, audience: 'client' }); } catch (e) { /* best effort */ }
 }
 
 export async function notifyAdmin(title, body, type) {
   await addNotification({ audience: 'admin', recipient: '', title, body, type });
   const adminEmail = process.env.ADMIN_EMAIL;
-  if (adminEmail) { try { await sendEmail({ to: adminEmail, subject: '[Vanta] ' + title, text: body }); } catch (e) { /* best effort */ } }
+  if (adminEmail) { try { await sendEmail({ to: adminEmail, subject: '[Vanta] ' + title, text: body, audience: 'admin' }); } catch (e) { /* best effort */ } }
 }
