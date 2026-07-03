@@ -71,7 +71,6 @@
     confirmPay: { en: "Confirm",             fr: "Confirmer" },
     rejectPay:  { en: "Reject",              fr: "Rejeter" },
     statusCol:  { en: "Status",              fr: "Statut" },
-    stPending:  { en: "Pending",             fr: "En attente" },
     stConfirmed:{ en: "Confirmed",           fr: "Confirmé" },
     stRejected: { en: "Rejected",            fr: "Rejeté" },
     noClaims:   { en: "No payment claims yet.", fr: "Aucune réclamation de paiement." },
@@ -109,7 +108,6 @@
     renewNow:   { en: "Renew now",           fr: "Renouveler" },
     alreadyPaid:{ en: "I already paid",      fr: "J'ai déjà payé" },
     managePlans:{ en: "Manage plans",       fr: "Gérer les forfaits" },
-    plansTitle: { en: "Plans",              fr: "Forfaits" },
     plansHint:  { en: "Define your plans. They appear in the client Plan dropdown; the buy link is your Whop/Stripe checkout.", fr: "Définissez vos forfaits. Ils apparaissent dans le menu Forfait du client; le lien d'achat est votre paiement Whop/Stripe." },
     planNone:   { en: "— No plan —",         fr: "— Aucun forfait —" },
     planName:   { en: "Plan name",           fr: "Nom du forfait" },
@@ -1118,10 +1116,6 @@
     "body.vp-dash nav.vn,body.vp-dash footer,body.vp-dash #chatw{display:none!important}" +
     "#view-admin>.sec,#view-dashboard>.sec{padding-top:34px}" +
     ".dash-table tbody tr:hover td{background:rgba(124,58,237,.06)}" +
-    ".dash-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line2,#2a2145);margin:4px 0 18px}" +
-    ".dash-tab{font:inherit;font-size:14px;font-weight:600;color:var(--mut,#9aa);background:none;border:none;border-bottom:2px solid transparent;padding:10px 14px;margin-bottom:-1px;cursor:pointer}" +
-    ".dash-tab:hover{color:var(--white,#fff)}" +
-    ".dash-tab.is-on{color:var(--white,#fff);border-bottom-color:var(--royal,#7c3aed)}" +
     ".admin-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;margin-top:4px;min-height:62vh}" +
     ".admin-nav{display:flex;flex-direction:column;gap:4px;align-self:stretch}" +
     ".admin-nav-foot{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:6px}" +
