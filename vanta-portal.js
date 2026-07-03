@@ -11,6 +11,9 @@
   var LS = { token: "vanta_token", role: "vanta_role", name: "vanta_name" };
   // Google Sheet where lead/form submissions are collected (admin "View leads").
   var LEADS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1hrDo4e5WTX1WQF3n369v1CmsTXQq8ZFOrF8-odcDMI8/edit?gid=0#gid=0";
+  var GEAR_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+  var EYE_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYE_OFF_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
   var adminPoll = null; // interval handle for the admin Messages thread
   var bellPoll = null;  // interval handle for the notifications bell
   var msgPoll = null;   // interval handle for the admin Messages unread badge
@@ -576,7 +579,10 @@
     main.style.display = "none";
     det.style.display = "";
     det.innerHTML =
-      '<button class="btn ghost sm" id="cdBack">&#8592; ' + esc(t("cdBack")) + "</button>" +
+      '<div class="cd-topbar">' +
+        '<button class="btn ghost sm" id="cdBack">&#8592; ' + esc(t("cdBack")) + "</button>" +
+        '<button class="btn ghost sm cd-gear" id="cdSettings" title="' + esc(t("visSection")) + '" aria-label="' + esc(t("visSection")) + '">' + GEAR_SVG + "</button>" +
+      "</div>" +
       '<div class="cd-head"><h3>' + esc(c.name || c.email || "") + "</h3>" +
         '<div class="dash-muted">' + esc(c.email || "") + (c.plan ? " · " + esc(c.plan) : "") + "</div></div>" +
       '<div class="cd-tabs">' +
@@ -588,6 +594,8 @@
         '<div class="dash-toolbar"><button class="btn ghost" id="cdEdit">' + esc(t("edit")) + "</button></div>" +
         cdManualHTML(c.metrics || {}) + "</div>";
     el("cdBack").onclick = function () { det.style.display = "none"; det.innerHTML = ""; main.style.display = ""; };
+    var gear = el("cdSettings");
+    if (gear) gear.onclick = function () { openVisibilityModal(c); };
     var editBtn = el("cdEdit");
     if (editBtn) editBtn.onclick = function () { if (typeof onEdit === "function") onEdit(); };
     det.querySelectorAll(".cd-tab").forEach(function (b) {
@@ -603,6 +611,55 @@
     }).catch(function () {
       var host = el("cdReal"); if (host) host.innerHTML = '<div class="dash-card"><div class="dash-empty">' + esc(t("netErr")) + "</div></div>";
     });
+  }
+  // Eye-toggle modal: pick which data blocks the client sees.
+  function openVisibilityModal(c) {
+    var modal = el("vpModal"); if (!modal) return;
+    var state = { real: showGroup("real", c.visible), manual: showGroup("manual", c.visible) };
+    function eyeRow(key, label, sub) {
+      return '<div class="vis-row"><div class="vis-row-t"><b>' + esc(label) + "</b><span>" + esc(sub) + "</span></div>" +
+        '<button type="button" class="vis-eye' + (state[key] ? " is-on" : "") + '" data-vk="' + key +
+        '" aria-pressed="' + (state[key] ? "true" : "false") + '">' +
+        '<span class="vis-eye-on">' + EYE_SVG + "</span><span class=\"vis-eye-off\">" + EYE_OFF_SVG + "</span></button></div>";
+    }
+    modal.innerHTML =
+      '<div class="dash-modal-bg" id="vpVisBg"><div class="dash-modal" style="max-width:460px">' +
+        '<div class="dash-modal-head"><h3>' + esc(t("visSection")) + "</h3>" +
+          '<button type="button" class="dash-modal-x" id="vpVisX" aria-label="' + esc(t("close")) + '">&#10005;</button></div>' +
+        '<div class="dash-modal-body">' +
+          '<p class="dash-muted" style="margin:2px 0 12px">' + esc(t("visHint")) + "</p>" +
+          eyeRow("real", t("visReal"), t("visRealSub")) +
+          eyeRow("manual", t("visManual"), t("visManualSub")) +
+        "</div>" +
+        '<div class="dash-modal-foot"><span class="hint" id="vpVisMsg"></span><div class="vpf-actions">' +
+          '<button type="button" class="btn ghost" id="vpVisCancel">' + esc(t("cancel")) + "</button>" +
+          '<button type="button" class="btn primary" id="vpVisSave">' + esc(t("save")) + "</button></div></div>" +
+      "</div></div>";
+    try { document.body.style.overflow = "hidden"; } catch (e) {}
+    function close() { modal.innerHTML = ""; try { document.body.style.overflow = ""; } catch (e) {} document.removeEventListener("keydown", onKey); }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    document.addEventListener("keydown", onKey);
+    el("vpVisX").onclick = close;
+    el("vpVisCancel").onclick = close;
+    el("vpVisBg").onclick = function (e) { if (e.target === el("vpVisBg")) close(); };
+    modal.querySelectorAll(".vis-eye").forEach(function (btn) {
+      btn.onclick = function () {
+        var k = btn.getAttribute("data-vk");
+        state[k] = !state[k];
+        btn.classList.toggle("is-on", state[k]);
+        btn.setAttribute("aria-pressed", state[k] ? "true" : "false");
+      };
+    });
+    el("vpVisSave").onclick = function () {
+      var visible = [];
+      if (state.real) visible.push("real");
+      if (state.manual) visible.push("manual");
+      var msg = el("vpVisMsg"); if (msg) { msg.textContent = "…"; msg.style.color = ""; }
+      api("/admin-clients", { method: "PUT", body: { email: c.email, visible: visible } }).then(function (res) {
+        if (res.ok) { c.visible = visible; if (msg) { msg.textContent = t("setSaved"); msg.style.color = "#39d98a"; } setTimeout(close, 500); }
+        else if (msg) { msg.textContent = (res.data && res.data.error) || "Error."; msg.style.color = "#ff8080"; }
+      });
+    };
   }
   function stat(value, label, sub) {
     return '<div class="dash-stat"><div class="dash-stat-v">' + value + "</div>" +
@@ -683,8 +740,8 @@
             '<span class="admin-nav-badge" id="vpPayBadge" hidden></span></button>' +
           navItem("emails", t("emailsTab"), false) +
           navItem("plans", t("managePlans"), false) +
-          navItem("settings", t("settingsTab"), false) +
           '<div class="admin-nav-foot">' +
+            navItem("settings", t("settingsTab"), false) +
             '<div class="admin-nav-sep"></div>' +
             '<button class="admin-nav-item admin-nav-logout" id="vpLogout">' + esc(t("logout")) + "</button>" +
           "</div>" +
@@ -719,9 +776,6 @@
   function clientForm(c, isNew, plans) {
     c = c || {}; var m = c.metrics || {};
     plans = plans || [];
-    // Which data blocks this client sees (default both when unset).
-    var vis = Array.isArray(c.visible) ? c.visible : null;
-    function visChk(key) { return (vis ? vis.indexOf(key) >= 0 : true) ? " checked" : ""; }
     function f(label, name, val, type) {
       return '<label class="vpf">' + esc(label) +
         '<input name="' + name + '" type="' + (type || "text") + '" value="' + esc(val == null ? "" : val) + '"></label>';
@@ -780,12 +834,6 @@
           '<textarea name="articles" rows="3">' + esc(articlesToStr(m.articles)) + "</textarea></label>" +
         '<label class="vpf">' + (FR() ? "Note au client" : "Note to client") +
           '<input name="note" value="' + esc(m.note || "") + '"></label>' +
-        '<div class="vpf-section">' + esc(t("visSection")) + "</div>" +
-        '<div class="vpf-hint" style="margin:-4px 0 6px">' + esc(t("visHint")) + "</div>" +
-        '<label class="vpf-check"><input type="checkbox" name="vis_real"' + visChk("real") + ">" +
-          '<span><b>' + esc(t("visReal")) + "</b><span>" + esc(t("visRealSub")) + "</span></span></label>" +
-        '<label class="vpf-check"><input type="checkbox" name="vis_manual"' + visChk("manual") + ">" +
-          '<span><b>' + esc(t("visManual")) + "</b><span>" + esc(t("visManualSub")) + "</span></span></label>" +
       "</div>" +
       '<div class="dash-modal-foot">' +
         '<div class="hint" id="vpFormMsg"></div>' +
@@ -834,10 +882,6 @@
         note: v("note")
       }
     };
-    var visible = [];
-    if (form.vis_real && form.vis_real.checked) visible.push("real");
-    if (form.vis_manual && form.vis_manual.checked) visible.push("manual");
-    payload.visible = visible;
     var pw = v("password");
     if (pw) payload.password = pw;
     return payload;
@@ -1494,11 +1538,16 @@
     ".vpf textarea{resize:vertical}" +
     ".vpf select{width:100%;box-sizing:border-box;font-size:14px;color:var(--white,#fff)}" +
     ".vpf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}" +
-    ".vpf-check{display:flex;align-items:flex-start;gap:10px;margin-top:10px;cursor:pointer;font:inherit}" +
-    ".vpf-check input{margin-top:3px;width:16px;height:16px;accent-color:var(--royal,#7c3aed);flex:0 0 auto}" +
-    ".vpf-check span{display:flex;flex-direction:column}" +
-    ".vpf-check b{font-size:14px;color:var(--white,#fff)}" +
-    ".vpf-check span span{font-size:12px;color:var(--mut2,#77809a)}" +
+    ".cd-topbar{display:flex;align-items:center;gap:8px}" +
+    ".cd-gear{display:inline-flex;align-items:center;justify-content:center;padding:6px 9px}" +
+    ".vis-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-bottom:1px solid var(--line2,#2a2145)}" +
+    ".vis-row:last-child{border-bottom:none}" +
+    ".vis-row-t b{display:block;font-size:14.5px;color:var(--white,#fff)}" +
+    ".vis-row-t span{font-size:12.5px;color:var(--mut2,#77809a)}" +
+    ".vis-eye{flex:0 0 auto;width:52px;height:32px;border-radius:20px;border:1px solid var(--line2,#2a2145);background:rgba(255,255,255,.05);color:var(--mut2,#77809a);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}" +
+    ".vis-eye.is-on{background:rgba(124,58,237,.22);border-color:transparent;color:#c4b5fd}" +
+    ".vis-eye .vis-eye-on{display:none}.vis-eye .vis-eye-off{display:inline-flex}" +
+    ".vis-eye.is-on .vis-eye-on{display:inline-flex}.vis-eye.is-on .vis-eye-off{display:none}" +
     ".vpf-actions{display:flex;justify-content:flex-end;gap:10px}" +
     "@media(max-width:820px){.dash-stats{grid-template-columns:1fr 1fr}.dash-grid2{grid-template-columns:1fr}}" +
     "@media(max-width:520px){.vpf-row{grid-template-columns:1fr}.dash-modal-foot{flex-direction:column;align-items:stretch}.vpf-actions .btn{flex:1}}";
