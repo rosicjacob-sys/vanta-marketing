@@ -61,6 +61,11 @@
     noNotifs:   { en: "No notifications yet.", fr: "Aucune notification." },
     justNow:    { en: "just now",            fr: "à l'instant" },
     payments:   { en: "Payments",            fr: "Paiements" },
+    runRem:     { en: "Run reminders",        fr: "Lancer les rappels" },
+    remDone:    { en: "Sweep done —",         fr: "Balayage terminé —" },
+    remRems:    { en: "reminder(s),",         fr: "rappel(s)," },
+    remExps:    { en: "expiry notice(s),",    fr: "avis d'expiration," },
+    remScan:    { en: "scanned",              fr: "analysés" },
     claimed:    { en: "Claimed",             fr: "Réclamé" },
     confirmPay: { en: "Confirm",             fr: "Confirmer" },
     rejectPay:  { en: "Reject",              fr: "Rejeter" },
@@ -482,7 +487,8 @@
         "</aside>" +
         '<div class="admin-main">' +
           '<div class="dash-panel" data-panel="clients">' +
-            '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button></div>" +
+            '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button>" +
+              ' <button class="btn ghost" id="vpRunRem">' + esc(t("runRem")) + "</button></div>" +
             '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
               "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("renewalCol")) +
               "</th><th>" + esc(t("views")) + "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
@@ -655,6 +661,17 @@
     }
 
     var add = el("vpAdd"); if (add) add.onclick = function () { openForm({}, true); };
+    var runRem = el("vpRunRem");
+    if (runRem) runRem.onclick = function () {
+      runRem.disabled = true; var orig = runRem.textContent; runRem.textContent = "…";
+      api("/admin-run-reminders", { method: "POST" }).then(function (res) {
+        runRem.disabled = false; runRem.textContent = orig;
+        var d = res.data || {};
+        alert(t("remDone") + " " + (d.reminders || 0) + " " + t("remRems") + " " + (d.expiries || 0) + " " +
+          t("remExps") + " " + (d.scanned || 0) + " " + t("remScan") + ".");
+        loadBell();
+      });
+    };
 
     // ---- left-nav switching ----
     var plansRendered = false, chatLoaded = false;
