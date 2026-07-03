@@ -60,6 +60,19 @@
     notifs:     { en: "Notifications",       fr: "Notifications" },
     noNotifs:   { en: "No notifications yet.", fr: "Aucune notification." },
     justNow:    { en: "just now",            fr: "à l'instant" },
+    payments:   { en: "Payments",            fr: "Paiements" },
+    claimed:    { en: "Claimed",             fr: "Réclamé" },
+    confirmPay: { en: "Payment confirmed",   fr: "Paiement confirmé" },
+    rejectPay:  { en: "Not confirmed",       fr: "Non confirmé" },
+    noClaims:   { en: "No payment claims to review.", fr: "Aucune réclamation de paiement à vérifier." },
+    rejectConfirm:{ en: "Mark this payment as NOT confirmed?", fr: "Marquer ce paiement comme NON confirmé?" },
+    underReview:{ en: "Payment under review", fr: "Paiement en vérification" },
+    reviewNote: { en: "We're verifying your payment — we'll confirm shortly.", fr: "On vérifie votre paiement — confirmation sous peu." },
+    expiredT:   { en: "Your plan has expired", fr: "Votre forfait a expiré" },
+    expiredMsg: { en: "Your plan expired on", fr: "Votre forfait a expiré le" },
+    remindLater:{ en: "Remind me later",     fr: "Me le rappeler plus tard" },
+    renewNow:   { en: "Renew now",           fr: "Renouveler" },
+    alreadyPaid:{ en: "I already paid",      fr: "J'ai déjà payé" },
     managePlans:{ en: "Manage plans",       fr: "Gérer les forfaits" },
     plansTitle: { en: "Plans",              fr: "Forfaits" },
     plansHint:  { en: "Define your plans. They appear in the client Plan dropdown; the buy link is your Whop/Stripe checkout.", fr: "Définissez vos forfaits. Ils apparaissent dans le menu Forfait du client; le lien d'achat est votre paiement Whop/Stripe." },
@@ -104,10 +117,40 @@
   function subBanner(user) {
     var si = subInfo(user);
     if (!si) return "";
+    if (user && user.claimStatus === "pending") return '<div class="sub-banner"><span class="sub-pill pend">' +
+      esc(t("underReview")) + "</span><span>" + esc(t("reviewNote")) + "</span></div>";
     if (si.expired) return '<div class="sub-banner exp"><span class="sub-pill exp">' + esc(t("expiredS")) +
       "</span><span>" + esc(fmtDate(si.expiry)) + "</span></div>";
     return '<div class="sub-banner"><span class="sub-pill ok">' + esc(t("active")) + "</span><span>" +
       esc(t("renews")) + " " + esc(fmtDate(si.expiry)) + " · " + si.days + " " + esc(t("daysWord")) + "</span></div>";
+  }
+  // Blocking expiry prompt for an expired, unclaimed, un-snoozed client.
+  function maybeShowExpiry(user, planLink) {
+    var host = el("vpExpiry"); if (!host) return;
+    host.innerHTML = "";
+    var si = subInfo(user);
+    if (!si || !si.expired) return;
+    if (user.claimStatus === "pending") return;
+    if (Date.now() < (user.snoozeUntil || 0)) return;
+    host.innerHTML =
+      '<div class="dash-modal-bg" id="vpExpBg"><div class="dash-modal" style="max-width:440px">' +
+        '<div class="dash-modal-head"><h3>' + esc(t("expiredT")) + "</h3></div>" +
+        '<div class="dash-modal-body"><p class="dash-muted" style="font-size:14px;line-height:1.5">' +
+          esc(t("expiredMsg")) + " <b>" + esc(fmtDate(si.expiry)) + "</b>." + "</p></div>" +
+        '<div class="dash-modal-foot" style="flex-wrap:wrap;justify-content:flex-end">' +
+          '<button class="btn ghost" id="vpRemind">' + esc(t("remindLater")) + "</button>" +
+          (planLink ? '<a class="btn ghost" href="' + esc(planLink) + '" target="_blank" rel="noopener">' + esc(t("renewNow")) + "</a>" : "") +
+          '<button class="btn primary" id="vpPaid">' + esc(t("alreadyPaid")) + "</button>" +
+        "</div></div></div>";
+    var remind = el("vpRemind");
+    if (remind) remind.onclick = function () {
+      api("/client-subscription", { method: "POST", body: { action: "snooze" } }).then(function () { host.innerHTML = ""; });
+    };
+    var paid = el("vpPaid");
+    if (paid) paid.onclick = function () {
+      paid.disabled = true;
+      api("/client-subscription", { method: "POST", body: { action: "paid" } }).then(function () { renderClient(); });
+    };
   }
 
   // Plans may be stored as strings (legacy) or {name, price, link} objects.
@@ -213,6 +256,7 @@
     clearSession();
     if (bellPoll) { clearInterval(bellPoll); bellPoll = null; }
     if (adminPoll) { clearInterval(adminPoll); adminPoll = null; }
+    try { if (window.__chatReset) window.__chatReset(); } catch (e) {}
     go("#/login");
     location.hash = "#/login";
   }
@@ -298,6 +342,7 @@
       var m = user.metrics || {};
       host.innerHTML = clientHTML(user, m);
       wireCommon();
+      maybeShowExpiry(user, (res.data && res.data.planLink) || "");
     }).catch(function () {
       host.innerHTML = '<div class="sec"><div class="wrap">' + topbar(getName() || "") +
         '<p class="lead">' + esc(t("netErr")) + '</p></div></div>';
@@ -367,7 +412,7 @@
       "</div>" +
       '<div class="dash-card"><h3>' + esc(t("articles")) + "</h3>" + articleList(m.articles) + "</div>" +
       (m.note ? '<p class="dash-note">' + esc(m.note) + "</p>" : "") +
-    "</div></div>";
+    '</div></div><div id="vpExpiry"></div>';
   }
 
   function stat(value, label, sub) {
@@ -428,6 +473,7 @@
         '<aside class="admin-nav">' +
           navItem("clients", t("clients"), true) +
           navItem("messages", t("tabMessages"), false) +
+          navItem("payments", t("payments"), false) +
           navItem("plans", t("managePlans"), false) +
         "</aside>" +
         '<div class="admin-main">' +
@@ -441,6 +487,7 @@
             '<div class="vpc-admin"><div class="vpc-list" id="vpChatList"><div class="dash-empty">…</div></div>' +
             '<div class="vpc-pane" id="vpChatPane"><div class="vpc-empty">' + esc(t("selectConv")) + "</div></div></div>" +
           "</div>" +
+          '<div class="dash-panel" data-panel="payments" style="display:none" id="vpPayPanel"></div>' +
           '<div class="dash-panel" data-panel="plans" style="display:none" id="vpPlansPanel"></div>' +
         "</div>" +
       "</div>" +
@@ -616,8 +663,41 @@
         });
         if (name === "messages" && !chatLoaded) { chatLoaded = true; loadChats(); }
         if (name === "plans" && !plansRendered) { plansRendered = true; renderPlansPanel(); }
+        if (name === "payments") renderPayments();
       };
     });
+
+    // ---- payments (verify claims) ----
+    function renderPayments() {
+      var host = el("vpPayPanel"); if (!host) return;
+      host.innerHTML = '<div class="dash-card"><p class="lead">…</p></div>';
+      api("/admin-payments").then(function (res) {
+        var claims = (res.data && res.data.claims) || [];
+        host.innerHTML = '<div class="dash-card" style="overflow-x:auto">' +
+          (claims.length
+            ? '<table class="dash-table"><thead><tr><th>' + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) +
+              "</th><th>" + esc(t("claimed")) + "</th><th></th></tr></thead><tbody>" +
+              claims.map(function (c) {
+                return '<tr data-email="' + esc(c.email) + '"><td><b>' + esc(c.name || "—") + '</b><div class="dash-muted">' +
+                  esc(c.email) + "</div></td><td>" + esc(c.plan || "—") + '</td><td class="dash-muted">' +
+                  esc(relTime(c.claimAt || Date.now())) + '</td><td class="dash-actions">' +
+                  '<button class="btn primary sm pay-ok">' + esc(t("confirmPay")) + "</button> " +
+                  '<button class="btn ghost sm pay-no">' + esc(t("rejectPay")) + "</button></td></tr>";
+              }).join("") + "</tbody></table>"
+            : '<div class="dash-empty">' + esc(t("noClaims")) + "</div>") + "</div>";
+        host.querySelectorAll(".pay-ok").forEach(function (btn) {
+          btn.onclick = function () { decidePayment(btn.closest("tr").getAttribute("data-email"), "confirm"); };
+        });
+        host.querySelectorAll(".pay-no").forEach(function (btn) {
+          btn.onclick = function () { if (!confirm(t("rejectConfirm"))) return; decidePayment(btn.closest("tr").getAttribute("data-email"), "reject"); };
+        });
+      });
+    }
+    function decidePayment(email, decision) {
+      api("/admin-payments", { method: "POST", body: { email: email, decision: decision } }).then(function () {
+        renderPayments(); loadBell();
+      });
+    }
 
     // ---- manage plans (panel) ----
     function planRow(p) {
@@ -771,6 +851,7 @@
     ".vp-bell{position:relative;width:44px;height:44px;border-radius:12px;border:1px solid var(--line2,#2a2145);background:rgba(255,255,255,.04);color:var(--white,#fff);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}" +
     ".vp-bell:hover{background:rgba(255,255,255,.09)}" +
     ".vp-bell-badge{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#e8409b;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}" +
+    ".vp-bell-badge[hidden]{display:none}" +
     ".vp-bell-menu{position:absolute;top:52px;right:0;width:330px;max-width:calc(100vw - 32px);max-height:min(60vh,460px);overflow-y:auto;background:#17112f;border:1px solid var(--line2,#2a2145);border-radius:14px;box-shadow:0 34px 90px -24px rgba(0,0,0,.85);z-index:1500}" +
     ".vp-bell-head{padding:13px 15px;font-weight:700;font-size:14px;color:var(--white,#fff);border-bottom:1px solid var(--line2,#2a2145);position:sticky;top:0;background:#17112f}" +
     ".vp-bell-empty{padding:26px 15px;text-align:center;color:var(--mut2,#77809a);font-size:13px}" +
@@ -784,6 +865,7 @@
     ".sub-pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}" +
     ".sub-pill.ok{background:rgba(57,217,138,.14);color:#39d98a}" +
     ".sub-pill.exp{background:rgba(255,122,122,.16);color:#ff8f8f}" +
+    ".sub-pill.pend{background:rgba(245,183,49,.16);color:#f5c451}" +
     ".dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}" +
     ".dash-stat{background:linear-gradient(180deg,var(--panel,#140e29),#0c0918);border:1px solid var(--line2,#2a2145);border-radius:16px;padding:18px}" +
     ".dash-stat-v{font-size:30px;font-weight:800;color:var(--white,#fff);line-height:1.1}" +
