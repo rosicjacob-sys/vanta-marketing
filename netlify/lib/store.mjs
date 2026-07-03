@@ -249,6 +249,19 @@ async function pgSetPlans(plans) {
     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
   return plans;
 }
+async function pgGetConfig() {
+  await ensureSchema();
+  const rows = await sqlc()`SELECT value FROM settings WHERE key = 'config'`;
+  const v = rows[0] && rows[0].value;
+  return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+}
+async function pgSetConfig(cfg) {
+  await ensureSchema();
+  await sqlc()`
+    INSERT INTO settings (key, value) VALUES ('config', ${JSON.stringify(cfg || {})}::jsonb)
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
+  return cfg;
+}
 
 /* ===================== chat: Blobs (fallback) ===================== */
 function chatStore() { return getStore({ name: 'vanta-chats', consistency: 'strong' }); }
@@ -302,6 +315,11 @@ async function blobGetPlans() {
   return Array.isArray(v) ? v : [];
 }
 async function blobSetPlans(plans) { await settingsStore().setJSON('plans', plans); return plans; }
+async function blobGetConfig() {
+  const v = await settingsStore().get('config', { type: 'json' });
+  return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+}
+async function blobSetConfig(cfg) { await settingsStore().setJSON('config', cfg || {}); return cfg; }
 
 /* ===================== notifications: Postgres ===================== */
 async function pgAddNotif(n) {
@@ -451,6 +469,9 @@ export function chatList()              { return usePg() ? pgChatList()         
 
 export function getPlans()        { return usePg() ? pgGetPlans()      : blobGetPlans(); }
 export function setPlans(plans)   { return usePg() ? pgSetPlans(plans) : blobSetPlans(plans); }
+
+export function getConfig()       { return usePg() ? pgGetConfig()     : blobGetConfig(); }
+export function setConfig(cfg)    { return usePg() ? pgSetConfig(cfg)  : blobSetConfig(cfg); }
 
 export function addClaim(c)               { return usePg() ? pgAddClaim(c)      : blobAddClaim(c); }
 export function listClaims()              { return usePg() ? pgListClaims()     : blobListClaims(); }
