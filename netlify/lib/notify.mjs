@@ -8,8 +8,9 @@ export async function notifyClient(email, title, body, type) {
   try { await sendEmail({ to: email, subject: title, text: body, audience: 'client' }); } catch (e) { /* best effort */ }
 }
 
-export async function notifyAdmin(title, body, type) {
+export async function notifyAdmin(title, body, type, opts) {
   await addNotification({ audience: 'admin', recipient: '', title, body, type });
+  const email = !opts || opts.email !== false; // default: also send email
   const adminEmail = process.env.ADMIN_EMAIL;
-  if (adminEmail) { try { await sendEmail({ to: adminEmail, subject: '[Vanta] ' + title, text: body, audience: 'admin' }); } catch (e) { /* best effort */ } }
+  if (email && adminEmail) { try { await sendEmail({ to: adminEmail, subject: '[Vanta] ' + title, text: body, audience: 'admin' }); } catch (e) { /* best effort */ } }
 }
