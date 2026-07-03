@@ -11,6 +11,7 @@
   var LS = { token: "vanta_token", role: "vanta_role", name: "vanta_name" };
   var adminPoll = null; // interval handle for the admin Messages thread
   var bellPoll = null;  // interval handle for the notifications bell
+  var msgPoll = null;   // interval handle for the admin Messages unread badge
   var bellItems = [];   // last-fetched notifications
 
   function lang() { try { return localStorage.getItem("vanta_lang") || "en"; } catch (e) { return "en"; } }
@@ -265,9 +266,14 @@
     clearSession();
     if (bellPoll) { clearInterval(bellPoll); bellPoll = null; }
     if (adminPoll) { clearInterval(adminPoll); adminPoll = null; }
+    if (msgPoll) { clearInterval(msgPoll); msgPoll = null; }
     try { if (window.__chatReset) window.__chatReset(); } catch (e) {}
-    go("#/login");
-    location.hash = "#/login";
+    // Show the login screen right away instead of waiting on the async hashchange
+    // (the shared router has no "#/login" branch, so relying on it left the
+    //  dashboard visible until a manual refresh).
+    document.body.classList.remove("vp-dash");
+    showView("view-login");
+    if ((location.hash || "").indexOf("#/login") !== 0) location.hash = "#/login";
   }
 
   function requireRole(role) {
@@ -278,7 +284,7 @@
     return true;
   }
 
-  function topbar(title) {
+  function topbar(title, hideLogout) {
     return '<div class="dash-top">' +
       '<div><div class="eyebrow">' + esc(t("welcome")) + '</div>' +
       '<h2 style="margin:6px 0 0">' + esc(title) + '</h2></div>' +
@@ -287,7 +293,7 @@
           '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
           '<span class="vp-bell-badge" id="vpBellCount" hidden></span></button>' +
           '<div class="vp-bell-menu" id="vpBellMenu" hidden></div></div>' +
-        '<button class="btn ghost" id="vpLogout">' + esc(t("logout")) + '</button>' +
+        (hideLogout ? "" : '<button class="btn ghost" id="vpLogout">' + esc(t("logout")) + '</button>') +
       "</div></div>";
   }
   function relTime(ms) {
@@ -435,6 +441,7 @@
     var host = el("view-admin");
     if (!host) return;
     if (adminPoll) { clearInterval(adminPoll); adminPoll = null; }
+    if (msgPoll) { clearInterval(msgPoll); msgPoll = null; }
     host.innerHTML = '<div class="sec"><div class="wrap"><p class="lead">…</p></div></div>';
     showView("view-admin");
 
@@ -477,14 +484,17 @@
       return '<button class="admin-nav-item' + (on ? " is-on" : "") + '" data-nav="' + id + '">' + esc(label) + "</button>";
     }
     return '<div class="sec"><div class="wrap">' +
-      topbar(t("adminTitle")) +
+      topbar(t("adminTitle"), true) +
       '<div class="admin-layout">' +
         '<aside class="admin-nav">' +
           navItem("clients", t("clients"), true) +
-          navItem("messages", t("tabMessages"), false) +
+          '<button class="admin-nav-item" data-nav="messages">' + esc(t("tabMessages")) +
+            '<span class="admin-nav-badge" id="vpMsgBadge" hidden></span></button>' +
           '<button class="admin-nav-item" data-nav="payments">' + esc(t("payments")) +
             '<span class="admin-nav-badge" id="vpPayBadge" hidden></span></button>' +
           navItem("plans", t("managePlans"), false) +
+          '<div class="admin-nav-sep"></div>' +
+          '<button class="admin-nav-item admin-nav-logout" id="vpLogout">' + esc(t("logout")) + "</button>" +
         "</aside>" +
         '<div class="admin-main">' +
           '<div class="dash-panel" data-panel="clients">' +
@@ -675,10 +685,10 @@
     };
     // ---- left-nav switching ----
     var plansRendered = false, chatLoaded = false;
-    document.querySelectorAll(".admin-nav-item").forEach(function (item) {
+    document.querySelectorAll(".admin-nav-item[data-nav]").forEach(function (item) {
       item.onclick = function () {
         var name = item.getAttribute("data-nav");
-        document.querySelectorAll(".admin-nav-item").forEach(function (b) { b.classList.toggle("is-on", b === item); });
+        document.querySelectorAll(".admin-nav-item[data-nav]").forEach(function (b) { b.classList.toggle("is-on", b === item); });
         document.querySelectorAll(".admin-main .dash-panel").forEach(function (pnl) {
           pnl.style.display = pnl.getAttribute("data-panel") === name ? "" : "none";
         });
@@ -810,14 +820,33 @@
 
     // ---- messages ----
     var curCid = null, chatSeen = 0, convs = [];
+    // Which client messages the admin has already seen — kept per browser.
+    var readMap = (function () { try { return JSON.parse(localStorage.getItem("vanta_chat_read") || "{}") || {}; } catch (e) { return {}; } })();
+    function saveReadMap() { try { localStorage.setItem("vanta_chat_read", JSON.stringify(readMap)); } catch (e) {} }
+    function convUnread(c) { return (c.lastClientAt || 0) > (readMap[c.cid] || 0); }
+    function updateMsgBadge(list) {
+      var badge = el("vpMsgBadge"); if (!badge) return;
+      var n = (list || convs || []).filter(convUnread).length;
+      if (n > 0) { badge.textContent = n > 9 ? "9+" : String(n); badge.hidden = false; } else badge.hidden = true;
+    }
+    function refreshMsgBadge() {
+      api("/admin-chats").then(function (res) {
+        var list = (res.data && res.data.conversations) || [];
+        // If the Messages panel isn't rendered yet, keep this list for badge counting.
+        if (!convs.length) convs = list;
+        updateMsgBadge(list);
+      }).catch(function () {});
+    }
     function loadChats() {
       var listEl = el("vpChatList");
       api("/admin-chats").then(function (res) {
         if (!listEl) return;
         convs = (res.data && res.data.conversations) || [];
+        updateMsgBadge(convs);
         if (!convs.length) { listEl.innerHTML = '<div class="dash-empty">' + esc(t("noMessages")) + "</div>"; return; }
         listEl.innerHTML = convs.map(function (c) {
-          return '<button class="vpc-conv" data-cid="' + esc(c.cid) + '">' +
+          return '<button class="vpc-conv' + (convUnread(c) ? " has-unread" : "") + '" data-cid="' + esc(c.cid) + '">' +
+            '<span class="vpc-dot" aria-hidden="true"></span>' +
             '<div class="vpc-conv-name">' + esc(c.name || c.email || c.cid) + "</div>" +
             (c.business ? '<div class="vpc-conv-sub">' + esc(c.business) + "</div>" : "") +
             '<div class="vpc-conv-last">' + esc(c.last || "") + "</div></button>";
@@ -832,6 +861,12 @@
     }
     function openConv(meta) {
       curCid = meta.cid; chatSeen = 0;
+      // Opening the thread marks its client messages as read.
+      readMap[meta.cid] = Math.max(readMap[meta.cid] || 0, meta.lastClientAt || meta.lastAt || Date.now());
+      saveReadMap();
+      var row = document.querySelector('.vpc-conv[data-cid="' + (window.CSS && CSS.escape ? CSS.escape(meta.cid) : meta.cid) + '"]');
+      if (row) row.classList.remove("has-unread");
+      updateMsgBadge(convs);
       var pane = el("vpChatPane"); if (!pane) return;
       pane.innerHTML =
         '<div class="vpc-head"><b>' + esc(meta.name || meta.email || meta.cid) + "</b>" +
@@ -868,9 +903,20 @@
         });
         if (res.data && typeof res.data.head === "number") chatSeen = res.data.head;
         if (!thread.children.length) thread.innerHTML = '<div class="dash-empty">' + esc(t("noReplyYet")) + "</div>";
-        if (msgs.length) thread.scrollTop = thread.scrollHeight;
+        if (msgs.length) {
+          thread.scrollTop = thread.scrollHeight;
+          // The admin is looking at this thread — keep it marked read.
+          readMap[cid] = Math.max(readMap[cid] || 0, chatSeen || 0);
+          saveReadMap();
+          updateMsgBadge(convs);
+        }
       });
     }
+
+    // Populate the Messages nav badge on load and keep it fresh in the background.
+    refreshMsgBadge();
+    if (msgPoll) clearInterval(msgPoll);
+    msgPoll = setInterval(refreshMsgBadge, 30000);
   }
 
   function wireCommon() {
@@ -952,6 +998,9 @@
     ".admin-nav-item.is-on{color:var(--white,#fff);background:rgba(124,58,237,.18)}" +
     ".admin-nav-badge{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#e8409b;color:#fff;font-size:11px;font-weight:700;vertical-align:middle;box-sizing:border-box}" +
     ".admin-nav-badge[hidden]{display:none}" +
+    ".admin-nav-sep{height:1px;background:var(--line2,#2a2145);margin:10px 6px}" +
+    ".admin-nav-logout{color:var(--mut2,#77809a)}" +
+    ".admin-nav-logout:hover{color:#ff8f8f;background:rgba(255,122,122,.12)}" +
     ".admin-main{min-width:0}" +
     ".vpp-cols{display:grid;grid-template-columns:1fr 1fr 1.5fr 108px 36px;gap:10px;font-size:11.5px;color:var(--mut2,#77809a);font-weight:600;padding:0 2px 9px;border-bottom:1px solid var(--line2,#2a2145);margin-bottom:12px}" +
     ".vpp-row{display:grid;grid-template-columns:1fr 1fr 1.5fr 108px 36px;gap:10px;margin-bottom:10px;align-items:center}" +
@@ -965,9 +1014,13 @@
     "@media(max-width:820px){.admin-layout{grid-template-columns:1fr}.admin-nav{flex-direction:row;overflow-x:auto;position:static;margin-bottom:8px}.vpp-cols{display:none}.vpp-row{grid-template-columns:1fr 1fr;gap:8px}.vpp-row .vpp-link{grid-column:1/-1}.vpp-del{width:auto}}" +
     ".vpc-admin{display:grid;grid-template-columns:300px 1fr;gap:14px;height:min(66vh,620px)}" +
     ".vpc-list{overflow-y:auto;background:linear-gradient(180deg,var(--panel,#140e29),#0a0817);border:1px solid var(--line2,#2a2145);border-radius:16px;padding:8px}" +
-    ".vpc-conv{display:block;width:100%;text-align:left;background:none;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;color:var(--white,#fff);font:inherit}" +
+    ".vpc-conv{position:relative;display:block;width:100%;text-align:left;background:none;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;color:var(--white,#fff);font:inherit}" +
     ".vpc-conv:hover{background:rgba(255,255,255,.05)}" +
     ".vpc-conv.is-on{background:rgba(124,58,237,.16)}" +
+    ".vpc-dot{display:none;position:absolute;top:14px;right:12px;width:9px;height:9px;border-radius:50%;background:#e8409b}" +
+    ".vpc-conv.has-unread .vpc-dot{display:block}" +
+    ".vpc-conv.has-unread .vpc-conv-name{font-weight:800}" +
+    ".vpc-conv.has-unread .vpc-conv-last{color:var(--white,#fff)}" +
     ".vpc-conv-name{font-weight:700;font-size:14px}" +
     ".vpc-conv-sub{font-size:12px;color:var(--mut2,#77809a);margin-top:1px}" +
     ".vpc-conv-last{font-size:12.5px;color:var(--mut,#9aa);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
