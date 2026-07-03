@@ -16,6 +16,7 @@ addEventListener('pageshow',function(){
 });</script>
 <title>Vanta · Restaurant SEO + AI visibility · Get found on Google and in AI answers</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307060D'/%3E%3Ctext x='30' y='45' font-family='Georgia,serif' font-size='40' font-weight='800' text-anchor='middle' fill='%23A855F7'%3EV%3C/text%3E%3Ccircle cx='50' cy='44' r='5' fill='%23E8409B'/%3E%3C/svg%3E" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="canonical" href="https://vantamarketing.io/outreach/" />
 <meta property="og:type" content="website" /><meta property="og:site_name" content="Vanta Marketing" />
 <meta property="og:title" content="Vanta · Restaurant SEO + AI visibility · Get found on Google and in AI answers" /><meta property="og:description" content="A done-for-you blog for your restaurant that lifts you in Google and in ChatGPT, Gemini and Perplexity, and funnels those diners straight to your Google profile. $97/mo, no contract, cancel anytime." />
@@ -909,14 +910,15 @@ form.addEventListener('submit', (e)=>{
   e.preventDefault();
   const rn=form.resto_name.value.trim(), on=form.owner_name.value.trim(), em=form.courriel.value.trim(), sms=form.sms.value.trim();
   if(!rn||!on||!em||!sms){ form.reportValidity&&form.reportValidity(); return; }
-  const data={ ts:new Date().toISOString(), type:'outreach_lead', nom:on, restaurant:rn, courriel:em, telephone:sms,
+  const data={ ts:new Date().toISOString(), type:'outreach_lead', nom:on, business:rn, restaurant:rn, courriel:em, telephone:sms,
     nb_restaurants:form.nb_restaurants.value||'', nb_sites:form.nb_sites.value||'', contact_pref:form.contact_pref.value||'',
     focus:(form.focus_resto.value||'').trim(), langue:lang, page:'vanta-landing', enrolled:'non' };
   lastLead=data;
-  saveLead(data);                 // save the lead FIRST (background) so it's kept even if they abandon payment
-  checkout.classList.add('show'); document.body.style.overflow='hidden';   // open milestone overlay immediately
+  var _sb=form.querySelector('[type=submit]'); if(_sb) _sb.disabled=true;
+  saveLead(data);
+  checkout.classList.add('show'); document.body.style.overflow='hidden';
 });
-function closeCheckout(){ checkout.classList.remove('show'); document.body.style.overflow=''; }
+function closeCheckout(){ checkout.classList.remove('show'); document.body.style.overflow=''; var _sb=form.querySelector('[type=submit]'); if(_sb) _sb.disabled=false; }
 document.getElementById('checkoutClose').addEventListener('click', closeCheckout);
 checkout.addEventListener('click', e=>{ if(e.target===checkout) closeCheckout(); });
 document.getElementById('checkoutGo').addEventListener('click', closeCheckout);
@@ -953,6 +955,7 @@ updatePrice();
   try{ logArr=JSON.parse(localStorage.getItem(K_LOG)||'[]'); }catch(_){}
   function persist(){ try{ localStorage.setItem(K_LOG,JSON.stringify(logArr.slice(-60))); localStorage.setItem(K_SEEN,String(seen)); }catch(_){} }
   function bubble(text, who){ var d=document.createElement('div'); d.className='b '+(who==='admin'?'them':(who==='note'?'note':'you')); d.textContent=text; thread.appendChild(d); thread.scrollTop=thread.scrollHeight; }
+  window.__chatRepaint=function(){ try{paint();}catch(e){} };
   function paint(){ thread.innerHTML=''; bubble(lang==='fr'?'Bonjour ! Une question ? On répond à la plupart des messages en 2 à 4 heures.':'Hi! Have a question? We answer most messages within 2 to 4 hours.','note'); for(var i=0;i<logArr.length;i++) bubble(logArr[i].t, logArr[i].s==='admin'?'admin':'you'); if(info) start.classList.add('hide'); else start.classList.remove('hide'); }
   function jsonp(params){ return new Promise(function(res){ var cb='__vc'+Date.now()+Math.floor(Math.random()*1e6); var s=document.createElement('script'); var to=setTimeout(function(){ fin(null); },9000); function fin(v){ clearTimeout(to); try{ delete window[cb]; }catch(_){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); res(v); } window[cb]=function(d){ fin(d); }; s.onerror=function(){ fin(null); }; params.callback=cb; s.src=LEADS_ENDPOINT+'?'+new URLSearchParams(params).toString(); document.body.appendChild(s); }); }
   function doPoll(){ if(!cid) return; jsonp({action:'chat_poll', cid:cid, since:seen}).then(function(r){ if(!r||!r.messages) return; for(var i=0;i<r.messages.length;i++){ if(r.messages[i].sender==='admin'){ logArr.push({s:'admin',t:r.messages[i].text}); bubble(r.messages[i].text,'admin'); } } if(typeof r.head==='number') seen=r.head; persist(); }); }

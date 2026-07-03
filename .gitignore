@@ -6,3 +6,8 @@ node_modules
 WHOP-SETUP-SOP.md
 SETUP-google-sheet.md
 *.gs
+
+# never commit real secrets
+.env
+.env.*
+!.env.example

@@ -8,6 +8,7 @@ if('scrollRestoration' in history) history.scrollRestoration='manual';
 addEventListener('pageshow',function(){ document.body.style.overflow=''; });</script>
 <title>Vanta · Be the business Google and AI recommend</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307060D'/%3E%3Ctext x='30' y='45' font-family='Georgia,serif' font-size='40' font-weight='800' text-anchor='middle' fill='%23A855F7'%3EV%3C/text%3E%3Ccircle cx='50' cy='44' r='5' fill='%23E8409B'/%3E%3C/svg%3E" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="canonical" href="https://vantamarketing.io/" />
 <meta property="og:type" content="website" /><meta property="og:site_name" content="Vanta Marketing" />
 <meta property="og:title" content="Vanta · Be the business Google and AI recommend" /><meta property="og:description" content="A done-for-you content engine that gets your local business found on Google and recommended inside AI answers like ChatGPT, Gemini and Perplexity, then funnels those customers to you." />
@@ -457,7 +458,7 @@ const UI = {
  }
 };
 const t = k => { const v = UI[lang] && UI[lang][k]; return v!==undefined ? v : (UI.en[k]!==undefined ? UI.en[k] : k); };
-const SERVICES = (window.__VANTA_DATA&&window.__VANTA_DATA.services)||[];
+const SERVICES = (window.__VANTA_DATA&&window.__VANTA_DATA.services)||[]; if(!SERVICES.length){ try{ document.getElementById("main").innerHTML='<div class="sec"><div class="wrap" style="text-align:center;padding:80px 0"><h1 style="font-size:32px">Vanta</h1><p class="lead" style="margin-top:14px">We had trouble loading this page. Please refresh, or <a href="/#/book" style="color:var(--lilac2)">book a call</a> and we will reach out.</p><p style="margin-top:20px"><a class="btn primary lg" href="/">Reload</a></p></div></div>'; }catch(e){} };
 const SVC_CATS = [{"id": "seo", "name": "SEO & AI Search", "nameFr": "SEO & recherche IA"}, {"id": "leads", "name": "Lead Generation", "nameFr": "Génération de leads"}, {"id": "content", "name": "Content", "nameFr": "Contenu"}, {"id": "ecom", "name": "Ecommerce", "nameFr": "Commerce en ligne"}, {"id": "ads", "name": "Paid Ads & Ad Infrastructure", "nameFr": "Publicité & infrastructure"}, {"id": "software", "name": "Software, Apps & Dashboards", "nameFr": "Logiciels, apps & tableaux de bord"}, {"id": "payments", "name": "Payments & Finance Ops", "nameFr": "Paiements & finances"}, {"id": "design", "name": "Design & Creative", "nameFr": "Design & créatif"}, {"id": "support", "name": "Support & Operations", "nameFr": "Support & opérations"}, {"id": "research", "name": "Research & Intelligence", "nameFr": "Recherche & intelligence"}, {"id": "leverage", "name": "Leverage & Bundles", "nameFr": "Effet de levier & forfaits"}];
 const TOPICS = [{id:'marketing',name:'Marketing & visibility',nameFr:'Marketing & visibilité',cats:['seo','content','ads']},{id:'leads',name:'Leads & sales',nameFr:'Leads & ventes',cats:['leads']},{id:'ecom',name:'Ecommerce',nameFr:'Commerce en ligne',cats:['ecom']},{id:'software',name:'Software & dashboards',nameFr:'Logiciels & tableaux de bord',cats:['software']},{id:'ops',name:'Operations & support',nameFr:'Opérations & support',cats:['support']},{id:'payments',name:'Payments & finance',nameFr:'Paiements & finances',cats:['payments']},{id:'other',name:'Something bigger or not sure yet',nameFr:'Un projet plus grand ou pas encore sûr',cats:['research','leverage']}];
 const topicFor = catId => { const x=TOPICS.find(t=>t.cats.indexOf(catId)>=0); return x?x.id:'other'; };
@@ -620,6 +621,7 @@ function applyLang(l){
   document.querySelectorAll('[data-ph]').forEach(el=>{ const k=el.getAttribute('data-ph'); const v=UI[l]&&UI[l][k]; if(typeof v==='string') el.placeholder=v; });
   const _av=document.querySelector('.view.active'); const _snap={};
   if(_av) _av.querySelectorAll('input[name],textarea[name],select[name]').forEach(el=>{ if(el.type!=='hidden'&&el.value) _snap[el.name]=el.value; });
+  var _hc=document.getElementById('homeContent'); var _vh=document.getElementById('view-home'); if(_hc && _vh && _vh.classList.contains('active')) _hc.innerHTML=renderHome();
   if(typeof route==='function') route();
   const _nv=document.querySelector('.view.active');
   if(_nv) Object.keys(_snap).forEach(k=>{ const el=_nv.querySelector('[name="'+k+'"]'); if(el&&!el.value) el.value=_snap[k]; });
@@ -719,7 +721,7 @@ function submitNicheRequest(){
   const email=(document.getElementById('reqEmail').value||'').trim();
   const msg=document.getElementById('reqMsg');
   if(!niche||!phone||!email){ msg.style.color='var(--flare)'; msg.textContent=t('reqErr'); return; }
-  saveLead({ type:'niche_request', topic:niche, telephone:phone, courriel:email, langue:lang, page:'vanta-platform' });
+  saveLead({ type:'niche_request', topic:niche, business:niche, telephone:phone, courriel:email, message:'Requested industry: '+niche, langue:lang, page:'vanta-platform' });
   msg.style.color='var(--lilac2)';
   msg.textContent=t('reqOk');
   document.getElementById('reqNiche').value=''; document.getElementById('reqPhone').value=''; document.getElementById('reqEmail').value='';
@@ -839,7 +841,8 @@ addEventListener('hashchange', route);
 // "Get started" / "See pricing" / "Choose" / pay buttons all use href="#form": scroll to the form (or open Whop) WITHOUT triggering the hash router
 document.addEventListener('click', function(e){ var a = e.target.closest && e.target.closest('a[href="#form"]'); if(!a) return; e.preventDefault(); var pay=a.getAttribute('data-pay'); var u = pay ? WHOP_LINKS[pay] : ''; if(u){ location.href=u; return; } var el=document.getElementById('form'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); });
 document.getElementById('search').addEventListener('input', e=>buildTiles(e.target.value));
-route();
+document.documentElement.lang = lang;
+if(lang!=='en' && typeof applyLang==='function'){ applyLang(lang); } else { route(); }
 document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on', b.getAttribute('data-lang')===lang));
 
 /* ---- floating two-way chat (messages live in the database) ---- */
