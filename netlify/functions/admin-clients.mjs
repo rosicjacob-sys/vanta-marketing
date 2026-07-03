@@ -40,6 +40,8 @@ export default async (req) => {
       role: 'client',
       pwHash: hashPassword(body.password),
       metrics: { ...defaultMetrics(), ...(body.metrics || {}) },
+      availedAt: typeof body.availedAt === 'string' ? body.availedAt : '',
+      period: body.period === 'yearly' ? 'yearly' : (body.period === 'monthly' ? 'monthly' : ''),
       createdAt: Date.now(),
     };
     await putUser(user);
@@ -52,6 +54,8 @@ export default async (req) => {
     const updated = { ...existing };
     if (typeof body.name === 'string') updated.name = body.name;
     if (typeof body.plan === 'string') updated.plan = body.plan;
+    if (typeof body.availedAt === 'string') updated.availedAt = body.availedAt;
+    if (body.period === 'yearly' || body.period === 'monthly') updated.period = body.period;
     if (body.password) updated.pwHash = hashPassword(body.password);
     if (body.metrics && typeof body.metrics === 'object') {
       updated.metrics = { ...defaultMetrics(), ...existing.metrics, ...body.metrics };

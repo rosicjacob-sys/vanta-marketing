@@ -69,6 +69,9 @@ function ensureSchema() {
         )`;
       await sql`CREATE INDEX IF NOT EXISTS chat_messages_cid_idx ON chat_messages (cid, created_at)`;
       await sql`CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, value jsonb NOT NULL DEFAULT '[]'::jsonb)`;
+      // subscription fields (added to the clients table if it already exists)
+      await sql`ALTER TABLE clients ADD COLUMN IF NOT EXISTS availed_at text`;
+      await sql`ALTER TABLE clients ADD COLUMN IF NOT EXISTS period text`;
     })();
   }
   return _schema;
@@ -83,6 +86,8 @@ function rowToUser(r) {
     role: r.role || 'client',
     pwHash: r.pw_hash || '',
     metrics: r.metrics || {},
+    availedAt: r.availed_at || '',
+    period: r.period || '',
     createdAt: Number(r.created_at) || 0,
     updatedAt: Number(r.updated_at) || 0,
   };
@@ -98,12 +103,14 @@ async function pgPut(user) {
   const email = normEmail(user.email);
   const metrics = JSON.stringify(user.metrics || {});
   await sqlc()`
-    INSERT INTO clients (email, name, plan, role, pw_hash, metrics, created_at, updated_at)
+    INSERT INTO clients (email, name, plan, role, pw_hash, metrics, availed_at, period, created_at, updated_at)
     VALUES (${email}, ${user.name || ''}, ${user.plan || ''}, ${user.role || 'client'},
-            ${user.pwHash || ''}, ${metrics}::jsonb, ${user.createdAt || Date.now()}, ${user.updatedAt || null})
+            ${user.pwHash || ''}, ${metrics}::jsonb, ${user.availedAt || ''}, ${user.period || ''},
+            ${user.createdAt || Date.now()}, ${user.updatedAt || null})
     ON CONFLICT (email) DO UPDATE SET
       name = EXCLUDED.name, plan = EXCLUDED.plan, role = EXCLUDED.role,
-      pw_hash = EXCLUDED.pw_hash, metrics = EXCLUDED.metrics, updated_at = EXCLUDED.updated_at`;
+      pw_hash = EXCLUDED.pw_hash, metrics = EXCLUDED.metrics,
+      availed_at = EXCLUDED.availed_at, period = EXCLUDED.period, updated_at = EXCLUDED.updated_at`;
   return { ...user, email };
 }
 async function pgDelete(email) {

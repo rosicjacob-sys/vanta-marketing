@@ -65,15 +65,52 @@
     addPlan:    { en: "+ Add plan",           fr: "+ Ajouter un forfait" },
     savePlans:  { en: "Save plans",           fr: "Enregistrer" },
     plansSaved: { en: "Saved.",               fr: "Enregistré." },
-    noPlans:    { en: "No plans yet. Add your first one.", fr: "Aucun forfait. Ajoutez le premier." }
+    noPlans:    { en: "No plans yet. Add your first one.", fr: "Aucun forfait. Ajoutez le premier." },
+    secSub:     { en: "Subscription",        fr: "Abonnement" },
+    dateAvailed:{ en: "Date availed",         fr: "Date d'adhésion" },
+    billing:    { en: "Billing period",       fr: "Cycle de facturation" },
+    monthly:    { en: "Monthly",              fr: "Mensuel" },
+    yearly:     { en: "Yearly",               fr: "Annuel" },
+    renews:     { en: "Renews",               fr: "Renouvellement" },
+    renewalCol: { en: "Renewal",              fr: "Renouvellement" },
+    active:     { en: "Active",               fr: "Actif" },
+    expiredS:   { en: "Expired",              fr: "Expiré" },
+    daysWord:   { en: "days",                 fr: "jours" }
   };
+
+  // Compute a client's expiry/status from Date Availed + billing period.
+  function subInfo(user) {
+    var availedAt = user && user.availedAt;
+    var period = (user && user.period) || "monthly";
+    if (!availedAt) return null;
+    var start = new Date(availedAt + "T00:00:00");
+    if (isNaN(start.getTime())) return null;
+    var exp = new Date(start.getTime());
+    if (period === "yearly") exp.setFullYear(exp.getFullYear() + 1);
+    else exp.setMonth(exp.getMonth() + 1);
+    var now = new Date();
+    return { expiry: exp, expired: now.getTime() > exp.getTime(),
+      days: Math.ceil((exp.getTime() - now.getTime()) / 86400000), period: period };
+  }
+  function fmtDate(d) {
+    try { return d.toLocaleDateString(FR() ? "fr-CA" : "en-CA", { year: "numeric", month: "short", day: "numeric" }); }
+    catch (e) { return ""; }
+  }
+  function subBanner(user) {
+    var si = subInfo(user);
+    if (!si) return "";
+    if (si.expired) return '<div class="sub-banner exp"><span class="sub-pill exp">' + esc(t("expiredS")) +
+      "</span><span>" + esc(fmtDate(si.expiry)) + "</span></div>";
+    return '<div class="sub-banner"><span class="sub-pill ok">' + esc(t("active")) + "</span><span>" +
+      esc(t("renews")) + " " + esc(fmtDate(si.expiry)) + " · " + si.days + " " + esc(t("daysWord")) + "</span></div>";
+  }
 
   // Plans may be stored as strings (legacy) or {name, price, link} objects.
   function normPlans(arr) {
     return (arr || []).map(function (p) {
       return (typeof p === "string")
-        ? { name: p, price: "", link: "" }
-        : { name: p.name || "", price: p.price || "", link: p.link || "" };
+        ? { name: p, price: "", link: "", period: "monthly" }
+        : { name: p.name || "", price: p.price || "", link: p.link || "", period: p.period === "yearly" ? "yearly" : "monthly" };
     }).filter(function (p) { return p.name; });
   }
   function t(k) { var e = T[k] || {}; return FR() ? (e.fr || e.en || k) : (e.en || k); }
@@ -258,6 +295,7 @@
     return '<div class="sec"><div class="wrap">' +
       topbar(name || "") +
       (user.plan ? '<div class="dash-plan">' + esc(t("yourPlan")) + ': <b>' + esc(user.plan) + "</b></div>" : "") +
+      subBanner(user) +
       '<div class="dash-stats">' +
         stat(fmt(m.views), t("views"), '<span class="dash-delta ' + changeCls + '">' + changeTxt + "</span>") +
         stat(fmt(m.profileClicks), t("clicks"), "") +
@@ -305,16 +343,22 @@
 
   function adminHTML(clients) {
     var rows = clients.length ? clients.map(function (c) {
+      var si = subInfo(c);
+      var renewal = si
+        ? '<span class="sub-pill ' + (si.expired ? "exp" : "ok") + '">' + (si.expired ? esc(t("expiredS")) : esc(t("active"))) +
+          '</span> <span class="dash-muted">' + esc(fmtDate(si.expiry)) + "</span>"
+        : '<span class="dash-muted">—</span>';
       return '<tr data-email="' + esc(c.email) + '">' +
         "<td><b>" + esc(c.name || "—") + "</b><div class='dash-muted'>" + esc(c.email) + "</div></td>" +
         "<td>" + esc(c.plan || "—") + "</td>" +
+        "<td>" + renewal + "</td>" +
         "<td>" + fmt(c.metrics && c.metrics.views) + "</td>" +
         "<td>" + fmt(c.metrics && c.metrics.articlesPublished) + "</td>" +
         '<td class="dash-actions">' +
           '<button class="btn ghost sm vp-edit">' + esc(t("edit")) + "</button> " +
           '<button class="btn ghost sm vp-del">' + esc(t("del")) + "</button>" +
         "</td></tr>";
-    }).join("") : '<tr><td colspan="5" class="dash-empty">' + esc(t("noClients")) + "</td></tr>";
+    }).join("") : '<tr><td colspan="6" class="dash-empty">' + esc(t("noClients")) + "</td></tr>";
 
     function navItem(id, label, on) {
       return '<button class="admin-nav-item' + (on ? " is-on" : "") + '" data-nav="' + id + '">' + esc(label) + "</button>";
@@ -331,8 +375,8 @@
           '<div class="dash-panel" data-panel="clients">' +
             '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button></div>" +
             '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
-              "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("views")) +
-              "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
+              "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("renewalCol")) +
+              "</th><th>" + esc(t("views")) + "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
           "</div>" +
           '<div class="dash-panel" data-panel="messages" style="display:none">' +
             '<div class="vpc-admin"><div class="vpc-list" id="vpChatList"><div class="dash-empty">…</div></div>' +
@@ -364,6 +408,13 @@
       if (current && !found) opts += '<option value="' + esc(current) + '" selected>' + esc(current) + "</option>";
       return '<label class="vpf">' + esc(FR() ? "Forfait" : "Plan") + '<select name="plan">' + opts + "</select></label>";
     }
+    function billingSel(current) {
+      var y = current === "yearly";
+      return '<label class="vpf">' + esc(t("billing")) + '<select name="period">' +
+        '<option value="monthly"' + (y ? "" : " selected") + ">" + esc(t("monthly")) + "</option>" +
+        '<option value="yearly"' + (y ? " selected" : "") + ">" + esc(t("yearly")) + "</option>" +
+        "</select></label>";
+    }
     return '<div class="dash-modal-bg" id="vpModalBg"><form class="dash-modal" id="vpForm">' +
       '<div class="dash-modal-head">' +
         "<h3>" + esc(isNew ? t("newClient") : t("edit")) + "</h3>" +
@@ -375,6 +426,11 @@
         f(FR() ? "Nom / entreprise" : "Name / business", "name", c.name) +
         planSel(c.plan) +
         f(isNew ? (FR() ? "Mot de passe" : "Password") : (FR() ? "Nouveau mot de passe (laisser vide)" : "New password (blank = keep)"), "password", "", "text") +
+        '<div class="vpf-section">' + esc(t("secSub")) + "</div>" +
+        '<div class="vpf-row">' +
+          '<label class="vpf">' + esc(t("dateAvailed")) + '<input name="availedAt" type="date" value="' + esc(c.availedAt || "") + '"></label>' +
+          billingSel(c.period) +
+        "</div>" +
         '<div class="vpf-section">' + esc(t("secNumbers")) + "</div>" +
         '<div class="vpf-row">' +
           f(t("views"), "views", m.views, "number") +
@@ -427,6 +483,8 @@
       email: v("email").trim(),
       name: v("name"),
       plan: v("plan"),
+      availedAt: v("availedAt"),
+      period: v("period") === "yearly" ? "yearly" : "monthly",
       metrics: {
         views: num(v("views")),
         viewsChangePct: num(v("viewsChangePct")),
@@ -466,6 +524,13 @@
       var focusEl = el("vpForm") && el("vpForm").querySelector("input");
       if (focusEl) { try { focusEl.focus(); } catch (e) {} }
       var form = el("vpForm");
+      // auto-fill billing period from the chosen plan
+      if (form && form.plan && form.period) {
+        form.plan.addEventListener("change", function () {
+          var pl = plans.filter(function (x) { return x.name === form.plan.value; })[0];
+          if (pl && pl.period) form.period.value = pl.period;
+        });
+      }
       if (form) form.onsubmit = function (e) {
         e.preventDefault();
         var payload = collectForm(form);
@@ -497,11 +562,14 @@
 
     // ---- manage plans (panel) ----
     function planRow(p) {
-      p = p || { name: "", price: "", link: "" };
+      p = p || { name: "", price: "", link: "", period: "monthly" };
+      var y = p.period === "yearly";
       return '<div class="vpp-row">' +
         '<input class="vpp-f vpp-name" placeholder="' + esc(t("planName")) + '" value="' + esc(p.name) + '">' +
         '<input class="vpp-f vpp-price" placeholder="' + esc(t("planPrice")) + '" value="' + esc(p.price) + '">' +
         '<input class="vpp-f vpp-link" placeholder="' + esc(t("planLink")) + '" value="' + esc(p.link) + '">' +
+        '<select class="vpp-f vpp-period"><option value="monthly"' + (y ? "" : " selected") + ">" + esc(t("monthly")) +
+          '</option><option value="yearly"' + (y ? " selected" : "") + ">" + esc(t("yearly")) + "</option></select>" +
         '<button type="button" class="vpp-del" aria-label="remove">&#10005;</button></div>';
     }
     function renderPlansPanel() {
@@ -510,7 +578,7 @@
         '<div class="dash-card">' +
           '<p class="dash-muted" style="margin:0 0 16px">' + esc(t("plansHint")) + "</p>" +
           '<div class="vpp-cols"><span>' + esc(t("planName")) + "</span><span>" + esc(t("planPrice")) +
-            "</span><span>" + esc(t("planLink")) + "</span><span></span></div>" +
+            "</span><span>" + esc(t("planLink")) + "</span><span>" + esc(t("billing")) + "</span><span></span></div>" +
           '<div id="vpPlanRows">' + (plans.length ? plans.map(planRow).join("") : "") + "</div>" +
           (plans.length ? "" : '<div class="dash-empty" id="vpPlanEmpty">' + esc(t("noPlans")) + "</div>") +
           '<div class="plans-foot"><button type="button" class="btn ghost sm" id="vpPlanAdd">' + esc(t("addPlan")) + "</button>" +
@@ -536,7 +604,7 @@
         el("vpPlanRows").querySelectorAll(".vpp-row").forEach(function (r) {
           var name = r.querySelector(".vpp-name").value.trim();
           if (!name) return;
-          out.push({ name: name, price: r.querySelector(".vpp-price").value.trim(), link: r.querySelector(".vpp-link").value.trim() });
+          out.push({ name: name, price: r.querySelector(".vpp-price").value.trim(), link: r.querySelector(".vpp-link").value.trim(), period: r.querySelector(".vpp-period").value });
         });
         var msg = el("vpPlansMsg"); if (msg) { msg.textContent = "…"; msg.style.color = ""; }
         api("/admin-plans", { method: "PUT", body: { plans: out } }).then(function (res) {
@@ -638,7 +706,11 @@
     if (el("vp-css")) return;
     var css =
     ".dash-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px;flex-wrap:wrap}" +
-    ".dash-plan{color:var(--mut,#9aa);margin:-6px 0 18px;font-size:14px}" +
+    ".dash-plan{color:var(--mut,#9aa);margin:-6px 0 10px;font-size:14px}" +
+    ".sub-banner{display:flex;align-items:center;gap:10px;margin:0 0 18px;font-size:13.5px;color:var(--mut,#9aa)}" +
+    ".sub-pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}" +
+    ".sub-pill.ok{background:rgba(57,217,138,.14);color:#39d98a}" +
+    ".sub-pill.exp{background:rgba(255,122,122,.16);color:#ff8f8f}" +
     ".dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}" +
     ".dash-stat{background:linear-gradient(180deg,var(--panel,#140e29),#0c0918);border:1px solid var(--line2,#2a2145);border-radius:16px;padding:18px}" +
     ".dash-stat-v{font-size:30px;font-weight:800;color:var(--white,#fff);line-height:1.1}" +
@@ -686,10 +758,11 @@
     ".admin-nav-item:hover{color:var(--white,#fff);background:rgba(255,255,255,.05)}" +
     ".admin-nav-item.is-on{color:var(--white,#fff);background:rgba(124,58,237,.18)}" +
     ".admin-main{min-width:0}" +
-    ".vpp-cols{display:grid;grid-template-columns:1fr 1fr 1.5fr 36px;gap:10px;font-size:11.5px;color:var(--mut2,#77809a);font-weight:600;padding:0 2px 9px;border-bottom:1px solid var(--line2,#2a2145);margin-bottom:12px}" +
-    ".vpp-row{display:grid;grid-template-columns:1fr 1fr 1.5fr 36px;gap:10px;margin-bottom:10px;align-items:center}" +
+    ".vpp-cols{display:grid;grid-template-columns:1fr 1fr 1.5fr 108px 36px;gap:10px;font-size:11.5px;color:var(--mut2,#77809a);font-weight:600;padding:0 2px 9px;border-bottom:1px solid var(--line2,#2a2145);margin-bottom:12px}" +
+    ".vpp-row{display:grid;grid-template-columns:1fr 1fr 1.5fr 108px 36px;gap:10px;margin-bottom:10px;align-items:center}" +
     ".vpp-f{font:inherit;font-size:14px;color:var(--white,#fff);background:rgba(255,255,255,.05);border:1px solid var(--line2,#2a2145);border-radius:9px;padding:9px 11px;outline:none;width:100%;box-sizing:border-box}" +
     ".vpp-f:focus{border-color:var(--royal,#7c3aed)}" +
+    ".vpp-period{background-color:rgba(255,255,255,.05);background-image:url(\"data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23C4B5FD' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 9px center;padding-right:24px}" +
     ".vpp-del{width:36px;height:38px;border-radius:9px;border:1px solid var(--line2,#2a2145);background:rgba(255,255,255,.04);color:var(--mut,#9aa);font-size:13px;cursor:pointer}" +
     ".vpp-del:hover{color:#fff;background:rgba(255,122,122,.18)}" +
     ".plans-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}" +

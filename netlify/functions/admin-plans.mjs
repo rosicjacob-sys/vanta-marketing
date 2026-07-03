@@ -22,6 +22,7 @@ export default async (req) => {
               name: String(p.name || '').trim().slice(0, 100),
               price: String(p.price || '').trim().slice(0, 60),
               link: String(p.link || '').trim().slice(0, 500),
+              period: p.period === 'yearly' ? 'yearly' : 'monthly',
             })
         .filter(p => p.name)
         .slice(0, 100)
