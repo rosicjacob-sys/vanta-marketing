@@ -106,6 +106,18 @@
     ngNoScan:   { en: "Not scanned yet",       fr: "Pas encore analysé" },
     ngNoPost:   { en: "No posts yet",          fr: "Aucun article" },
     ngNone:     { en: "No sites connected yet.", fr: "Aucun site connecté." },
+    cdView:     { en: "View",                  fr: "Voir" },
+    cdBack:     { en: "Back to clients",       fr: "Retour aux clients" },
+    cdReal:     { en: "Real data",             fr: "Données réelles" },
+    cdManual:   { en: "Manual",                fr: "Manuel" },
+    cdRealSub:  { en: "Live from netgrid",     fr: "En direct de netgrid" },
+    cdManualSub:{ en: "Numbers you enter",     fr: "Chiffres que vous saisissez" },
+    cdOverallSeo:{ en: "Overall SEO score",    fr: "Score SEO global" },
+    cdBlogSites:{ en: "Blog sites",            fr: "Sites de blogue" },
+    cdActiveSites:{ en: "Active sites",        fr: "Sites actifs" },
+    cdLastPost: { en: "Latest post",           fr: "Dernier article" },
+    cdNoNetgrid:{ en: "netgrid isn't connected yet — set NETGRID_API_URL and NETGRID_API_KEY.", fr: "netgrid n'est pas connecté — configurez NETGRID_API_URL et NETGRID_API_KEY." },
+    cdNoMatch:  { en: "No netgrid data for this client — their email isn't matched to a netgrid account.", fr: "Aucune donnée netgrid pour ce client — son courriel ne correspond à aucun compte netgrid." },
     settingsTab:{ en: "Settings",            fr: "Paramètres" },
     setHint:    { en: "Configure reminder timing and the emails clients receive. Placeholders: {name} {plan} {date} {days} {brand} {link} (the client's plan checkout link).", fr: "Configurez le moment des rappels et les courriels reçus par les clients. Variables : {name} {plan} {date} {days} {brand} {link} (lien de paiement du forfait du client)." },
     setLeadDays:{ en: "Send renewal reminder this many days before expiry", fr: "Envoyer le rappel de renouvellement ce nombre de jours avant l'expiration" },
@@ -485,6 +497,25 @@
     try { return new Date(iso).toLocaleDateString(FR() ? "fr-CA" : "en-CA", { year: "numeric", month: "short", day: "numeric" }); }
     catch (e) { return ""; }
   }
+  // Shared: the <tr> rows for a netgrid sites table (domain, SEO, latest post).
+  function ngSiteRowsHTML(sites) {
+    sites = sites || [];
+    return sites.length ? sites.map(function (s) {
+      var score = s.seoScore == null ? '<span class="dash-muted">' + esc(t("ngNoScan")) + "</span>"
+        : '<span class="ng-score ' + seoClass(s.seoScore) + '">' + Math.round(num(s.seoScore)) + "</span>";
+      var post = s.lastPostTitle
+        ? esc(s.lastPostTitle) + (s.lastPostAt ? ' <span class="dash-muted">· ' + esc(ngDate(s.lastPostAt)) + "</span>" : "")
+        : '<span class="dash-muted">' + esc(t("ngNoPost")) + "</span>";
+      return "<tr><td><b>" + esc(s.domain || "—") + "</b>" +
+        (s.platform ? ' <span class="ng-plat">' + esc(s.platform) + "</span>" : "") + "</td>" +
+        "<td>" + score + "</td><td>" + post + "</td></tr>";
+    }).join("") : '<tr><td colspan="3" class="dash-empty">' + esc(t("ngNone")) + "</td></tr>";
+  }
+  function ngSitesTable(sites) {
+    return '<div style="overflow-x:auto"><table class="dash-table ng-table"><thead><tr><th>' + esc(t("ngSiteCol")) +
+      "</th><th>" + esc(t("ngSeoCol")) + "</th><th>" + esc(t("ngLatestCol")) +
+      "</th></tr></thead><tbody>" + ngSiteRowsHTML(sites) + "</tbody></table></div>";
+  }
   function netgridHTML(c, sites) {
     c = c || {}; sites = sites || [];
     var avg = c.avgSeoScore == null ? "—" : Math.round(num(c.avgSeoScore));
@@ -496,19 +527,73 @@
       (c.activeBlogCount == null ? "" :
         '<div class="ng-kpi"><span class="ng-kpi-v">' + num(c.activeBlogCount) + '</span><span class="ng-kpi-l">' + esc(t("ngActiveN")) + "</span></div>") +
       "</div>";
-    var rows = sites.length ? sites.map(function (s) {
-      var score = s.seoScore == null ? '<span class="dash-muted">' + esc(t("ngNoScan")) + "</span>"
-        : '<span class="ng-score ' + seoClass(s.seoScore) + '">' + Math.round(num(s.seoScore)) + "</span>";
-      var post = s.lastPostTitle
-        ? esc(s.lastPostTitle) + (s.lastPostAt ? ' <span class="dash-muted">· ' + esc(ngDate(s.lastPostAt)) + "</span>" : "")
-        : '<span class="dash-muted">' + esc(t("ngNoPost")) + "</span>";
-      return "<tr><td><b>" + esc(s.domain || "—") + "</b>" +
-        (s.platform ? ' <span class="ng-plat">' + esc(s.platform) + "</span>" : "") + "</td>" +
-        "<td>" + score + "</td><td>" + post + "</td></tr>";
-    }).join("") : '<tr><td colspan="3" class="dash-empty">' + esc(t("ngNone")) + "</td></tr>";
     return '<div class="dash-card ng-card"><div class="ng-head"><h3>' + esc(t("ngTitle")) + "</h3>" + summary + "</div>" +
-      '<div style="overflow-x:auto"><table class="dash-table ng-table"><thead><tr><th>' + esc(t("ngSiteCol")) +
-      "</th><th>" + esc(t("ngSeoCol")) + "</th><th>" + esc(t("ngLatestCol")) + "</th></tr></thead><tbody>" + rows + "</tbody></table></div></div>";
+      ngSitesTable(sites) + "</div>";
+  }
+
+  // ---- admin client-detail view: Real data (netgrid) + Manual tabs ----
+  function cdStat(value, label) {
+    return '<div class="dash-stat"><div class="dash-stat-v">' + value + "</div>" +
+      '<div class="dash-stat-l">' + esc(label) + "</div></div>";
+  }
+  function cdManualHTML(m) {
+    m = m || {};
+    return '<div class="dash-stats">' +
+      cdStat(fmt(m.views), t("views")) +
+      cdStat(fmt(m.profileClicks), t("clicks")) +
+      cdStat(fmt(m.aiCitations), t("ai")) +
+      cdStat(fmt(m.articlesPublished), t("published")) +
+      "</div>" +
+      '<div class="dash-grid2">' +
+        '<div class="dash-card"><h3>' + esc(t("trend")) + "</h3>" + bars(m.series) + "</div>" +
+        '<div class="dash-card"><h3>' + esc(t("sources")) + "</h3>" + sourceList(m.sources) + "</div>" +
+      "</div>";
+  }
+  function cdRealHTML(d) {
+    d = d || {};
+    if (!d.configured) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoNetgrid")) + "</div></div>";
+    if (!d.ok || !d.client) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoMatch")) + "</div></div>";
+    var c = d.client, sites = d.sites || [];
+    var seoVal = c.avgSeoScore == null ? "—"
+      : '<span class="ng-score ' + seoClass(c.avgSeoScore) + '">' + Math.round(num(c.avgSeoScore)) + "</span>";
+    var cards = '<div class="dash-stats">' +
+      cdStat(seoVal, t("cdOverallSeo")) +
+      cdStat(num(c.blogCount), t("cdBlogSites")) +
+      cdStat(c.activeBlogCount == null ? "—" : num(c.activeBlogCount), t("cdActiveSites")) +
+      cdStat(c.lastPostAt ? esc(ngDate(c.lastPostAt)) : "—", t("cdLastPost")) +
+      "</div>";
+    return cards + '<div class="dash-card"><h3>' + esc(t("ngTitle")) + "</h3>" + ngSitesTable(sites) + "</div>";
+  }
+  function openClientDetail(c) {
+    var main = el("vpClientsMain"), det = el("vpClientDetail");
+    if (!main || !det) return;
+    c = c || {};
+    main.style.display = "none";
+    det.style.display = "";
+    det.innerHTML =
+      '<button class="btn ghost sm" id="cdBack">&#8592; ' + esc(t("cdBack")) + "</button>" +
+      '<div class="cd-head"><h3>' + esc(c.name || c.email || "") + "</h3>" +
+        '<div class="dash-muted">' + esc(c.email || "") + (c.plan ? " · " + esc(c.plan) : "") + "</div></div>" +
+      '<div class="cd-tabs">' +
+        '<button class="cd-tab is-on" data-cdtab="real"><b>' + esc(t("cdReal")) + '</b><span>' + esc(t("cdRealSub")) + "</span></button>" +
+        '<button class="cd-tab" data-cdtab="manual"><b>' + esc(t("cdManual")) + '</b><span>' + esc(t("cdManualSub")) + "</span></button>" +
+      "</div>" +
+      '<div id="cdReal"><div class="dash-card"><p class="lead">…</p></div></div>' +
+      '<div id="cdManual" style="display:none">' + cdManualHTML(c.metrics || {}) + "</div>";
+    el("cdBack").onclick = function () { det.style.display = "none"; det.innerHTML = ""; main.style.display = ""; };
+    det.querySelectorAll(".cd-tab").forEach(function (b) {
+      b.onclick = function () {
+        det.querySelectorAll(".cd-tab").forEach(function (x) { x.classList.toggle("is-on", x === b); });
+        var tab = b.getAttribute("data-cdtab");
+        el("cdReal").style.display = tab === "real" ? "" : "none";
+        el("cdManual").style.display = tab === "manual" ? "" : "none";
+      };
+    });
+    api("/admin-client-netgrid?email=" + encodeURIComponent(c.email || "")).then(function (res) {
+      var host = el("cdReal"); if (host) host.innerHTML = cdRealHTML(res.data || {});
+    }).catch(function () {
+      var host = el("cdReal"); if (host) host.innerHTML = '<div class="dash-card"><div class="dash-empty">' + esc(t("netErr")) + "</div></div>";
+    });
   }
   function loadNetgrid() {
     var host = el("vpNetgrid"); if (!host) return;
@@ -579,6 +664,7 @@
         "<td>" + fmt(c.metrics && c.metrics.articlesPublished) + "</td>" +
         ngCell(c.email) +
         '<td class="dash-actions">' +
+          '<button class="btn ghost sm vp-view">' + esc(t("cdView")) + "</button> " +
           '<button class="btn ghost sm vp-edit">' + esc(t("edit")) + "</button> " +
           '<button class="btn ghost sm vp-del">' + esc(t("del")) + "</button>" +
         "</td></tr>";
@@ -606,13 +692,16 @@
         "</aside>" +
         '<div class="admin-main">' +
           '<div class="dash-panel" data-panel="clients">' +
-            '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button>" +
-              ' <button class="btn ghost" id="vpRunRem">' + esc(t("runRem")) + "</button>" +
-              ' <a class="btn ghost" href="' + esc(LEADS_SHEET_URL) + '" target="_blank" rel="noopener">' + esc(t("viewLeads")) + "</a></div>" +
-            '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
-              "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("renewalCol")) +
-              "</th><th>" + esc(t("views")) + "</th><th>" + esc(t("published")) + "</th>" +
-              (ng ? "<th>" + esc(t("ngSeoCol")) + "</th>" : "") + "<th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
+            '<div id="vpClientsMain">' +
+              '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button>" +
+                ' <button class="btn ghost" id="vpRunRem">' + esc(t("runRem")) + "</button>" +
+                ' <a class="btn ghost" href="' + esc(LEADS_SHEET_URL) + '" target="_blank" rel="noopener">' + esc(t("viewLeads")) + "</a></div>" +
+              '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
+                "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("renewalCol")) +
+                "</th><th>" + esc(t("views")) + "</th><th>" + esc(t("published")) + "</th>" +
+                (ng ? "<th>" + esc(t("ngSeoCol")) + "</th>" : "") + "<th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
+            "</div>" +
+            '<div id="vpClientDetail" style="display:none"></div>' +
           "</div>" +
           '<div class="dash-panel" data-panel="messages" style="display:none">' +
             '<div class="vpc-admin"><div class="vpc-list" id="vpChatList"><div class="dash-empty">…</div></div>' +
@@ -1091,6 +1180,14 @@
       };
     }
 
+    var viewBtns = document.querySelectorAll(".vp-view");
+    for (var v = 0; v < viewBtns.length; v++) {
+      viewBtns[v].onclick = function () {
+        var email = this.closest("tr").getAttribute("data-email");
+        var c = clients.filter(function (x) { return x.email === email; })[0];
+        openClientDetail(c || { email: email });
+      };
+    }
     var editBtns = document.querySelectorAll(".vp-edit");
     for (var i = 0; i < editBtns.length; i++) {
       editBtns[i].onclick = function () {
@@ -1282,6 +1379,16 @@
     ".ng-plat{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut2,#77809a);border:1px solid var(--line2,#2a2145);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}" +
     ".ng-table{min-width:0}" +
     ".ng-table td{font-size:13px}" +
+    ".cd-head{margin:14px 0 16px}" +
+    ".cd-head h3{margin:0;font-size:22px;color:var(--white,#fff)}" +
+    ".cd-tabs{display:flex;gap:10px;margin:0 0 18px;flex-wrap:wrap}" +
+    ".cd-tab{flex:1;min-width:150px;text-align:left;font:inherit;background:rgba(255,255,255,.04);border:1px solid var(--line2,#2a2145);border-radius:12px;padding:12px 15px;cursor:pointer;color:var(--mut,#9aa)}" +
+    ".cd-tab b{display:block;font-size:14.5px;color:var(--white,#fff)}" +
+    ".cd-tab span{font-size:12px;color:var(--mut2,#77809a)}" +
+    ".cd-tab:hover{background:rgba(255,255,255,.07)}" +
+    ".cd-tab.is-on{border-color:transparent;background:rgba(124,58,237,.2)}" +
+    ".cd-tab.is-on span{color:#c4b5fd}" +
+    "#cdBack{margin-bottom:4px}" +
     ".dash-toolbar{margin:0 0 14px}" +
     ".dash-table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}" +
     ".dash-table th{text-align:left;color:var(--mut2,#77809a);font-size:12px;font-weight:600;padding:0 10px 10px}" +
