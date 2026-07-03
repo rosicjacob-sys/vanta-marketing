@@ -10,6 +10,8 @@
   var API = "/.netlify/functions";
   var LS = { token: "vanta_token", role: "vanta_role", name: "vanta_name" };
   var adminPoll = null; // interval handle for the admin Messages thread
+  var bellPoll = null;  // interval handle for the notifications bell
+  var bellItems = [];   // last-fetched notifications
 
   function lang() { try { return localStorage.getItem("vanta_lang") || "en"; } catch (e) { return "en"; } }
   var FR = function () { return lang() === "fr"; };
@@ -55,6 +57,9 @@
     replyPh:    { en: "Type your reply…",   fr: "Écrivez votre réponse…" },
     sendReply:  { en: "Send",               fr: "Envoyer" },
     noReplyYet: { en: "No messages.",       fr: "Aucun message." },
+    notifs:     { en: "Notifications",       fr: "Notifications" },
+    noNotifs:   { en: "No notifications yet.", fr: "Aucune notification." },
+    justNow:    { en: "just now",            fr: "à l'instant" },
     managePlans:{ en: "Manage plans",       fr: "Gérer les forfaits" },
     plansTitle: { en: "Plans",              fr: "Forfaits" },
     plansHint:  { en: "Define your plans. They appear in the client Plan dropdown; the buy link is your Whop/Stripe checkout.", fr: "Définissez vos forfaits. Ils apparaissent dans le menu Forfait du client; le lien d'achat est votre paiement Whop/Stripe." },
@@ -65,15 +70,52 @@
     addPlan:    { en: "+ Add plan",           fr: "+ Ajouter un forfait" },
     savePlans:  { en: "Save plans",           fr: "Enregistrer" },
     plansSaved: { en: "Saved.",               fr: "Enregistré." },
-    noPlans:    { en: "No plans yet. Add your first one.", fr: "Aucun forfait. Ajoutez le premier." }
+    noPlans:    { en: "No plans yet. Add your first one.", fr: "Aucun forfait. Ajoutez le premier." },
+    secSub:     { en: "Subscription",        fr: "Abonnement" },
+    dateAvailed:{ en: "Date availed",         fr: "Date d'adhésion" },
+    billing:    { en: "Billing period",       fr: "Cycle de facturation" },
+    monthly:    { en: "Monthly",              fr: "Mensuel" },
+    yearly:     { en: "Yearly",               fr: "Annuel" },
+    renews:     { en: "Renews",               fr: "Renouvellement" },
+    renewalCol: { en: "Renewal",              fr: "Renouvellement" },
+    active:     { en: "Active",               fr: "Actif" },
+    expiredS:   { en: "Expired",              fr: "Expiré" },
+    daysWord:   { en: "days",                 fr: "jours" }
   };
+
+  // Compute a client's expiry/status from Date Availed + billing period.
+  function subInfo(user) {
+    var availedAt = user && user.availedAt;
+    var period = (user && user.period) || "monthly";
+    if (!availedAt) return null;
+    var start = new Date(availedAt + "T00:00:00");
+    if (isNaN(start.getTime())) return null;
+    var exp = new Date(start.getTime());
+    if (period === "yearly") exp.setFullYear(exp.getFullYear() + 1);
+    else exp.setMonth(exp.getMonth() + 1);
+    var now = new Date();
+    return { expiry: exp, expired: now.getTime() > exp.getTime(),
+      days: Math.ceil((exp.getTime() - now.getTime()) / 86400000), period: period };
+  }
+  function fmtDate(d) {
+    try { return d.toLocaleDateString(FR() ? "fr-CA" : "en-CA", { year: "numeric", month: "short", day: "numeric" }); }
+    catch (e) { return ""; }
+  }
+  function subBanner(user) {
+    var si = subInfo(user);
+    if (!si) return "";
+    if (si.expired) return '<div class="sub-banner exp"><span class="sub-pill exp">' + esc(t("expiredS")) +
+      "</span><span>" + esc(fmtDate(si.expiry)) + "</span></div>";
+    return '<div class="sub-banner"><span class="sub-pill ok">' + esc(t("active")) + "</span><span>" +
+      esc(t("renews")) + " " + esc(fmtDate(si.expiry)) + " · " + si.days + " " + esc(t("daysWord")) + "</span></div>";
+  }
 
   // Plans may be stored as strings (legacy) or {name, price, link} objects.
   function normPlans(arr) {
     return (arr || []).map(function (p) {
       return (typeof p === "string")
-        ? { name: p, price: "", link: "" }
-        : { name: p.name || "", price: p.price || "", link: p.link || "" };
+        ? { name: p, price: "", link: "", period: "monthly" }
+        : { name: p.name || "", price: p.price || "", link: p.link || "", period: p.period === "yearly" ? "yearly" : "monthly" };
     }).filter(function (p) { return p.name; });
   }
   function t(k) { var e = T[k] || {}; return FR() ? (e.fr || e.en || k) : (e.en || k); }
@@ -169,6 +211,8 @@
 
   function logout() {
     clearSession();
+    if (bellPoll) { clearInterval(bellPoll); bellPoll = null; }
+    if (adminPoll) { clearInterval(adminPoll); adminPoll = null; }
     go("#/login");
     location.hash = "#/login";
   }
@@ -185,7 +229,59 @@
     return '<div class="dash-top">' +
       '<div><div class="eyebrow">' + esc(t("welcome")) + '</div>' +
       '<h2 style="margin:6px 0 0">' + esc(title) + '</h2></div>' +
-      '<button class="btn ghost" id="vpLogout">' + esc(t("logout")) + '</button></div>';
+      '<div class="dash-top-actions">' +
+        '<div class="vp-bell-wrap"><button class="vp-bell" id="vpBell" aria-label="' + esc(t("notifs")) + '">' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
+          '<span class="vp-bell-badge" id="vpBellCount" hidden></span></button>' +
+          '<div class="vp-bell-menu" id="vpBellMenu" hidden></div></div>' +
+        '<button class="btn ghost" id="vpLogout">' + esc(t("logout")) + '</button>' +
+      "</div></div>";
+  }
+  function relTime(ms) {
+    var s = Math.floor((Date.now() - ms) / 1000);
+    if (s < 60) return t("justNow");
+    var m = Math.floor(s / 60); if (m < 60) return m + (FR() ? " min" : "m");
+    var h = Math.floor(m / 60); if (h < 24) return h + (FR() ? " h" : "h");
+    return Math.floor(h / 24) + (FR() ? " j" : "d");
+  }
+  function renderBellItems() {
+    var menu = el("vpBellMenu"); if (!menu) return;
+    menu.innerHTML = '<div class="vp-bell-head">' + esc(t("notifs")) + "</div>" +
+      (bellItems.length ? bellItems.map(function (n) {
+        return '<div class="vp-notif' + (n.read ? "" : " unread") + '"><div class="vp-notif-t">' + esc(n.title) + "</div>" +
+          (n.body ? '<div class="vp-notif-b">' + esc(n.body) + "</div>" : "") +
+          '<div class="vp-notif-time">' + esc(relTime(n.created_at)) + "</div></div>";
+      }).join("") : '<div class="vp-bell-empty">' + esc(t("noNotifs")) + "</div>");
+  }
+  function loadBell() {
+    api("/notifications").then(function (res) {
+      bellItems = (res.data && res.data.notifications) || [];
+      var unread = (res.data && res.data.unread) || 0;
+      var badge = el("vpBellCount");
+      if (badge) { if (unread > 0) { badge.textContent = unread > 9 ? "9+" : String(unread); badge.hidden = false; } else badge.hidden = true; }
+      var menu = el("vpBellMenu");
+      if (menu && !menu.hidden) renderBellItems();
+    }).catch(function () {});
+  }
+  function initBell() {
+    var bell = el("vpBell"); if (!bell) return;
+    var menu = el("vpBellMenu");
+    bell.onclick = function (e) {
+      e.stopPropagation();
+      if (!menu) return;
+      if (menu.hidden) {
+        renderBellItems(); menu.hidden = false;
+        var badge = el("vpBellCount");
+        if (badge && !badge.hidden) { api("/notifications", { method: "POST", body: { action: "read" } }).then(function () { badge.hidden = true; bellItems.forEach(function (n) { n.read = true; }); }); }
+      } else { menu.hidden = true; }
+    };
+    document.addEventListener("click", function (e) {
+      var mn = el("vpBellMenu"), bl = el("vpBell");
+      if (mn && !mn.hidden && bl && !bl.contains(e.target) && !mn.contains(e.target)) mn.hidden = true;
+    });
+    loadBell();
+    if (bellPoll) clearInterval(bellPoll);
+    bellPoll = setInterval(loadBell, 30000);
   }
 
   // ================= CLIENT DASHBOARD =================
@@ -258,6 +354,7 @@
     return '<div class="sec"><div class="wrap">' +
       topbar(name || "") +
       (user.plan ? '<div class="dash-plan">' + esc(t("yourPlan")) + ': <b>' + esc(user.plan) + "</b></div>" : "") +
+      subBanner(user) +
       '<div class="dash-stats">' +
         stat(fmt(m.views), t("views"), '<span class="dash-delta ' + changeCls + '">' + changeTxt + "</span>") +
         stat(fmt(m.profileClicks), t("clicks"), "") +
@@ -305,16 +402,22 @@
 
   function adminHTML(clients) {
     var rows = clients.length ? clients.map(function (c) {
+      var si = subInfo(c);
+      var renewal = si
+        ? '<span class="sub-pill ' + (si.expired ? "exp" : "ok") + '">' + (si.expired ? esc(t("expiredS")) : esc(t("active"))) +
+          '</span> <span class="dash-muted">' + esc(fmtDate(si.expiry)) + "</span>"
+        : '<span class="dash-muted">—</span>';
       return '<tr data-email="' + esc(c.email) + '">' +
         "<td><b>" + esc(c.name || "—") + "</b><div class='dash-muted'>" + esc(c.email) + "</div></td>" +
         "<td>" + esc(c.plan || "—") + "</td>" +
+        "<td>" + renewal + "</td>" +
         "<td>" + fmt(c.metrics && c.metrics.views) + "</td>" +
         "<td>" + fmt(c.metrics && c.metrics.articlesPublished) + "</td>" +
         '<td class="dash-actions">' +
           '<button class="btn ghost sm vp-edit">' + esc(t("edit")) + "</button> " +
           '<button class="btn ghost sm vp-del">' + esc(t("del")) + "</button>" +
         "</td></tr>";
-    }).join("") : '<tr><td colspan="5" class="dash-empty">' + esc(t("noClients")) + "</td></tr>";
+    }).join("") : '<tr><td colspan="6" class="dash-empty">' + esc(t("noClients")) + "</td></tr>";
 
     function navItem(id, label, on) {
       return '<button class="admin-nav-item' + (on ? " is-on" : "") + '" data-nav="' + id + '">' + esc(label) + "</button>";
@@ -331,8 +434,8 @@
           '<div class="dash-panel" data-panel="clients">' +
             '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button></div>" +
             '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
-              "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("views")) +
-              "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
+              "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("renewalCol")) +
+              "</th><th>" + esc(t("views")) + "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
           "</div>" +
           '<div class="dash-panel" data-panel="messages" style="display:none">' +
             '<div class="vpc-admin"><div class="vpc-list" id="vpChatList"><div class="dash-empty">…</div></div>' +
@@ -364,6 +467,13 @@
       if (current && !found) opts += '<option value="' + esc(current) + '" selected>' + esc(current) + "</option>";
       return '<label class="vpf">' + esc(FR() ? "Forfait" : "Plan") + '<select name="plan">' + opts + "</select></label>";
     }
+    function billingSel(current) {
+      var y = current === "yearly";
+      return '<label class="vpf">' + esc(t("billing")) + '<select name="period">' +
+        '<option value="monthly"' + (y ? "" : " selected") + ">" + esc(t("monthly")) + "</option>" +
+        '<option value="yearly"' + (y ? " selected" : "") + ">" + esc(t("yearly")) + "</option>" +
+        "</select></label>";
+    }
     return '<div class="dash-modal-bg" id="vpModalBg"><form class="dash-modal" id="vpForm">' +
       '<div class="dash-modal-head">' +
         "<h3>" + esc(isNew ? t("newClient") : t("edit")) + "</h3>" +
@@ -375,6 +485,11 @@
         f(FR() ? "Nom / entreprise" : "Name / business", "name", c.name) +
         planSel(c.plan) +
         f(isNew ? (FR() ? "Mot de passe" : "Password") : (FR() ? "Nouveau mot de passe (laisser vide)" : "New password (blank = keep)"), "password", "", "text") +
+        '<div class="vpf-section">' + esc(t("secSub")) + "</div>" +
+        '<div class="vpf-row">' +
+          '<label class="vpf">' + esc(t("dateAvailed")) + '<input name="availedAt" type="date" value="' + esc(c.availedAt || "") + '"></label>' +
+          billingSel(c.period) +
+        "</div>" +
         '<div class="vpf-section">' + esc(t("secNumbers")) + "</div>" +
         '<div class="vpf-row">' +
           f(t("views"), "views", m.views, "number") +
@@ -427,6 +542,8 @@
       email: v("email").trim(),
       name: v("name"),
       plan: v("plan"),
+      availedAt: v("availedAt"),
+      period: v("period") === "yearly" ? "yearly" : "monthly",
       metrics: {
         views: num(v("views")),
         viewsChangePct: num(v("viewsChangePct")),
@@ -466,6 +583,13 @@
       var focusEl = el("vpForm") && el("vpForm").querySelector("input");
       if (focusEl) { try { focusEl.focus(); } catch (e) {} }
       var form = el("vpForm");
+      // auto-fill billing period from the chosen plan
+      if (form && form.plan && form.period) {
+        form.plan.addEventListener("change", function () {
+          var pl = plans.filter(function (x) { return x.name === form.plan.value; })[0];
+          if (pl && pl.period) form.period.value = pl.period;
+        });
+      }
       if (form) form.onsubmit = function (e) {
         e.preventDefault();
         var payload = collectForm(form);
@@ -497,11 +621,14 @@
 
     // ---- manage plans (panel) ----
     function planRow(p) {
-      p = p || { name: "", price: "", link: "" };
+      p = p || { name: "", price: "", link: "", period: "monthly" };
+      var y = p.period === "yearly";
       return '<div class="vpp-row">' +
         '<input class="vpp-f vpp-name" placeholder="' + esc(t("planName")) + '" value="' + esc(p.name) + '">' +
         '<input class="vpp-f vpp-price" placeholder="' + esc(t("planPrice")) + '" value="' + esc(p.price) + '">' +
         '<input class="vpp-f vpp-link" placeholder="' + esc(t("planLink")) + '" value="' + esc(p.link) + '">' +
+        '<select class="vpp-f vpp-period"><option value="monthly"' + (y ? "" : " selected") + ">" + esc(t("monthly")) +
+          '</option><option value="yearly"' + (y ? " selected" : "") + ">" + esc(t("yearly")) + "</option></select>" +
         '<button type="button" class="vpp-del" aria-label="remove">&#10005;</button></div>';
     }
     function renderPlansPanel() {
@@ -510,7 +637,7 @@
         '<div class="dash-card">' +
           '<p class="dash-muted" style="margin:0 0 16px">' + esc(t("plansHint")) + "</p>" +
           '<div class="vpp-cols"><span>' + esc(t("planName")) + "</span><span>" + esc(t("planPrice")) +
-            "</span><span>" + esc(t("planLink")) + "</span><span></span></div>" +
+            "</span><span>" + esc(t("planLink")) + "</span><span>" + esc(t("billing")) + "</span><span></span></div>" +
           '<div id="vpPlanRows">' + (plans.length ? plans.map(planRow).join("") : "") + "</div>" +
           (plans.length ? "" : '<div class="dash-empty" id="vpPlanEmpty">' + esc(t("noPlans")) + "</div>") +
           '<div class="plans-foot"><button type="button" class="btn ghost sm" id="vpPlanAdd">' + esc(t("addPlan")) + "</button>" +
@@ -536,7 +663,7 @@
         el("vpPlanRows").querySelectorAll(".vpp-row").forEach(function (r) {
           var name = r.querySelector(".vpp-name").value.trim();
           if (!name) return;
-          out.push({ name: name, price: r.querySelector(".vpp-price").value.trim(), link: r.querySelector(".vpp-link").value.trim() });
+          out.push({ name: name, price: r.querySelector(".vpp-price").value.trim(), link: r.querySelector(".vpp-link").value.trim(), period: r.querySelector(".vpp-period").value });
         });
         var msg = el("vpPlansMsg"); if (msg) { msg.textContent = "…"; msg.style.color = ""; }
         api("/admin-plans", { method: "PUT", body: { plans: out } }).then(function (res) {
@@ -631,6 +758,7 @@
   function wireCommon() {
     var lo = el("vpLogout");
     if (lo) lo.onclick = logout;
+    initBell();
   }
 
   // ================= boot =================
@@ -638,7 +766,24 @@
     if (el("vp-css")) return;
     var css =
     ".dash-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px;flex-wrap:wrap}" +
-    ".dash-plan{color:var(--mut,#9aa);margin:-6px 0 18px;font-size:14px}" +
+    ".dash-top-actions{display:flex;align-items:center;gap:10px}" +
+    ".vp-bell-wrap{position:relative}" +
+    ".vp-bell{position:relative;width:44px;height:44px;border-radius:12px;border:1px solid var(--line2,#2a2145);background:rgba(255,255,255,.04);color:var(--white,#fff);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}" +
+    ".vp-bell:hover{background:rgba(255,255,255,.09)}" +
+    ".vp-bell-badge{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#e8409b;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}" +
+    ".vp-bell-menu{position:absolute;top:52px;right:0;width:330px;max-width:calc(100vw - 32px);max-height:min(60vh,460px);overflow-y:auto;background:#17112f;border:1px solid var(--line2,#2a2145);border-radius:14px;box-shadow:0 34px 90px -24px rgba(0,0,0,.85);z-index:1500}" +
+    ".vp-bell-head{padding:13px 15px;font-weight:700;font-size:14px;color:var(--white,#fff);border-bottom:1px solid var(--line2,#2a2145);position:sticky;top:0;background:#17112f}" +
+    ".vp-bell-empty{padding:26px 15px;text-align:center;color:var(--mut2,#77809a);font-size:13px}" +
+    ".vp-notif{padding:12px 15px;border-bottom:1px solid var(--line2,#2a2145)}" +
+    ".vp-notif.unread{background:rgba(124,58,237,.09)}" +
+    ".vp-notif-t{font-size:13.5px;font-weight:600;color:var(--white,#fff)}" +
+    ".vp-notif-b{font-size:12.5px;color:var(--mut,#9aa);margin-top:2px;line-height:1.4}" +
+    ".vp-notif-time{font-size:11px;color:var(--mut2,#77809a);margin-top:5px}" +
+    ".dash-plan{color:var(--mut,#9aa);margin:-6px 0 10px;font-size:14px}" +
+    ".sub-banner{display:flex;align-items:center;gap:10px;margin:0 0 18px;font-size:13.5px;color:var(--mut,#9aa)}" +
+    ".sub-pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}" +
+    ".sub-pill.ok{background:rgba(57,217,138,.14);color:#39d98a}" +
+    ".sub-pill.exp{background:rgba(255,122,122,.16);color:#ff8f8f}" +
     ".dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}" +
     ".dash-stat{background:linear-gradient(180deg,var(--panel,#140e29),#0c0918);border:1px solid var(--line2,#2a2145);border-radius:16px;padding:18px}" +
     ".dash-stat-v{font-size:30px;font-weight:800;color:var(--white,#fff);line-height:1.1}" +
@@ -686,10 +831,11 @@
     ".admin-nav-item:hover{color:var(--white,#fff);background:rgba(255,255,255,.05)}" +
     ".admin-nav-item.is-on{color:var(--white,#fff);background:rgba(124,58,237,.18)}" +
     ".admin-main{min-width:0}" +
-    ".vpp-cols{display:grid;grid-template-columns:1fr 1fr 1.5fr 36px;gap:10px;font-size:11.5px;color:var(--mut2,#77809a);font-weight:600;padding:0 2px 9px;border-bottom:1px solid var(--line2,#2a2145);margin-bottom:12px}" +
-    ".vpp-row{display:grid;grid-template-columns:1fr 1fr 1.5fr 36px;gap:10px;margin-bottom:10px;align-items:center}" +
+    ".vpp-cols{display:grid;grid-template-columns:1fr 1fr 1.5fr 108px 36px;gap:10px;font-size:11.5px;color:var(--mut2,#77809a);font-weight:600;padding:0 2px 9px;border-bottom:1px solid var(--line2,#2a2145);margin-bottom:12px}" +
+    ".vpp-row{display:grid;grid-template-columns:1fr 1fr 1.5fr 108px 36px;gap:10px;margin-bottom:10px;align-items:center}" +
     ".vpp-f{font:inherit;font-size:14px;color:var(--white,#fff);background:rgba(255,255,255,.05);border:1px solid var(--line2,#2a2145);border-radius:9px;padding:9px 11px;outline:none;width:100%;box-sizing:border-box}" +
     ".vpp-f:focus{border-color:var(--royal,#7c3aed)}" +
+    ".vpp-period{background-color:rgba(255,255,255,.05);background-image:url(\"data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23C4B5FD' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 9px center;padding-right:24px}" +
     ".vpp-del{width:36px;height:38px;border-radius:9px;border:1px solid var(--line2,#2a2145);background:rgba(255,255,255,.04);color:var(--mut,#9aa);font-size:13px;cursor:pointer}" +
     ".vpp-del:hover{color:#fff;background:rgba(255,122,122,.18)}" +
     ".plans-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}" +
