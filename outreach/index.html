@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
@@ -14,7 +14,15 @@ addEventListener('pageshow',function(){
   ['checkout','login'].forEach(function(id){var el=document.getElementById(id); if(el) el.classList.remove('show');});
   if(!location.hash) window.scrollTo({top:0,left:0,behavior:'instant'});
 });</script>
-<title>Vanta Marketing · Soyez trouvé partout sur Google et l'IA</title>
+<title>Vanta · Restaurant SEO + AI visibility · Get found on Google and in AI answers</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307060D'/%3E%3Ctext x='30' y='45' font-family='Georgia,serif' font-size='40' font-weight='800' text-anchor='middle' fill='%23A855F7'%3EV%3C/text%3E%3Ccircle cx='50' cy='44' r='5' fill='%23E8409B'/%3E%3C/svg%3E" />
+<link rel="canonical" href="https://vantamarketing.io/outreach/" />
+<meta property="og:type" content="website" /><meta property="og:site_name" content="Vanta Marketing" />
+<meta property="og:title" content="Vanta · Restaurant SEO + AI visibility · Get found on Google and in AI answers" /><meta property="og:description" content="A done-for-you blog for your restaurant that lifts you in Google and in ChatGPT, Gemini and Perplexity, and funnels those diners straight to your Google profile. $97/mo, no contract, cancel anytime." />
+<meta property="og:url" content="https://vantamarketing.io/outreach/" /><meta property="og:image" content="https://vantamarketing.io/og-card.png" />
+<meta property="og:image:width" content="1200" /><meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content="Vanta · Restaurant SEO + AI visibility · Get found on Google and in AI answers" />
+<meta name="twitter:description" content="A done-for-you blog for your restaurant that lifts you in Google and in ChatGPT, Gemini and Perplexity, and funnels those diners straight to your Google profile. $97/mo, no contract, cancel anytime." /><meta name="twitter:image" content="https://vantamarketing.io/og-card.png" />
 <meta name="description" content="Un blogue clé en main pour votre restaurant qui vous fait remonter dans Google et dans les réponses IA, et qui envoie ces clients vers votre fiche Google. 97 $/mois." />
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -258,7 +266,7 @@ addEventListener('pageshow',function(){
   .field textarea:focus{border-color:var(--lilac);box-shadow:0 0 0 3px rgba(124,58,237,.18)}
   .field textarea::placeholder{color:var(--mut2)}
   /* checkout / milestone overlay */
-  .checkout{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(7,6,13,.88);backdrop-filter:blur(12px);overflow-y:auto}
+  .checkout{position:fixed;inset:0;z-index:1150;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(7,6,13,.88);backdrop-filter:blur(12px);overflow-y:auto}
   .checkout.show{display:flex}
   .checkout-card{position:relative;max-width:520px;width:100%;border:1px solid var(--line2);border-radius:22px;background:linear-gradient(180deg,#0e0a1c,#08060f);padding:clamp(24px,4vw,40px);box-shadow:0 40px 120px -40px rgba(124,58,237,.75);margin:auto}
   .checkout-card h2{font-size:clamp(22px,3vw,32px);margin:10px 0 0}
@@ -277,7 +285,7 @@ addEventListener('pageshow',function(){
   .navlink{font:inherit;font-size:14px;font-weight:600;color:var(--mut);cursor:pointer;padding:9px 13px;border-radius:10px;transition:.15s;white-space:nowrap;border:1px solid transparent}
   .navlink:hover{color:#fff;background:rgba(124,58,237,.12);border-color:var(--line2)}
   /* login overlay */
-  .login{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(7,6,13,.92);backdrop-filter:blur(14px);overflow-y:auto}
+  .login{position:fixed;inset:0;z-index:1180;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(7,6,13,.92);backdrop-filter:blur(14px);overflow-y:auto}
   .login.show{display:flex;animation:loginFade .25s ease}
   @keyframes loginFade{from{opacity:0}to{opacity:1}}
   .login-inner{position:relative;max-width:1080px;width:100%;margin:auto;border:1px solid var(--line2);border-radius:24px;background:linear-gradient(180deg,#0e0a1c,#08060f);box-shadow:0 50px 140px -50px rgba(124,58,237,.8);overflow:hidden;animation:loginPop .42s cubic-bezier(.2,.8,.2,1)}
@@ -330,7 +338,7 @@ addEventListener('pageshow',function(){
   }
   @media(prefers-reduced-motion:reduce){ .reveal{opacity:1;transform:none;transition:none} .btn.primary::after{display:none} }
   /* floating chat */
-  #chatw{position:fixed;right:20px;bottom:20px;z-index:500;font-family:var(--sans)}
+  #chatw{position:fixed;right:20px;bottom:20px;z-index:1200;font-family:var(--sans)}
   .chat-fab{position:relative;width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(145deg,#34D27B,#15A34A);box-shadow:0 12px 30px -8px rgba(34,197,94,.7),0 4px 12px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;transition:transform .18s}
   .chat-fab:hover{transform:scale(1.06)}
   .chat-fab svg{width:30px;height:30px;fill:#fff}
@@ -378,7 +386,7 @@ addEventListener('pageshow',function(){
 </div></nav>
 
 <!-- HERO -->
-<header class="hero">
+<header class="hero" id="main">
   <div class="el bg" data-el="godrays"></div>
   <div class="wrap inner">
     <div class="eyebrow" data-i18n="hero.eyebrow">SEO local + visibilité IA · Restaurants du Québec</div>
@@ -843,7 +851,7 @@ refresh(); setTimeout(refresh,250); setTimeout(refresh,1000);
 try{ const io=new IntersectionObserver(es=>es.forEach(e=>{e.isIntersecting?mountHost(e.target):unmountHost(e.target);}),{rootMargin:'420px 0px 420px 0px',threshold:0.01}); hosts.forEach(h=>io.observe(h)); }catch(_){}
 
 // nav: hide on scroll down, reveal on scroll up
-const navEl=document.querySelector('nav'); let lastNavY=scrollY;
+const navEl=document.querySelector('nav:not(.vn)'); let lastNavY=scrollY;
 addEventListener('scroll', ()=>{ const y=scrollY;
   if(y>lastNavY && y>120) navEl.classList.add('nav-hidden');
   else if(y<lastNavY) navEl.classList.remove('nav-hidden');
@@ -901,7 +909,7 @@ form.addEventListener('submit', (e)=>{
   e.preventDefault();
   const rn=form.resto_name.value.trim(), on=form.owner_name.value.trim(), em=form.courriel.value.trim(), sms=form.sms.value.trim();
   if(!rn||!on||!em||!sms){ form.reportValidity&&form.reportValidity(); return; }
-  const data={ ts:new Date().toISOString(), nom:on, restaurant:rn, courriel:em, telephone:sms,
+  const data={ ts:new Date().toISOString(), type:'outreach_lead', nom:on, restaurant:rn, courriel:em, telephone:sms,
     nb_restaurants:form.nb_restaurants.value||'', nb_sites:form.nb_sites.value||'', contact_pref:form.contact_pref.value||'',
     focus:(form.focus_resto.value||'').trim(), langue:lang, page:'vanta-landing', enrolled:'non' };
   lastLead=data;
@@ -914,7 +922,7 @@ checkout.addEventListener('click', e=>{ if(e.target===checkout) closeCheckout();
 document.getElementById('checkoutGo').addEventListener('click', closeCheckout);
 
 /* ---------------- login overlay (existing customers) ---------------- */
-const LOGIN_URL = ""; // <-- your customer dashboard/app login URL when ready (empty = "coming soon")
+const LOGIN_URL = window.PORTAL_URL || ""; // <-- your customer dashboard/app login URL when ready (empty = "coming soon")
 const login=document.getElementById('login');
 const loginEls=()=>[...login.querySelectorAll('.el[data-el]')];
 function openLogin(e){ if(e)e.preventDefault(); login.classList.add('show'); document.body.style.overflow='hidden';
