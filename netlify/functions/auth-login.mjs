@@ -20,7 +20,8 @@ export default async (req) => {
 
   // Admin: verified against env, never stored in the repo or exposed to the browser.
   if (adminEmail && email === adminEmail) {
-    if (adminHash && verifyPassword(password, adminHash)) {
+    if (!adminHash) return json({ error: 'admin_not_configured' }, 503);
+    if (verifyPassword(password, adminHash)) {
       const token = signToken({ sub: email, role: 'admin' }, secret);
       return json({ token, role: 'admin', name: 'Admin', email });
     }

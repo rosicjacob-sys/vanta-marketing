@@ -18,6 +18,8 @@
     signInFail: { en: "Wrong email or password.", fr: "Courriel ou mot de passe invalide." },
     signingIn:  { en: "Signing you in…",           fr: "Connexion en cours…" },
     netErr:     { en: "Network error — please try again.", fr: "Erreur réseau — réessayez." },
+    notConfigured: { en: "Login isn't set up on the server yet (missing environment variables). Set them in Netlify and redeploy.", fr: "La connexion n'est pas encore configurée sur le serveur (variables d'environnement manquantes). Configurez-les dans Netlify et redéployez." },
+    notDeployed: { en: "Login service not found (functions not deployed). Check the Netlify deploy.", fr: "Service de connexion introuvable (fonctions non déployées). Vérifiez le déploiement Netlify." },
     logout:     { en: "Log out",                   fr: "Se déconnecter" },
     welcome:    { en: "Welcome back",              fr: "Bon retour" },
     yourPlan:   { en: "Your plan",                 fr: "Votre forfait" },
@@ -115,7 +117,11 @@
           if (msg) msg.textContent = "";
           go(res.data.role === "admin" ? "#/admin" : "#/dashboard");
         } else {
-          if (msg) { msg.textContent = t("signInFail"); msg.style.color = "#ff8080"; }
+          var err = res.data && res.data.error;
+          var m2 = (err === "server_not_configured" || err === "admin_not_configured") ? t("notConfigured")
+                 : (res.status === 404 ? t("notDeployed") : t("signInFail"));
+          if (err) { try { console.warn("[vanta login]", res.status, err); } catch (e) {} }
+          if (msg) { msg.textContent = m2; msg.style.color = "#ff8080"; }
         }
       })
       .catch(function () {
