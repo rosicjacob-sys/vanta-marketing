@@ -5,7 +5,7 @@
 // (e.g. "Vanta <noreply@vantamarketing.io>").
 import { logEmail } from './store.mjs';
 
-export async function sendEmail({ to, subject, text, html }) {
+export async function sendEmail({ to, subject, text, html, audience }) {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM || 'Vanta <onboarding@resend.dev>';
   let result;
@@ -35,7 +35,7 @@ export async function sendEmail({ to, subject, text, html }) {
     : 'failed';
   try {
     await logEmail({ to: to || '', subject: subject || '', body: text || '', status,
-      detail: result.detail || result.reason || '' });
+      detail: result.detail || result.reason || '', audience: audience || '' });
   } catch (e) { /* logging is best-effort */ }
 
   return result;

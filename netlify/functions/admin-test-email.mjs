@@ -17,6 +17,7 @@ export default async (req) => {
     text: 'This is a test email from your Vanta admin dashboard.\n\n'
       + 'If you received this, email delivery is working: RESEND_API_KEY and EMAIL_FROM '
       + 'are set and your sending domain is verified.',
+    audience: 'admin',
   });
 
   return json({ ok: !!result.sent, result, to });

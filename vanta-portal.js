@@ -9,6 +9,8 @@
 
   var API = "/.netlify/functions";
   var LS = { token: "vanta_token", role: "vanta_role", name: "vanta_name" };
+  // Google Sheet where lead/form submissions are collected (admin "View leads").
+  var LEADS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1hrDo4e5WTX1WQF3n369v1CmsTXQq8ZFOrF8-odcDMI8/edit?gid=0#gid=0";
   var adminPoll = null; // interval handle for the admin Messages thread
   var bellPoll = null;  // interval handle for the notifications bell
   var msgPoll = null;   // interval handle for the admin Messages unread badge
@@ -83,6 +85,17 @@
     emSent:     { en: "Sent",                 fr: "Envoyé" },
     emFailed:   { en: "Failed",               fr: "Échec" },
     emSkipped:  { en: "Not sent",             fr: "Non envoyé" },
+    emAll:      { en: "All",                  fr: "Tous" },
+    emClientTab:{ en: "To clients",           fr: "Aux clients" },
+    emAdminTab: { en: "To admin",             fr: "À l'admin" },
+    emView:     { en: "View",                 fr: "Voir" },
+    emDelete:   { en: "Delete",               fr: "Supprimer" },
+    emClearAll: { en: "Clear all",            fr: "Tout effacer" },
+    emConfirmDel:{ en: "Delete this email from the log?", fr: "Supprimer ce courriel du journal ?" },
+    emConfirmClear:{ en: "Delete all emails shown in this tab? This can't be undone.", fr: "Supprimer tous les courriels de cet onglet ? Irréversible." },
+    emBodyLabel:{ en: "Message",              fr: "Message" },
+    emReason:   { en: "Reason",               fr: "Raison" },
+    viewLeads:  { en: "View leads",           fr: "Voir les prospects" },
     settingsTab:{ en: "Settings",            fr: "Paramètres" },
     setHint:    { en: "Configure reminder timing and the emails clients receive. Placeholders: {name} {plan} {date} {days} {brand} {link} (the client's plan checkout link).", fr: "Configurez le moment des rappels et les courriels reçus par les clients. Variables : {name} {plan} {date} {days} {brand} {link} (lien de paiement du forfait du client)." },
     setLeadDays:{ en: "Send renewal reminder this many days before expiry", fr: "Envoyer le rappel de renouvellement ce nombre de jours avant l'expiration" },
@@ -526,7 +539,8 @@
         '<div class="admin-main">' +
           '<div class="dash-panel" data-panel="clients">' +
             '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button>" +
-              ' <button class="btn ghost" id="vpRunRem">' + esc(t("runRem")) + "</button></div>" +
+              ' <button class="btn ghost" id="vpRunRem">' + esc(t("runRem")) + "</button>" +
+              ' <a class="btn ghost" href="' + esc(LEADS_SHEET_URL) + '" target="_blank" rel="noopener">' + esc(t("viewLeads")) + "</a></div>" +
             '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
               "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("renewalCol")) +
               "</th><th>" + esc(t("views")) + "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
@@ -779,34 +793,112 @@
     }
 
     // ---- emails (outbound log) ----
+    var emailTab = "all", emailsCache = [];
     function emailStatusPill(s) {
       if (s === "sent") return '<span class="sub-pill ok">' + esc(t("emSent")) + "</span>";
       if (s === "skipped") return '<span class="sub-pill pend">' + esc(t("emSkipped")) + "</span>";
       return '<span class="sub-pill exp">' + esc(t("emFailed")) + "</span>";
     }
+    function fullWhen(ms) { try { return new Date(ms).toLocaleString(FR() ? "fr-CA" : "en-CA"); } catch (e) { return ""; } }
     function renderEmails() {
       var host = el("vpEmailPanel"); if (!host) return;
       host.innerHTML = '<div class="dash-card"><p class="lead">…</p></div>';
       api("/admin-emails").then(function (res) {
-        var emails = (res.data && res.data.emails) || [];
-        host.innerHTML =
-          '<div class="dash-card">' +
-            '<p class="dash-muted" style="margin:0 0 16px">' + esc(t("emailsHint")) + "</p>" +
-            '<div style="overflow-x:auto">' +
-            (emails.length
-              ? '<table class="dash-table"><thead><tr><th>' + esc(t("emTo")) + "</th><th>" + esc(t("emSubject")) +
-                "</th><th>" + esc(t("statusCol")) + "</th><th>" + esc(t("emWhen")) + "</th></tr></thead><tbody>" +
-                emails.map(function (e) {
-                  return "<tr><td>" + esc(e.to || "—") + "</td>" +
-                    "<td><b>" + esc(e.subject || "—") + "</b>" +
-                    (e.body ? '<div class="dash-muted vp-em-body">' + esc(e.body) + "</div>" : "") +
-                    (e.status !== "sent" && e.detail ? '<div class="dash-muted">' + esc(e.detail) + "</div>" : "") +
-                    "</td><td>" + emailStatusPill(e.status) + '</td><td class="dash-muted">' +
-                    esc(relTime(e.created_at || Date.now())) + "</td></tr>";
-                }).join("") + "</tbody></table>"
-              : '<div class="dash-empty">' + esc(t("noEmails")) + "</div>") +
-            "</div></div>";
+        emailsCache = (res.data && res.data.emails) || [];
+        drawEmails();
       });
+    }
+    function emailsFor(tab) {
+      return emailsCache.filter(function (e) {
+        if (tab === "client") return e.audience === "client";
+        if (tab === "admin") return e.audience === "admin";
+        return true;
+      });
+    }
+    function drawEmails() {
+      var host = el("vpEmailPanel"); if (!host) return;
+      var list = emailsFor(emailTab);
+      function tab(id, label) {
+        return '<button class="em-tab' + (emailTab === id ? " is-on" : "") + '" data-etab="' + id + '">' +
+          esc(label) + ' <span class="em-tab-n">' + emailsFor(id).length + "</span></button>";
+      }
+      host.innerHTML =
+        '<div class="dash-card">' +
+          '<p class="dash-muted" style="margin:0 0 14px">' + esc(t("emailsHint")) + "</p>" +
+          '<div class="em-tabs">' + tab("all", t("emAll")) + tab("client", t("emClientTab")) + tab("admin", t("emAdminTab")) +
+            '<span class="em-tabs-sp"></span>' +
+            (list.length ? '<button class="btn ghost sm" id="vpEmClear">' + esc(t("emClearAll")) + "</button>" : "") +
+          "</div>" +
+          '<div style="overflow-x:auto">' +
+          (list.length
+            ? '<table class="dash-table"><thead><tr><th>' + esc(t("emTo")) + "</th><th>" + esc(t("emSubject")) +
+              "</th><th>" + esc(t("statusCol")) + "</th><th>" + esc(t("emWhen")) + "</th><th></th></tr></thead><tbody>" +
+              list.map(function (e) {
+                return '<tr data-id="' + esc(e.id) + '"><td>' + esc(e.to || "—") + "</td>" +
+                  '<td class="em-subcell"><b>' + esc(e.subject || "—") + "</b>" +
+                  (e.body ? '<div class="dash-muted em-prev">' + esc(e.body) + "</div>" : "") +
+                  "</td><td>" + emailStatusPill(e.status) + '</td><td class="dash-muted">' +
+                  esc(relTime(e.created_at || Date.now())) + '</td>' +
+                  '<td class="dash-actions"><button class="btn ghost sm em-view">' + esc(t("emView")) +
+                    '</button> <button class="btn ghost sm em-del">' + esc(t("emDelete")) + "</button></td></tr>";
+              }).join("") + "</tbody></table>"
+            : '<div class="dash-empty">' + esc(t("noEmails")) + "</div>") +
+          "</div></div>";
+
+      host.querySelectorAll(".em-tab").forEach(function (b) {
+        b.onclick = function () { emailTab = b.getAttribute("data-etab"); drawEmails(); };
+      });
+      var clear = el("vpEmClear");
+      if (clear) clear.onclick = function () {
+        if (!confirm(t("emConfirmClear"))) return;
+        var aud = emailTab === "all" ? "" : emailTab;
+        api("/admin-emails", { method: "DELETE", body: { all: true, audience: aud } }).then(function () {
+          emailsCache = aud ? emailsCache.filter(function (e) { return e.audience !== aud; }) : [];
+          drawEmails();
+        });
+      };
+      host.querySelectorAll("tr[data-id]").forEach(function (tr) {
+        var id = tr.getAttribute("data-id");
+        var em = list.filter(function (e) { return String(e.id) === String(id); })[0];
+        tr.querySelector(".em-view").onclick = function () { openEmailModal(em); };
+        tr.querySelector(".em-subcell").onclick = function () { openEmailModal(em); };
+        tr.querySelector(".em-del").onclick = function () { if (confirm(t("emConfirmDel"))) removeEmail(id); };
+      });
+    }
+    function removeEmail(id) {
+      api("/admin-emails", { method: "DELETE", body: { id: id } }).then(function () {
+        emailsCache = emailsCache.filter(function (e) { return String(e.id) !== String(id); });
+        drawEmails();
+      });
+    }
+    function openEmailModal(e) {
+      if (!e) return;
+      var modal = el("vpModal"); if (!modal) return;
+      modal.innerHTML =
+        '<div class="dash-modal-bg" id="vpEmBg"><div class="dash-modal">' +
+          '<div class="dash-modal-head"><h3>' + esc(e.subject || "—") + "</h3>" +
+            '<button type="button" class="dash-modal-x" id="vpEmX" aria-label="' + esc(t("close")) + '">&#10005;</button></div>' +
+          '<div class="dash-modal-body">' +
+            '<div class="vpf-section">' + esc(t("emTo")) + "</div><div>" + esc(e.to || "—") + "</div>" +
+            '<div style="margin-top:10px">' + emailStatusPill(e.status) +
+              ' <span class="dash-muted">' + esc(fullWhen(e.created_at)) + "</span></div>" +
+            (e.status !== "sent" && e.detail ? '<div class="vpf-section">' + esc(t("emReason")) +
+              '</div><div class="dash-muted" style="white-space:pre-wrap">' + esc(e.detail) + "</div>" : "") +
+            '<div class="vpf-section">' + esc(t("emBodyLabel")) + "</div>" +
+            '<div class="em-modal-body">' + esc(e.body || "") + "</div>" +
+          "</div>" +
+          '<div class="dash-modal-foot"><span></span><div class="vpf-actions">' +
+            '<button type="button" class="btn ghost" id="vpEmDelM">' + esc(t("emDelete")) + "</button>" +
+            '<button type="button" class="btn primary" id="vpEmClose">' + esc(t("close")) + "</button></div></div>" +
+        "</div></div>";
+      try { document.body.style.overflow = "hidden"; } catch (er) {}
+      function close() { modal.innerHTML = ""; try { document.body.style.overflow = ""; } catch (er) {} document.removeEventListener("keydown", onKey); }
+      function onKey(ev) { if (ev.key === "Escape") close(); }
+      document.addEventListener("keydown", onKey);
+      el("vpEmX").onclick = close;
+      el("vpEmClose").onclick = close;
+      el("vpEmBg").onclick = function (ev) { if (ev.target === el("vpEmBg")) close(); };
+      el("vpEmDelM").onclick = function () { if (!confirm(t("emConfirmDel"))) return; removeEmail(e.id); close(); };
     }
 
     // ---- settings ----
@@ -1125,7 +1217,15 @@
     ".admin-nav-badge{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#e8409b;color:#fff;font-size:11px;font-weight:700;vertical-align:middle;box-sizing:border-box}" +
     ".admin-nav-badge[hidden]{display:none}" +
     ".admin-nav-sep{height:1px;background:var(--line2,#2a2145);margin:10px 6px}" +
-    ".vp-em-body{max-width:420px;white-space:normal;margin-top:3px;line-height:1.4}" +
+    ".em-tabs{display:flex;align-items:center;gap:6px;margin:0 0 14px;flex-wrap:wrap}" +
+    ".em-tabs-sp{flex:1}" +
+    ".em-tab{font:inherit;font-size:13px;font-weight:600;color:var(--mut,#9aa);background:rgba(255,255,255,.04);border:1px solid var(--line2,#2a2145);border-radius:9px;padding:7px 12px;cursor:pointer}" +
+    ".em-tab:hover{color:var(--white,#fff)}" +
+    ".em-tab.is-on{color:var(--white,#fff);background:rgba(124,58,237,.2);border-color:transparent}" +
+    ".em-tab-n{opacity:.6;font-weight:700;margin-left:2px}" +
+    ".em-subcell{cursor:pointer}" +
+    ".em-prev{max-width:460px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}" +
+    ".em-modal-body{white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.5;color:var(--white,#fff);background:rgba(255,255,255,.04);border:1px solid var(--line2,#2a2145);border-radius:10px;padding:12px 14px;margin-top:4px}" +
     ".admin-nav-logout{color:var(--mut2,#77809a)}" +
     ".admin-nav-logout:hover{color:#ff8f8f;background:rgba(255,122,122,.12)}" +
     ".admin-main{min-width:0}" +
