@@ -62,6 +62,9 @@
     justNow:    { en: "just now",            fr: "à l'instant" },
     payments:   { en: "Payments",            fr: "Paiements" },
     runRem:     { en: "Run reminders",        fr: "Lancer les rappels" },
+    migrate:    { en: "Migrate old data",     fr: "Migrer les anciennes données" },
+    migrateConfirm: { en: "Copy your old Blobs data (clients, plans, chats) into the database?", fr: "Copier vos anciennes données Blobs (clients, forfaits, clavardages) dans la base de données?" },
+    migrateDone:{ en: "Migrated —",            fr: "Migré —" },
     remDone:    { en: "Sweep done —",         fr: "Balayage terminé —" },
     remRems:    { en: "reminder(s),",         fr: "rappel(s)," },
     remExps:    { en: "expiry notice(s),",    fr: "avis d'expiration," },
@@ -488,7 +491,8 @@
         '<div class="admin-main">' +
           '<div class="dash-panel" data-panel="clients">' +
             '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button>" +
-              ' <button class="btn ghost" id="vpRunRem">' + esc(t("runRem")) + "</button></div>" +
+              ' <button class="btn ghost" id="vpRunRem">' + esc(t("runRem")) + "</button>" +
+              ' <button class="btn ghost" id="vpMigrate">' + esc(t("migrate")) + "</button></div>" +
             '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
               "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("renewalCol")) +
               "</th><th>" + esc(t("views")) + "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
@@ -670,6 +674,18 @@
         alert(t("remDone") + " " + (d.reminders || 0) + " " + t("remRems") + " " + (d.expiries || 0) + " " +
           t("remExps") + " " + (d.scanned || 0) + " " + t("remScan") + ".");
         loadBell();
+      });
+    };
+    var mig = el("vpMigrate");
+    if (mig) mig.onclick = function () {
+      if (!confirm(t("migrateConfirm"))) return;
+      mig.disabled = true; var orig = mig.textContent; mig.textContent = "…";
+      api("/admin-migrate", { method: "POST" }).then(function (res) {
+        mig.disabled = false; mig.textContent = orig;
+        var d = res.data || {};
+        if (d.error) { alert(d.error); return; }
+        alert(t("migrateDone") + " " + (d.clients || 0) + " client(s), " + (d.plans || 0) + " plan(s), " + (d.chats || 0) + " chat(s).");
+        renderAdmin();
       });
     };
 
