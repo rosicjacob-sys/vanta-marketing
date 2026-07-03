@@ -84,6 +84,16 @@
     emSent:     { en: "Sent",                 fr: "Envoyé" },
     emFailed:   { en: "Failed",               fr: "Échec" },
     emSkipped:  { en: "Not sent",             fr: "Non envoyé" },
+    settingsTab:{ en: "Settings",            fr: "Paramètres" },
+    setHint:    { en: "Configure reminder timing and the emails clients receive. Placeholders: {name} {plan} {date} {days} {brand}.", fr: "Configurez le moment des rappels et les courriels reçus par les clients. Variables : {name} {plan} {date} {days} {brand}." },
+    setLeadDays:{ en: "Send renewal reminder this many days before expiry", fr: "Envoyer le rappel de renouvellement ce nombre de jours avant l'expiration" },
+    setBrand:   { en: "Brand name (used in emails as {brand})", fr: "Nom de marque (utilisé dans les courriels via {brand})" },
+    setRenewal: { en: "Renewal reminder email", fr: "Courriel de rappel de renouvellement" },
+    setExpired: { en: "Expiry notice email",   fr: "Courriel d'avis d'expiration" },
+    setSubject: { en: "Subject",              fr: "Objet" },
+    setBody:    { en: "Message",              fr: "Message" },
+    setSaved:   { en: "Settings saved.",      fr: "Paramètres enregistrés." },
+    setSave:    { en: "Save settings",        fr: "Enregistrer les paramètres" },
     rejectConfirm:{ en: "Mark this payment as NOT confirmed?", fr: "Marquer ce paiement comme NON confirmé?" },
     underReview:{ en: "Payment under review", fr: "Paiement en vérification" },
     reviewNote: { en: "We're verifying your payment — we'll confirm shortly.", fr: "On vérifie votre paiement — confirmation sous peu." },
@@ -503,8 +513,11 @@
             '<span class="admin-nav-badge" id="vpPayBadge" hidden></span></button>' +
           navItem("emails", t("emailsTab"), false) +
           navItem("plans", t("managePlans"), false) +
-          '<div class="admin-nav-sep"></div>' +
-          '<button class="admin-nav-item admin-nav-logout" id="vpLogout">' + esc(t("logout")) + "</button>" +
+          navItem("settings", t("settingsTab"), false) +
+          '<div class="admin-nav-foot">' +
+            '<div class="admin-nav-sep"></div>' +
+            '<button class="admin-nav-item admin-nav-logout" id="vpLogout">' + esc(t("logout")) + "</button>" +
+          "</div>" +
         "</aside>" +
         '<div class="admin-main">' +
           '<div class="dash-panel" data-panel="clients">' +
@@ -521,6 +534,7 @@
           '<div class="dash-panel" data-panel="payments" style="display:none" id="vpPayPanel"></div>' +
           '<div class="dash-panel" data-panel="emails" style="display:none" id="vpEmailPanel"></div>' +
           '<div class="dash-panel" data-panel="plans" style="display:none" id="vpPlansPanel"></div>' +
+          '<div class="dash-panel" data-panel="settings" style="display:none" id="vpSettingsPanel"></div>' +
         "</div>" +
       "</div>" +
       '<div id="vpModal"></div>' +
@@ -695,7 +709,7 @@
       });
     };
     // ---- left-nav switching ----
-    var plansRendered = false, chatLoaded = false;
+    var plansRendered = false, chatLoaded = false, settingsRendered = false;
     document.querySelectorAll(".admin-nav-item[data-nav]").forEach(function (item) {
       item.onclick = function () {
         var name = item.getAttribute("data-nav");
@@ -707,6 +721,7 @@
         if (name === "plans" && !plansRendered) { plansRendered = true; renderPlansPanel(); }
         if (name === "payments") renderPayments();
         if (name === "emails") renderEmails();
+        if (name === "settings" && !settingsRendered) { settingsRendered = true; renderSettings(); }
       };
     });
 
@@ -787,6 +802,53 @@
                 }).join("") + "</tbody></table>"
               : '<div class="dash-empty">' + esc(t("noEmails")) + "</div>") +
             "</div></div>";
+      });
+    }
+
+    // ---- settings ----
+    function renderSettings() {
+      var host = el("vpSettingsPanel"); if (!host) return;
+      host.innerHTML = '<div class="dash-card"><p class="lead">…</p></div>';
+      api("/admin-settings").then(function (res) {
+        var s = (res.data && res.data.settings) || {};
+        host.innerHTML =
+          '<div class="dash-card"><form id="vpSetForm">' +
+            '<p class="dash-muted" style="margin:0 0 18px">' + esc(t("setHint")) + "</p>" +
+            '<label class="vpf">' + esc(t("setLeadDays")) +
+              '<input name="reminderLeadDays" type="number" min="1" max="90" value="' + esc(s.reminderLeadDays == null ? 3 : s.reminderLeadDays) + '"></label>' +
+            '<label class="vpf">' + esc(t("setBrand")) +
+              '<input name="brandName" type="text" value="' + esc(s.brandName || "") + '"></label>' +
+            '<div class="vpf-section">' + esc(t("setRenewal")) + "</div>" +
+            '<label class="vpf">' + esc(t("setSubject")) +
+              '<input name="renewalSubject" type="text" value="' + esc(s.renewalSubject || "") + '"></label>' +
+            '<label class="vpf">' + esc(t("setBody")) +
+              '<textarea name="renewalBody" rows="3">' + esc(s.renewalBody || "") + "</textarea></label>" +
+            '<div class="vpf-section">' + esc(t("setExpired")) + "</div>" +
+            '<label class="vpf">' + esc(t("setSubject")) +
+              '<input name="expiredSubject" type="text" value="' + esc(s.expiredSubject || "") + '"></label>' +
+            '<label class="vpf">' + esc(t("setBody")) +
+              '<textarea name="expiredBody" rows="3">' + esc(s.expiredBody || "") + "</textarea></label>" +
+            '<div class="plans-foot"><span></span><span class="plans-foot-r">' +
+              '<span class="hint" id="vpSetMsg"></span>' +
+              '<button type="submit" class="btn primary">' + esc(t("setSave")) + "</button></span></div>" +
+          "</form></div>";
+        var form = el("vpSetForm");
+        form.onsubmit = function (e) {
+          e.preventDefault();
+          var body = {
+            reminderLeadDays: form.reminderLeadDays.value,
+            brandName: form.brandName.value,
+            renewalSubject: form.renewalSubject.value,
+            renewalBody: form.renewalBody.value,
+            expiredSubject: form.expiredSubject.value,
+            expiredBody: form.expiredBody.value,
+          };
+          var msg = el("vpSetMsg"); if (msg) { msg.textContent = "…"; msg.style.color = ""; }
+          api("/admin-settings", { method: "PUT", body: body }).then(function (r) {
+            if (r.ok) { if (msg) { msg.textContent = t("setSaved"); msg.style.color = "#39d98a"; } }
+            else if (msg) { msg.textContent = (r.data && r.data.error) || "Error."; msg.style.color = "#ff8080"; }
+          });
+        };
       });
     }
 
@@ -1034,8 +1096,9 @@
     ".dash-tab{font:inherit;font-size:14px;font-weight:600;color:var(--mut,#9aa);background:none;border:none;border-bottom:2px solid transparent;padding:10px 14px;margin-bottom:-1px;cursor:pointer}" +
     ".dash-tab:hover{color:var(--white,#fff)}" +
     ".dash-tab.is-on{color:var(--white,#fff);border-bottom-color:var(--royal,#7c3aed)}" +
-    ".admin-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;margin-top:4px}" +
-    ".admin-nav{display:flex;flex-direction:column;gap:4px;position:sticky;top:20px}" +
+    ".admin-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;margin-top:4px;min-height:62vh}" +
+    ".admin-nav{display:flex;flex-direction:column;gap:4px;align-self:stretch}" +
+    ".admin-nav-foot{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:6px}" +
     ".admin-nav-item{font:inherit;font-size:14.5px;font-weight:600;text-align:left;color:var(--mut,#9aa);background:none;border:none;border-radius:10px;padding:11px 14px;cursor:pointer;white-space:nowrap}" +
     ".admin-nav-item:hover{color:var(--white,#fff);background:rgba(255,255,255,.05)}" +
     ".admin-nav-item.is-on{color:var(--white,#fff);background:rgba(124,58,237,.18)}" +
@@ -1055,7 +1118,7 @@
     ".vpp-del:hover{color:#fff;background:rgba(255,122,122,.18)}" +
     ".plans-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}" +
     ".plans-foot-r{display:flex;align-items:center;gap:12px}" +
-    "@media(max-width:820px){.admin-layout{grid-template-columns:1fr}.admin-nav{flex-direction:row;overflow-x:auto;position:static;margin-bottom:8px}.vpp-cols{display:none}.vpp-row{grid-template-columns:1fr 1fr;gap:8px}.vpp-row .vpp-link{grid-column:1/-1}.vpp-del{width:auto}}" +
+    "@media(max-width:820px){.admin-layout{grid-template-columns:1fr;min-height:0}.admin-nav{flex-direction:row;overflow-x:auto;position:static;margin-bottom:8px;align-self:auto}.admin-nav-foot{flex-direction:row;margin:0;padding:0}.admin-nav-sep{display:none}.vpp-cols{display:none}.vpp-row{grid-template-columns:1fr 1fr;gap:8px}.vpp-row .vpp-link{grid-column:1/-1}.vpp-del{width:auto}}" +
     ".vpc-admin{display:grid;grid-template-columns:300px 1fr;gap:14px;height:min(66vh,620px)}" +
     ".vpc-list{overflow-y:auto;background:linear-gradient(180deg,var(--panel,#140e29),#0a0817);border:1px solid var(--line2,#2a2145);border-radius:16px;padding:8px}" +
     ".vpc-conv{position:relative;display:block;width:100%;text-align:left;background:none;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;color:var(--white,#fff);font:inherit}" +

@@ -3,6 +3,7 @@
 // the same expiry date). Shared by the daily cron and the admin "Run now".
 import { listUsers, putUser } from './store.mjs';
 import { notifyClient, notifyAdmin } from './notify.mjs';
+import { loadSettings, fillTemplate } from './settings.mjs';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -19,7 +20,8 @@ function expiryOf(user) {
 }
 
 export async function runReminders() {
-  const lead = Number(process.env.REMINDER_LEAD_DAYS) || 3;
+  const settings = await loadSettings();
+  const lead = Number(settings.reminderLeadDays) || Number(process.env.REMINDER_LEAD_DAYS) || 3;
   const clients = await listUsers();
   let scanned = 0, reminders = 0, expiries = 0;
 
@@ -30,14 +32,17 @@ export async function runReminders() {
     scanned++;
     const ymd = toStr(exp);
     const days = Math.ceil((exp.getTime() - Date.now()) / DAY);
+    const vars = {
+      name: c.name || c.email, plan: c.plan || 'plan', date: ymd,
+      days: days + ' day' + (days === 1 ? '' : 's'), brand: settings.brandName || 'Vanta',
+    };
     let changed = false;
 
     // renewal reminder in the lead window (once per cycle)
     if (days > 0 && days <= lead && c.reminderSentFor !== ymd) {
       try {
-        await notifyClient(c.email, 'Your plan renews soon',
-          'Your ' + (c.plan || 'plan') + ' renews on ' + ymd + ' (' + days + ' day' + (days === 1 ? '' : 's') + ' left).',
-          'renewal_reminder');
+        await notifyClient(c.email, fillTemplate(settings.renewalSubject, vars),
+          fillTemplate(settings.renewalBody, vars), 'renewal_reminder');
         await notifyAdmin('Client renewal soon', (c.name || c.email) + ' renews on ' + ymd + '.', 'renewal_reminder');
       } catch (e) { /* best effort */ }
       c.reminderSentFor = ymd; changed = true; reminders++;
@@ -46,8 +51,8 @@ export async function runReminders() {
     // expiry notice (once per cycle)
     if (days <= 0 && c.expiredNotifiedFor !== ymd) {
       try {
-        await notifyClient(c.email, 'Your plan has expired',
-          'Your ' + (c.plan || 'plan') + ' expired on ' + ymd + '. Log in to renew.', 'expired');
+        await notifyClient(c.email, fillTemplate(settings.expiredSubject, vars),
+          fillTemplate(settings.expiredBody, vars), 'expired');
         await notifyAdmin('Client plan expired', (c.name || c.email) + "'s plan expired on " + ymd + '.', 'expired');
       } catch (e) { /* best effort */ }
       c.expiredNotifiedFor = ymd; changed = true; expiries++;
