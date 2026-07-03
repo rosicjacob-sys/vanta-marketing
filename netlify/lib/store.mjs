@@ -414,3 +414,29 @@ export function unreadCount(a, r)           { return usePg() ? pgUnread(a, r)   
 // Read straight from Blobs regardless of backend — used by the one-time
 // migration to copy legacy records into Postgres.
 export async function listBlobUsers() { return blobList(); }
+export async function getBlobPlans() { return blobGetPlans(); }
+export async function listBlobChatsFull() {
+  const store = chatStore();
+  const { blobs } = await store.list();
+  const out = [];
+  for (const b of blobs) { const c = await store.get(b.key, { type: 'json' }); if (c) out.push(c); }
+  return out;
+}
+// Import a full conversation (with its messages) into the active backend.
+// Idempotent: skips if the conversation already exists.
+export async function importChat(conv) {
+  if (usePg()) {
+    await ensureSchema();
+    const existing = await sqlc()`SELECT 1 FROM chat_conversations WHERE cid = ${conv.cid}`;
+    if (existing.length) return { ok: true, skipped: true };
+    const t = conv.createdAt || conv.lastAt || Date.now();
+    await sqlc()`INSERT INTO chat_conversations (cid, name, email, business, created_at, last_at)
+      VALUES (${conv.cid}, ${conv.name || ''}, ${conv.email || ''}, ${conv.business || ''}, ${conv.createdAt || t}, ${conv.lastAt || t})`;
+    for (const m of (conv.messages || [])) {
+      await sqlc()`INSERT INTO chat_messages (cid, sender, body, created_at) VALUES (${conv.cid}, ${m.sender}, ${m.body}, ${m.created_at || t})`;
+    }
+    return { ok: true };
+  }
+  await chatStore().setJSON(conv.cid, conv);
+  return { ok: true };
+}
