@@ -573,7 +573,7 @@
     ".dash-muted{color:var(--mut2,#77809a);font-size:12px;font-weight:400}" +
     ".dash-actions{white-space:nowrap;text-align:right}" +
     ".btn.sm{padding:6px 12px;font-size:12.5px}" +
-    "body.vp-dash nav.vn,body.vp-dash footer{display:none!important}" +
+    "body.vp-dash nav.vn,body.vp-dash footer,body.vp-dash #chatw{display:none!important}" +
     "#view-admin>.sec,#view-dashboard>.sec{padding-top:34px}" +
     ".dash-table tbody tr:hover td{background:rgba(124,58,237,.06)}" +
     ".dash-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line2,#2a2145);margin:4px 0 18px}" +
