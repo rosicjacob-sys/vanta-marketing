@@ -8,6 +8,7 @@
     "dev": "netlify dev"
   },
   "dependencies": {
-    "@netlify/blobs": "^8.1.0"
+    "@netlify/blobs": "^8.1.0",
+    "@netlify/neon": "^0.1.2"
   }
 }
