@@ -16,7 +16,15 @@ export default async (req) => {
     let b = {};
     try { b = await req.json(); } catch { /* ignore */ }
     const plans = Array.isArray(b.plans)
-      ? b.plans.map(p => String(p || '').trim()).filter(Boolean).slice(0, 100)
+      ? b.plans.map(p => (typeof p === 'string')
+          ? { name: p.trim().slice(0, 100), price: '', link: '' }
+          : {
+              name: String(p.name || '').trim().slice(0, 100),
+              price: String(p.price || '').trim().slice(0, 60),
+              link: String(p.link || '').trim().slice(0, 500),
+            })
+        .filter(p => p.name)
+        .slice(0, 100)
       : [];
     await setPlans(plans);
     return json({ plans });
