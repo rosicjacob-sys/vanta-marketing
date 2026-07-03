@@ -22,6 +22,28 @@ export default async () => {
     }
   }
 
+  // netgrid: are the env vars set, and can we actually reach the API with the key?
+  const netgridConfigured = !!(process.env.NETGRID_API_URL && process.env.NETGRID_API_KEY);
+  let netgridOk = false;
+  let netgridStatus = null;
+  let netgridError = null;
+  if (netgridConfigured) {
+    try {
+      const base = process.env.NETGRID_API_URL.replace(/\/$/, '');
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(), 8000);
+      const r = await fetch(base + '/api/v1', {
+        headers: { authorization: 'Bearer ' + process.env.NETGRID_API_KEY },
+        signal: ctrl.signal,
+      });
+      clearTimeout(to);
+      netgridStatus = r.status; // 200 = wired; 401 = wrong key; 503 = key missing on netgrid
+      netgridOk = r.ok;
+    } catch (e) {
+      netgridError = String((e && e.message) || e).slice(0, 140);
+    }
+  }
+
   return json({
     hasSessionSecret: !!process.env.SESSION_SECRET,
     hasAdminEmail: !!process.env.ADMIN_EMAIL,
@@ -33,6 +55,10 @@ export default async () => {
     dbError,
     emailEnabled: !!process.env.RESEND_API_KEY,
     hasEmailFrom: !!process.env.EMAIL_FROM,
+    netgridConfigured,
+    netgridOk,
+    netgridStatus,
+    netgridError,
     ready: !!process.env.SESSION_SECRET && !!process.env.ADMIN_EMAIL &&
            hash.startsWith('scrypt$') && hash.split('$').length === 3 &&
            (!hasDb || dbConnected),
