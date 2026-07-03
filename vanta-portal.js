@@ -94,6 +94,12 @@
     setBody:    { en: "Message",              fr: "Message" },
     setSaved:   { en: "Settings saved.",      fr: "Paramètres enregistrés." },
     setSave:    { en: "Save settings",        fr: "Enregistrer les paramètres" },
+    setEmailSec:{ en: "Email delivery",       fr: "Livraison des courriels" },
+    testEmail:  { en: "Send test email",      fr: "Envoyer un courriel test" },
+    testEmailHint:{ en: "Sends a test message to your admin email to confirm delivery is working.", fr: "Envoie un message test à votre courriel admin pour confirmer la livraison." },
+    testSending:{ en: "Sending…",             fr: "Envoi…" },
+    testSentTo: { en: "Test email sent to",   fr: "Courriel test envoyé à" },
+    testFailed: { en: "Couldn't send:",       fr: "Échec de l'envoi :" },
     rejectConfirm:{ en: "Mark this payment as NOT confirmed?", fr: "Marquer ce paiement comme NON confirmé?" },
     underReview:{ en: "Payment under review", fr: "Paiement en vérification" },
     reviewNote: { en: "We're verifying your payment — we'll confirm shortly.", fr: "On vérifie votre paiement — confirmation sous peu." },
@@ -831,7 +837,27 @@
             '<div class="plans-foot"><span></span><span class="plans-foot-r">' +
               '<span class="hint" id="vpSetMsg"></span>' +
               '<button type="submit" class="btn primary">' + esc(t("setSave")) + "</button></span></div>" +
-          "</form></div>";
+          "</form>" +
+          '<div class="vpf-section">' + esc(t("setEmailSec")) + "</div>" +
+          '<p class="dash-muted" style="margin:0 0 12px">' + esc(t("testEmailHint")) + "</p>" +
+          '<div class="plans-foot"><span class="hint" id="vpTestMsg"></span>' +
+            '<button type="button" class="btn ghost" id="vpTestEmail">' + esc(t("testEmail")) + "</button></div>" +
+          "</div>";
+        var testBtn = el("vpTestEmail");
+        if (testBtn) testBtn.onclick = function () {
+          var tm = el("vpTestMsg");
+          testBtn.disabled = true; if (tm) { tm.textContent = t("testSending"); tm.style.color = ""; }
+          api("/admin-test-email", { method: "POST" }).then(function (r) {
+            testBtn.disabled = false;
+            var d = r.data || {};
+            if (d.ok) { if (tm) { tm.textContent = t("testSentTo") + " " + (d.to || ""); tm.style.color = "#39d98a"; } }
+            else if (tm) {
+              var res = d.result || {};
+              tm.textContent = t("testFailed") + " " + (res.detail || res.reason || "error");
+              tm.style.color = "#ff8080";
+            }
+          }).catch(function () { testBtn.disabled = false; if (tm) { tm.textContent = t("netErr"); tm.style.color = "#ff8080"; } });
+        };
         var form = el("vpSetForm");
         form.onsubmit = function (e) {
           e.preventDefault();
