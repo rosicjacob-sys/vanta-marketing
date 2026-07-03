@@ -98,7 +98,6 @@
     emBodyLabel:{ en: "Message",              fr: "Message" },
     emReason:   { en: "Reason",               fr: "Raison" },
     viewLeads:  { en: "View leads",           fr: "Voir les prospects" },
-    ngTitle:    { en: "Your sites & SEO",      fr: "Vos sites et SEO" },
     ngAvgSeo:   { en: "Avg SEO score",         fr: "Score SEO moyen" },
     ngSitesN:   { en: "Sites",                 fr: "Sites" },
     ngActiveN:  { en: "Active",                fr: "Actifs" },
@@ -123,9 +122,7 @@
     visSection: { en: "What this client sees",  fr: "Ce que ce client voit" },
     visHint:    { en: "Choose which data blocks appear on this client's dashboard.", fr: "Choisissez les blocs de données affichés sur le tableau de bord de ce client." },
     visReal:    { en: "Real data (from netgrid)", fr: "Données réelles (netgrid)" },
-    visRealSub: { en: "SEO score, sites, posts & traffic", fr: "Score SEO, sites, articles et trafic" },
     visManual:  { en: "Reported data",         fr: "Données rapportées" },
-    visManualSub:{ en: "The metrics you enter below", fr: "Les chiffres que vous saisissez ci-dessous" },
     refreshNote:{ en: "Data refreshes weekly.", fr: "Les données sont actualisées chaque semaine." },
     settingsTab:{ en: "Settings",            fr: "Paramètres" },
     setHint:    { en: "Configure reminder timing and the emails clients receive. Placeholders: {name} {plan} {date} {days} {brand} {link} (the client's plan checkout link).", fr: "Configurez le moment des rappels et les courriels reçus par les clients. Variables : {name} {plan} {date} {days} {brand} {link} (lien de paiement du forfait du client)." },
@@ -444,11 +441,28 @@
     });
   }
 
-  // Which dashboard blocks a client sees. Default (unset) = both.
-  var VIS_DEFAULT = ["real", "manual"];
-  function showGroup(key, vis) {
-    return Array.isArray(vis) ? vis.indexOf(key) >= 0 : VIS_DEFAULT.indexOf(key) >= 0;
+  // Individual dashboard cards the admin can show/hide per client.
+  // key -> i18n label key. Order here is the display order on the dashboard.
+  var NG_REAL_CARDS = [
+    ["seo", "ngAvgSeo"], ["sites", "ngSitesN"], ["active", "ngActiveN"],
+    ["posts", "cdTotalPosts"], ["rviews", "cdViews"], ["rclicks", "cdClicks"],
+  ];
+  var NG_MANUAL_CARDS = [
+    ["mviews", "views"], ["mclicks", "clicks"], ["mai", "ai"],
+    ["mpublished", "published"], ["trend", "trend"], ["sources", "sources"],
+  ];
+  // Expand legacy group keys ("real"/"manual") into their card keys.
+  function normVisible(vis) {
+    if (!Array.isArray(vis)) return null; // null = show everything (default)
+    var out = [];
+    vis.forEach(function (k) {
+      if (k === "real") NG_REAL_CARDS.forEach(function (c) { out.push(c[0]); });
+      else if (k === "manual") NG_MANUAL_CARDS.forEach(function (c) { out.push(c[0]); });
+      else out.push(k);
+    });
+    return out;
   }
+  function showCard(key, vis) { var n = normVisible(vis); return n === null ? true : n.indexOf(key) >= 0; }
 
   function bars(series) {
     if (!series || !series.length) return '<div class="dash-empty">' + esc(t("noData")) + "</div>";
@@ -486,24 +500,10 @@
     try { return new Date(iso).toLocaleDateString(FR() ? "fr-CA" : "en-CA", { year: "numeric", month: "short", day: "numeric" }); }
     catch (e) { return ""; }
   }
-  // Real data (netgrid) block on the client dashboard: SEO + sites + traffic
-  // tiles — the summary, no per-site table.
-  function clientRealHTML(c) {
-    var seoVal = c.avgSeoScore == null ? "—"
-      : '<span class="ng-score ' + seoClass(c.avgSeoScore) + '">' + Math.round(num(c.avgSeoScore)) + "</span>";
-    var tiles = stat(seoVal, t("ngAvgSeo"), "") +
-      stat(num(c.blogCount), t("ngSitesN"), "") +
-      stat(c.activeBlogCount == null ? "—" : num(c.activeBlogCount), t("ngActiveN"), "");
-    if (c.postCount != null) tiles += stat(fmt(c.postCount), t("cdTotalPosts"), "");
-    if (c.views != null) tiles += stat(fmt(c.views), t("cdViews"), "");
-    if (c.clicks != null) tiles += stat(fmt(c.clicks), t("cdClicks"), "");
-    return '<h3 class="dash-sec-h">' + esc(t("ngTitle")) + "</h3>" +
-      '<div class="dash-stats">' + tiles + "</div>";
-  }
-
   function clientHTML(user, m, ng) {
     var name = user.name || getName() || "";
     var vis = user.visible;
+    function show(k) { return showCard(k, vis); }
     var change = num(m.viewsChangePct);
     var changeTxt = (change > 0 ? "▲ " : change < 0 ? "▼ " : "") + Math.abs(change) + "% " + t("vsPrev");
     var changeCls = change > 0 ? "up" : change < 0 ? "down" : "";
@@ -512,23 +512,31 @@
       (user.plan ? '<div class="dash-plan">' + esc(t("yourPlan")) + ': <b>' + esc(user.plan) + "</b></div>" : "") +
       subBanner(user) +
       '<div class="dash-refresh">' + esc(t("refreshNote")) + "</div>";
-    // Real data (netgrid) — only when enabled for this client and data exists.
-    if (showGroup("real", vis) && ng) out += clientRealHTML(ng);
-    // Reported (manual) data — the metrics you enter.
-    if (showGroup("manual", vis)) {
-      out +=
-        '<div class="dash-stats">' +
-          stat(fmt(m.views), t("views"), '<span class="dash-delta ' + changeCls + '">' + changeTxt + "</span>") +
-          stat(fmt(m.profileClicks), t("clicks"), "") +
-          stat(fmt(m.aiCitations), t("ai"), "") +
-          stat(fmt(m.articlesPublished), t("published"), '<span class="dash-sub">' + fmt(m.articlesUpcoming) + " " + t("upcoming") + "</span>") +
-        "</div>" +
-        '<div class="dash-grid2">' +
-          '<div class="dash-card"><h3>' + esc(t("trend")) + "</h3>" + bars(m.series) + "</div>" +
-          '<div class="dash-card"><h3>' + esc(t("sources")) + "</h3>" + sourceList(m.sources) + "</div>" +
-        "</div>" +
-        (m.note ? '<p class="dash-note">' + esc(m.note) + "</p>" : "");
+
+    // Stat tiles — real (netgrid) + manual, in one grid, each card toggleable.
+    var tiles = "";
+    if (ng) {
+      if (show("seo")) tiles += stat(ng.avgSeoScore == null ? "—" : '<span class="ng-score ' + seoClass(ng.avgSeoScore) + '">' + Math.round(num(ng.avgSeoScore)) + "</span>", t("ngAvgSeo"), "");
+      if (show("sites")) tiles += stat(num(ng.blogCount), t("ngSitesN"), "");
+      if (show("active")) tiles += stat(ng.activeBlogCount == null ? "—" : num(ng.activeBlogCount), t("ngActiveN"), "");
+      if (show("posts") && ng.postCount != null) tiles += stat(fmt(ng.postCount), t("cdTotalPosts"), "");
+      if (show("rviews") && ng.views != null) tiles += stat(fmt(ng.views), t("cdViews"), "");
+      if (show("rclicks") && ng.clicks != null) tiles += stat(fmt(ng.clicks), t("cdClicks"), "");
     }
+    if (show("mviews")) tiles += stat(fmt(m.views), t("views"), '<span class="dash-delta ' + changeCls + '">' + changeTxt + "</span>");
+    if (show("mclicks")) tiles += stat(fmt(m.profileClicks), t("clicks"), "");
+    if (show("mai")) tiles += stat(fmt(m.aiCitations), t("ai"), "");
+    if (show("mpublished")) tiles += stat(fmt(m.articlesPublished), t("published"), '<span class="dash-sub">' + fmt(m.articlesUpcoming) + " " + t("upcoming") + "</span>");
+    if (tiles) out += '<div class="dash-stats">' + tiles + "</div>";
+
+    // Charts — trend and/or sources.
+    var charts = [];
+    if (show("trend")) charts.push('<div class="dash-card"><h3>' + esc(t("trend")) + "</h3>" + bars(m.series) + "</div>");
+    if (show("sources")) charts.push('<div class="dash-card"><h3>' + esc(t("sources")) + "</h3>" + sourceList(m.sources) + "</div>");
+    if (charts.length === 2) out += '<div class="dash-grid2">' + charts.join("") + "</div>";
+    else if (charts.length === 1) out += charts[0];
+
+    out += (m.note ? '<p class="dash-note">' + esc(m.note) + "</p>" : "");
     return out + '</div></div><div id="vpExpiry"></div>';
   }
 
@@ -612,24 +620,29 @@
       var host = el("cdReal"); if (host) host.innerHTML = '<div class="dash-card"><div class="dash-empty">' + esc(t("netErr")) + "</div></div>";
     });
   }
-  // Eye-toggle modal: pick which data blocks the client sees.
+  // Eye-toggle modal: pick which individual cards the client sees.
   function openVisibilityModal(c) {
     var modal = el("vpModal"); if (!modal) return;
-    var state = { real: showGroup("real", c.visible), manual: showGroup("manual", c.visible) };
-    function eyeRow(key, label, sub) {
-      return '<div class="vis-row"><div class="vis-row-t"><b>' + esc(label) + "</b><span>" + esc(sub) + "</span></div>" +
+    var state = {};
+    NG_REAL_CARDS.concat(NG_MANUAL_CARDS).forEach(function (card) { state[card[0]] = showCard(card[0], c.visible); });
+    function eyeRow(key, label) {
+      return '<div class="vis-row"><div class="vis-row-t"><b>' + esc(label) + "</b></div>" +
         '<button type="button" class="vis-eye' + (state[key] ? " is-on" : "") + '" data-vk="' + key +
         '" aria-pressed="' + (state[key] ? "true" : "false") + '">' +
         '<span class="vis-eye-on">' + EYE_SVG + "</span><span class=\"vis-eye-off\">" + EYE_OFF_SVG + "</span></button></div>";
     }
+    function group(label, cards) {
+      return '<div class="vpf-section">' + esc(label) + "</div>" +
+        cards.map(function (card) { return eyeRow(card[0], t(card[1])); }).join("");
+    }
     modal.innerHTML =
-      '<div class="dash-modal-bg" id="vpVisBg"><div class="dash-modal" style="max-width:460px">' +
+      '<div class="dash-modal-bg" id="vpVisBg"><div class="dash-modal" style="max-width:480px">' +
         '<div class="dash-modal-head"><h3>' + esc(t("visSection")) + "</h3>" +
           '<button type="button" class="dash-modal-x" id="vpVisX" aria-label="' + esc(t("close")) + '">&#10005;</button></div>' +
         '<div class="dash-modal-body">' +
-          '<p class="dash-muted" style="margin:2px 0 12px">' + esc(t("visHint")) + "</p>" +
-          eyeRow("real", t("visReal"), t("visRealSub")) +
-          eyeRow("manual", t("visManual"), t("visManualSub")) +
+          '<p class="dash-muted" style="margin:2px 0 6px">' + esc(t("visHint")) + "</p>" +
+          group(t("visReal"), NG_REAL_CARDS) +
+          group(t("visManual"), NG_MANUAL_CARDS) +
         "</div>" +
         '<div class="dash-modal-foot"><span class="hint" id="vpVisMsg"></span><div class="vpf-actions">' +
           '<button type="button" class="btn ghost" id="vpVisCancel">' + esc(t("cancel")) + "</button>" +
@@ -651,9 +664,9 @@
       };
     });
     el("vpVisSave").onclick = function () {
-      var visible = [];
-      if (state.real) visible.push("real");
-      if (state.manual) visible.push("manual");
+      var visible = NG_REAL_CARDS.concat(NG_MANUAL_CARDS)
+        .filter(function (card) { return state[card[0]]; })
+        .map(function (card) { return card[0]; });
       var msg = el("vpVisMsg"); if (msg) { msg.textContent = "…"; msg.style.color = ""; }
       api("/admin-clients", { method: "PUT", body: { email: c.email, visible: visible } }).then(function (res) {
         if (res.ok) { c.visible = visible; if (msg) { msg.textContent = t("setSaved"); msg.style.color = "#39d98a"; } setTimeout(close, 500); }
