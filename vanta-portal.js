@@ -108,8 +108,14 @@
     ngNoScan:   { en: "Not scanned yet",       fr: "Pas encore analysé" },
     ngNoPost:   { en: "No posts yet",          fr: "Aucun article" },
     trTitle:    { en: "Traffic over time",     fr: "Trafic dans le temps" },
+    trNoData:   { en: "No traffic tracked yet — this fills in as visits come in.", fr: "Aucun trafic pour l'instant — se remplit au fil des visites." },
     rngAll:     { en: "All time",              fr: "Depuis le début" },
     rng30:      { en: "30 days",               fr: "30 jours" },
+    recentTitle:{ en: "Recent posts",          fr: "Articles récents" },
+    cadenceTitle:{ en: "Publishing cadence",   fr: "Rythme de publication" },
+    cadenceSub: { en: "Posts per week",        fr: "Articles par semaine" },
+    noPostsYet: { en: "No posts published yet.", fr: "Aucun article publié pour l'instant." },
+    postViews:  { en: "views",                 fr: "vues" },
     cdView:     { en: "View",                  fr: "Voir" },
     cdBack:     { en: "Back to clients",       fr: "Retour aux clients" },
     cdReal:     { en: "Real data",             fr: "Données réelles" },
@@ -422,14 +428,14 @@
 
   // ================= CLIENT DASHBOARD =================
   // Cached client-data so the range toggle can re-render without re-fetching it.
-  var _cUser = null, _cM = null, _cPlanLink = "", _cDays = "";
+  var _cUser = null, _cM = null, _cPlanLink = "", _cDays = "", _cPosts = null;
   function renderClient() {
     if (!requireRole("client")) return;
     var host = el("view-dashboard");
     if (!host) return;
     host.innerHTML = '<div class="sec"><div class="wrap"><p class="lead">…</p></div></div>';
     showView("view-dashboard");
-    _cUser = null; _cM = null; _cPlanLink = ""; _cDays = "";
+    _cUser = null; _cM = null; _cPlanLink = ""; _cDays = ""; _cPosts = null;
 
     api("/client-data").then(function (res) {
       if (res.status === 401) { logout(); return; }
@@ -453,14 +459,23 @@
     var win = days ? "?days=" + encodeURIComponent(days) : "";
     var pNg = api("/client-netgrid" + win).catch(function () { return { data: {} }; });
     var pTr = api("/client-traffic" + win).catch(function () { return { data: {} }; });
+    // Posts don't depend on the range window — fetch once, reuse on toggle.
+    var pPo = (_cPosts !== null)
+      ? Promise.resolve(null)
+      : api("/client-posts").then(function (pr) {
+          var pd = pr.data || {};
+          _cPosts = (pd.configured && pd.ok) ? (pd.posts || []) : [];
+          return null;
+        }).catch(function () { _cPosts = []; return null; });
     pNg.then(function (nres) {
       pTr.then(function (tres) {
+        pPo.then(function () {
         var d = nres.data || {};
         var ng = (d.configured && d.ok && d.client) ? d.client : null;
         var ngSites = ng ? (d.sites || []) : [];
         var td = tres.data || {};
         var traffic = (td.configured && td.ok) ? (td.series || []) : [];
-        host.innerHTML = clientHTML(user, m, ng, ngSites, traffic, days);
+        host.innerHTML = clientHTML(user, m, ng, ngSites, traffic, days, _cPosts || []);
         wireCommon();
         wireCharts(host);
         host.querySelectorAll(".dash-stat-click").forEach(function (tl) {
@@ -478,6 +493,7 @@
           }).catch(function () {});
           maybeShowExpiry(user, _cPlanLink);
         }
+        });
       });
     });
   }
@@ -488,6 +504,7 @@
     ["seo", "ngAvgSeo"], ["sites", "ngSitesN"], ["active", "ngActiveN"],
     ["posts", "cdTotalPosts"], ["rviews", "cdViews"], ["rclicks", "cdClicks"],
     ["sitelist", "ngSiteList"], ["traffic", "trTitle"],
+    ["recentposts", "recentTitle"], ["cadence", "cadenceTitle"],
   ];
   var NG_MANUAL_CARDS = [
     ["mviews", "views"], ["mclicks", "clicks"], ["mai", "ai"],
@@ -584,30 +601,41 @@
     for (var j = 0; j < n; j++) vals.push(num(series[j][key]));
     var head = '<div class="tchart-head"><span class="tchart-title">' + esc(title) + "</span>" +
       (n ? '<span class="tchart-last">' + fmt(vals[n - 1]) + "</span>" : "") + "</div>";
-    if (n < 2) return '<div class="tchart">' + head + '<div class="dash-empty">' + esc(t("noData")) + "</div></div>";
+    // No buckets at all -> genuine empty state.
+    if (n < 1) return '<div class="tchart">' + head + '<div class="dash-empty">' + esc(t("trNoData")) + "</div></div>";
     var W = 320, H = 90, mx = 6, my = 8, base = H - my;
     var max = 0; for (var a = 0; a < n; a++) max = Math.max(max, vals[a]); max = max || 1;
     var line = [], pdata = [], x0 = 0, xn = 0;
     for (var i = 0; i < n; i++) {
-      var x = mx + (i / (n - 1)) * (W - 2 * mx);
+      // A single bucket is drawn as one centered marker (can't make a line from one point).
+      var x = n === 1 ? W / 2 : mx + (i / (n - 1)) * (W - 2 * mx);
       var y = my + (1 - vals[i] / max) * (H - 2 * my);
       if (i === 0) x0 = x; if (i === n - 1) xn = x;
       line.push(x.toFixed(1) + "," + y.toFixed(1));
       pdata.push({ fx: +(x / W).toFixed(4), fy: +(y / H).toFixed(4), v: vals[i], d: series[i].date });
     }
-    var area = "M" + x0.toFixed(1) + "," + base + " L" + line.join(" L") + " L" + xn.toFixed(1) + "," + base + " Z";
     var gid = "tgrad-" + key;
+    var body;
+    if (n === 1) {
+      var one = line[0].split(",");
+      body = '<circle cx="' + one[0] + '" cy="' + one[1] + '" r="4" fill="' + color + '"/>';
+    } else {
+      var area = "M" + x0.toFixed(1) + "," + base + " L" + line.join(" L") + " L" + xn.toFixed(1) + "," + base + " Z";
+      body = '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="' + color + '" stop-opacity="0.28"/>' +
+          '<stop offset="1" stop-color="' + color + '" stop-opacity="0"/></linearGradient></defs>' +
+        '<path d="' + area + '" fill="url(#' + gid + ')"/>' +
+        '<polyline points="' + line.join(" ") + '" fill="none" stroke="' + color +
+        '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>';
+    }
     var svg = '<svg viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" class="tchart-svg" aria-hidden="true">' +
-      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0" stop-color="' + color + '" stop-opacity="0.28"/>' +
-        '<stop offset="1" stop-color="' + color + '" stop-opacity="0"/></linearGradient></defs>' +
-      '<path d="' + area + '" fill="url(#' + gid + ')"/>' +
-      '<polyline points="' + line.join(" ") + '" fill="none" stroke="' + color +
-      '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
+      body + "</svg>";
     var overlay = '<span class="tchart-cross"></span><span class="tchart-dot" style="background:' + color +
       '"></span><span class="tchart-tip"></span>';
-    var axis = '<div class="tchart-axis"><span>' + esc(chartDate(series[0].date)) + "</span><span>" +
-      esc(chartDate(series[n - 1].date)) + "</span></div>";
+    var axis = n === 1
+      ? '<div class="tchart-axis tchart-axis-1"><span>' + esc(chartDate(series[0].date)) + "</span></div>"
+      : '<div class="tchart-axis"><span>' + esc(chartDate(series[0].date)) + "</span><span>" +
+        esc(chartDate(series[n - 1].date)) + "</span></div>";
     return '<div class="tchart">' + head +
       '<div class="tchart-plot" data-pts="' + esc(JSON.stringify(pdata)) + '" data-label="' + esc(title) + '">' +
       svg + overlay + "</div>" + axis + "</div>";
@@ -666,6 +694,65 @@
       plot.addEventListener("touchmove", move);
       plot.addEventListener("touchend", leave);
     });
+  }
+  // Recent posts: a clickable list of the latest articles (title links out).
+  function postsListHTML(posts) {
+    posts = (posts || []).slice(0, 8);
+    if (!posts.length) return '<div class="dash-empty">' + esc(t("noPostsYet")) + "</div>";
+    var rows = posts.map(function (p) {
+      var url = p.url ? siteUrl(p.url) : "";
+      var title = url
+        ? '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="post-link">' + esc(p.title || "—") + " ↗</a>"
+        : '<b class="post-title">' + esc(p.title || "—") + "</b>";
+      var meta = [];
+      if (p.publishedAt) meta.push(esc(ngDate(p.publishedAt)));
+      if (p.seoScore != null) meta.push('<span class="ng-score ' + seoClass(p.seoScore) + ' post-seo">' + Math.round(num(p.seoScore)) + "</span>");
+      if (p.views != null) meta.push(fmt(p.views) + " " + esc(t("postViews")));
+      return '<li class="post-item">' + title +
+        '<div class="post-meta">' + meta.join('<span class="post-dot">·</span>') + "</div></li>";
+    }).join("");
+    return '<ul class="post-list">' + rows + "</ul>";
+  }
+  function postsCardHTML(posts) {
+    return '<div class="dash-card ng-card"><h3>' + esc(t("recentTitle")) + "</h3>" + postsListHTML(posts) + "</div>";
+  }
+  // Publishing cadence: posts published per week over the last 8 weeks.
+  function cadenceBars(posts) {
+    posts = posts || [];
+    var WEEKS = 8;
+    function weekStart(d) {
+      var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      var back = (x.getDay() + 6) % 7; // days since Monday
+      x.setDate(x.getDate() - back);
+      x.setHours(0, 0, 0, 0);
+      return x;
+    }
+    var cur = weekStart(new Date());
+    var buckets = [];
+    for (var i = WEEKS - 1; i >= 0; i--) {
+      var s = new Date(cur); s.setDate(s.getDate() - i * 7);
+      buckets.push({ start: s, count: 0 });
+    }
+    posts.forEach(function (p) {
+      if (!p.publishedAt) return;
+      var pd = new Date(p.publishedAt); if (isNaN(pd.getTime())) return;
+      var ws = weekStart(pd).getTime();
+      for (var b = 0; b < buckets.length; b++) { if (buckets[b].start.getTime() === ws) { buckets[b].count++; break; } }
+    });
+    var series = buckets.map(function (b) { return { label: chartDate(b.start.toISOString()), value: b.count }; });
+    return '<p class="dash-muted" style="margin:-6px 0 12px">' + esc(t("cadenceSub")) + "</p>" + bars(series);
+  }
+  function cadenceCardHTML(posts) {
+    return '<div class="dash-card ng-card"><h3>' + esc(t("cadenceTitle")) + "</h3>" + cadenceBars(posts) + "</div>";
+  }
+  // Posts list + cadence, laid out side-by-side when both are shown.
+  function postsBlockHTML(posts, showPosts, showCadence) {
+    var cards = [];
+    if (showPosts) cards.push(postsCardHTML(posts));
+    if (showCadence) cards.push(cadenceCardHTML(posts));
+    if (cards.length === 2) return '<div class="dash-grid2">' + cards.join("") + "</div>";
+    if (cards.length === 1) return cards[0];
+    return "";
   }
   // Clickable list of the client's blog sites (domain links out to the site).
   function clientSitesHTML(sites) {
@@ -728,9 +815,10 @@
     host.querySelector("#vpSiteX").onclick = close;
     host.querySelector("#vpSiteBg").onclick = function (e) { if (e.target === host.querySelector("#vpSiteBg")) close(); };
   }
-  function clientHTML(user, m, ng, ngSites, traffic, days) {
+  function clientHTML(user, m, ng, ngSites, traffic, days, posts) {
     var name = user.name || getName() || "";
     traffic = traffic || [];
+    posts = posts || [];
     var vis = user.visible;
     function show(k) { return showCard(k, vis); }
     var change = num(m.viewsChangePct);
@@ -765,6 +853,9 @@
     // Views/clicks over time — two small single-series charts.
     if (show("traffic") && ng) out += trafficCardHTML(traffic);
 
+    // Recent posts list + publishing cadence.
+    if (ng) out += postsBlockHTML(posts, show("recentposts"), show("cadence"));
+
     // Clickable list of blog sites.
     if (show("sitelist") && ngSites && ngSites.length) out += clientSitesHTML(ngSites);
 
@@ -798,11 +889,12 @@
         '<div class="dash-card"><h3>' + esc(t("sources")) + "</h3>" + sourceList(m.sources) + "</div>" +
       "</div>";
   }
-  function cdRealHTML(d, traffic, days) {
+  function cdRealHTML(d, traffic, days, posts) {
     d = d || {};
     if (!d.configured) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoNetgrid")) + "</div></div>";
     if (!d.ok || !d.client) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoMatch")) + "</div></div>";
     traffic = traffic || [];
+    posts = posts || [];
     var c = d.client;
     var seoVal = seoBig(c.avgSeoScore);
     var ctr = (c.views != null && num(c.views) > 0) ? (num(c.clicks) / num(c.views) * 100).toFixed(1) + "%" : "—";
@@ -819,7 +911,8 @@
       cdStat(ctr, t("cdCtr")) +
       cdStat(c.lastPostAt ? esc(ngDate(c.lastPostAt)) : "—", t("cdLastPost")) +
       "</div>" +
-      trafficCardHTML(traffic);
+      trafficCardHTML(traffic) +
+      '<div class="dash-grid2">' + postsCardHTML(posts) + cadenceCardHTML(posts) + "</div>";
   }
   // Loads (or reloads on range toggle) the admin Real-data tab for a client.
   function loadCdReal(email, days) {
@@ -830,15 +923,20 @@
     var em = encodeURIComponent(email || "");
     var pNg = api("/admin-client-netgrid?email=" + em + win).catch(function () { return { data: {} }; });
     var pTr = api("/admin-client-traffic?email=" + em + win).catch(function () { return { data: {} }; });
+    var pPo = api("/admin-client-posts?email=" + em).catch(function () { return { data: {} }; });
     pNg.then(function (res) {
       pTr.then(function (tres) {
+        pPo.then(function (pres) {
         var host2 = el("cdReal"); if (!host2) return;
         var td = tres.data || {};
         var traffic = (td.configured && td.ok) ? (td.series || []) : [];
-        host2.innerHTML = cdRealHTML(res.data || {}, traffic, days);
+        var pd = pres.data || {};
+        var posts = (pd.configured && pd.ok) ? (pd.posts || []) : [];
+        host2.innerHTML = cdRealHTML(res.data || {}, traffic, days, posts);
         wireCharts(host2);
         host2.querySelectorAll(".rng-btn").forEach(function (bn) {
           bn.onclick = function () { if (bn.getAttribute("data-days") !== days) loadCdReal(email, bn.getAttribute("data-days")); };
+        });
         });
       });
     }).catch(function () {
@@ -1736,7 +1834,17 @@
     ".tchart-tip b{font-weight:800}" +
     ".tchart-tip span{display:block;color:var(--mut2,#77809a);font-size:11px;margin-top:1px}" +
     ".tchart-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--mut2,#77809a)}" +
+    ".tchart-axis-1{justify-content:center}" +
     "@media(max-width:640px){.tchart-grid{grid-template-columns:1fr}}" +
+    ".post-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}" +
+    ".post-item{padding:11px 0;border-top:1px solid var(--line2,#2a2145)}" +
+    ".post-item:first-child{border-top:none;padding-top:2px}" +
+    ".post-link,.post-title{display:inline-block;font-size:14px;font-weight:700;color:#c4b5fd;text-decoration:none}" +
+    ".post-title{color:var(--white,#fff)}" +
+    ".post-link:hover{text-decoration:underline}" +
+    ".post-meta{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:5px;font-size:12px;color:var(--mut2,#77809a)}" +
+    ".post-meta .ng-score.post-seo{min-width:0;padding:1px 6px;font-size:11px}" +
+    ".post-dot{opacity:.5}" +
     ".dash-stat-click{position:relative;cursor:pointer;transition:border-color .12s,background .12s}" +
     ".dash-stat-click:hover{border-color:var(--royal,#7c3aed);background:linear-gradient(180deg,rgba(124,58,237,.12),#0c0918)}" +
     ".dash-stat-more{position:absolute;top:14px;right:16px;color:var(--mut2,#77809a);font-size:18px;line-height:1}" +
