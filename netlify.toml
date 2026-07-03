@@ -1,0 +1,12 @@
+# Netlify config for Vanta Marketing
+# Static site (publish = repo root, no build) + serverless functions for auth/dashboards.
+
+[build]
+  publish = "."
+  # No site build step. Netlify still installs deps in package.json for the functions.
+  command = ""
+  functions = "netlify/functions"
+
+[functions]
+  # Modern Functions runtime; bundle shared lib/ imports with esbuild.
+  node_bundler = "esbuild"

@@ -1,0 +1,13 @@
+{
+  "name": "vanta-marketing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vanta Marketing static site + Netlify Functions (auth + client/admin dashboards).",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
