@@ -115,6 +115,12 @@
     cdOverallSeo:{ en: "Overall SEO score",    fr: "Score SEO global" },
     cdBlogSites:{ en: "Blog sites",            fr: "Sites de blogue" },
     cdActiveSites:{ en: "Active sites",        fr: "Sites actifs" },
+    cdActiveLc: { en: "active",                fr: "actifs" },
+    cdTotalPosts:{ en: "Total posts",          fr: "Articles publiés" },
+    cdPosts30:  { en: "Posts (30 days)",       fr: "Articles (30 j)" },
+    cdViews:    { en: "Views",                 fr: "Vues" },
+    cdClicks:   { en: "Clicks",                fr: "Clics" },
+    cdCtr:      { en: "CTR",                   fr: "CTR" },
     cdLastPost: { en: "Latest post",           fr: "Dernier article" },
     cdNoNetgrid:{ en: "netgrid isn't connected yet — set NETGRID_API_URL and NETGRID_API_KEY.", fr: "netgrid n'est pas connecté — configurez NETGRID_API_URL et NETGRID_API_KEY." },
     cdNoMatch:  { en: "No netgrid data for this client — their email isn't matched to a netgrid account.", fr: "Aucune donnée netgrid pour ce client — son courriel ne correspond à aucun compte netgrid." },
@@ -532,9 +538,10 @@
   }
 
   // ---- admin client-detail view: Real data (netgrid) + Manual tabs ----
-  function cdStat(value, label) {
+  function cdStat(value, label, sub) {
     return '<div class="dash-stat"><div class="dash-stat-v">' + value + "</div>" +
-      '<div class="dash-stat-l">' + esc(label) + "</div></div>";
+      '<div class="dash-stat-l">' + esc(label) + "</div>" +
+      (sub ? '<div class="dash-sub">' + sub + "</div>" : "") + "</div>";
   }
   function cdManualHTML(m) {
     m = m || {};
@@ -553,18 +560,24 @@
     d = d || {};
     if (!d.configured) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoNetgrid")) + "</div></div>";
     if (!d.ok || !d.client) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoMatch")) + "</div></div>";
-    var c = d.client, sites = d.sites || [];
+    var c = d.client;
     var seoVal = c.avgSeoScore == null ? "—"
       : '<span class="ng-score ' + seoClass(c.avgSeoScore) + '">' + Math.round(num(c.avgSeoScore)) + "</span>";
-    var cards = '<div class="dash-stats">' +
+    var ctr = (c.views != null && num(c.views) > 0) ? (num(c.clicks) / num(c.views) * 100).toFixed(1) + "%" : "—";
+    var activeSub = c.activeBlogCount == null ? "" : num(c.activeBlogCount) + " " + esc(t("cdActiveLc"));
+    var dash = function (v) { return v == null ? "—" : fmt(v); };
+    return '<div class="dash-stats">' +
       cdStat(seoVal, t("cdOverallSeo")) +
-      cdStat(num(c.blogCount), t("cdBlogSites")) +
-      cdStat(c.activeBlogCount == null ? "—" : num(c.activeBlogCount), t("cdActiveSites")) +
+      cdStat(dash(c.postCount), t("cdTotalPosts")) +
+      cdStat(dash(c.postsLast30Days), t("cdPosts30")) +
+      cdStat(num(c.blogCount), t("cdBlogSites"), activeSub) +
+      cdStat(dash(c.views), t("cdViews")) +
+      cdStat(dash(c.clicks), t("cdClicks")) +
+      cdStat(ctr, t("cdCtr")) +
       cdStat(c.lastPostAt ? esc(ngDate(c.lastPostAt)) : "—", t("cdLastPost")) +
       "</div>";
-    return cards + '<div class="dash-card"><h3>' + esc(t("ngTitle")) + "</h3>" + ngSitesTable(sites) + "</div>";
   }
-  function openClientDetail(c) {
+  function openClientDetail(c, onEdit) {
     var main = el("vpClientsMain"), det = el("vpClientDetail");
     if (!main || !det) return;
     c = c || {};
@@ -579,8 +592,12 @@
         '<button class="cd-tab" data-cdtab="manual"><b>' + esc(t("cdManual")) + '</b><span>' + esc(t("cdManualSub")) + "</span></button>" +
       "</div>" +
       '<div id="cdReal"><div class="dash-card"><p class="lead">…</p></div></div>' +
-      '<div id="cdManual" style="display:none">' + cdManualHTML(c.metrics || {}) + "</div>";
+      '<div id="cdManual" style="display:none">' +
+        '<div class="dash-toolbar"><button class="btn ghost" id="cdEdit">' + esc(t("edit")) + "</button></div>" +
+        cdManualHTML(c.metrics || {}) + "</div>";
     el("cdBack").onclick = function () { det.style.display = "none"; det.innerHTML = ""; main.style.display = ""; };
+    var editBtn = el("cdEdit");
+    if (editBtn) editBtn.onclick = function () { if (typeof onEdit === "function") onEdit(); };
     det.querySelectorAll(".cd-tab").forEach(function (b) {
       b.onclick = function () {
         det.querySelectorAll(".cd-tab").forEach(function (x) { x.classList.toggle("is-on", x === b); });
@@ -1185,7 +1202,7 @@
       viewBtns[v].onclick = function () {
         var email = this.closest("tr").getAttribute("data-email");
         var c = clients.filter(function (x) { return x.email === email; })[0];
-        openClientDetail(c || { email: email });
+        openClientDetail(c || { email: email }, function () { openForm(c || { email: email }, false); });
       };
     }
     var editBtns = document.querySelectorAll(".vp-edit");
