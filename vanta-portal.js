@@ -62,9 +62,6 @@
     justNow:    { en: "just now",            fr: "à l'instant" },
     payments:   { en: "Payments",            fr: "Paiements" },
     runRem:     { en: "Run reminders",        fr: "Lancer les rappels" },
-    migrate:    { en: "Migrate old data",     fr: "Migrer les anciennes données" },
-    migrateConfirm: { en: "Copy your old Blobs data (clients, plans, chats) into the database?", fr: "Copier vos anciennes données Blobs (clients, forfaits, clavardages) dans la base de données?" },
-    migrateDone:{ en: "Migrated —",            fr: "Migré —" },
     remDone:    { en: "Sweep done —",         fr: "Balayage terminé —" },
     remRems:    { en: "reminder(s),",         fr: "rappel(s)," },
     remExps:    { en: "expiry notice(s),",    fr: "avis d'expiration," },
@@ -485,14 +482,14 @@
         '<aside class="admin-nav">' +
           navItem("clients", t("clients"), true) +
           navItem("messages", t("tabMessages"), false) +
-          navItem("payments", t("payments"), false) +
+          '<button class="admin-nav-item" data-nav="payments">' + esc(t("payments")) +
+            '<span class="admin-nav-badge" id="vpPayBadge" hidden></span></button>' +
           navItem("plans", t("managePlans"), false) +
         "</aside>" +
         '<div class="admin-main">' +
           '<div class="dash-panel" data-panel="clients">' +
             '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button>" +
-              ' <button class="btn ghost" id="vpRunRem">' + esc(t("runRem")) + "</button>" +
-              ' <button class="btn ghost" id="vpMigrate">' + esc(t("migrate")) + "</button></div>" +
+              ' <button class="btn ghost" id="vpRunRem">' + esc(t("runRem")) + "</button></div>" +
             '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
               "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("renewalCol")) +
               "</th><th>" + esc(t("views")) + "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
@@ -676,19 +673,6 @@
         loadBell();
       });
     };
-    var mig = el("vpMigrate");
-    if (mig) mig.onclick = function () {
-      if (!confirm(t("migrateConfirm"))) return;
-      mig.disabled = true; var orig = mig.textContent; mig.textContent = "…";
-      api("/admin-migrate", { method: "POST" }).then(function (res) {
-        mig.disabled = false; mig.textContent = orig;
-        var d = res.data || {};
-        if (d.error) { alert(d.error); return; }
-        alert(t("migrateDone") + " " + (d.clients || 0) + " client(s), " + (d.plans || 0) + " plan(s), " + (d.chats || 0) + " chat(s).");
-        renderAdmin();
-      });
-    };
-
     // ---- left-nav switching ----
     var plansRendered = false, chatLoaded = false;
     document.querySelectorAll(".admin-nav-item").forEach(function (item) {
@@ -705,11 +689,21 @@
     });
 
     // ---- payments (verify claims) ----
+    function updatePayBadge(claims) {
+      var badge = el("vpPayBadge"); if (!badge) return;
+      var pending = (claims || []).filter(function (c) { return c.status === "pending"; }).length;
+      if (pending > 0) { badge.textContent = pending > 9 ? "9+" : String(pending); badge.hidden = false; }
+      else badge.hidden = true;
+    }
+    // initial count on admin load (so the badge is right before opening Payments)
+    api("/admin-payments").then(function (res) { updatePayBadge((res.data && res.data.claims) || []); });
+
     function renderPayments() {
       var host = el("vpPayPanel"); if (!host) return;
       host.innerHTML = '<div class="dash-card"><p class="lead">…</p></div>';
       api("/admin-payments").then(function (res) {
         var claims = (res.data && res.data.claims) || [];
+        updatePayBadge(claims);
         host.innerHTML = '<div class="dash-card" style="overflow-x:auto">' +
           (claims.length
             ? '<table class="dash-table"><thead><tr><th>' + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) +
@@ -956,6 +950,8 @@
     ".admin-nav-item{font:inherit;font-size:14.5px;font-weight:600;text-align:left;color:var(--mut,#9aa);background:none;border:none;border-radius:10px;padding:11px 14px;cursor:pointer;white-space:nowrap}" +
     ".admin-nav-item:hover{color:var(--white,#fff);background:rgba(255,255,255,.05)}" +
     ".admin-nav-item.is-on{color:var(--white,#fff);background:rgba(124,58,237,.18)}" +
+    ".admin-nav-badge{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#e8409b;color:#fff;font-size:11px;font-weight:700;vertical-align:middle;box-sizing:border-box}" +
+    ".admin-nav-badge[hidden]{display:none}" +
     ".admin-main{min-width:0}" +
     ".vpp-cols{display:grid;grid-template-columns:1fr 1fr 1.5fr 108px 36px;gap:10px;font-size:11.5px;color:var(--mut2,#77809a);font-weight:600;padding:0 2px 9px;border-bottom:1px solid var(--line2,#2a2145);margin-bottom:12px}" +
     ".vpp-row{display:grid;grid-template-columns:1fr 1fr 1.5fr 108px 36px;gap:10px;margin-bottom:10px;align-items:center}" +
