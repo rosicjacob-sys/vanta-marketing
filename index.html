@@ -873,6 +873,18 @@ document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on', b.g
   window.__chatReset=resetChat; // called on logout to clear this browser's thread
   // Prefill the start form for a signed-in client so their message is attributed to them.
   window.__chatIdentify=function(name, email){ if(info) return; if(name){ if(nomI&&!nomI.value) nomI.value=name; if(restoI&&!restoI.value) restoI.value=name; } if(email && mailI && !mailI.value) mailI.value=email; };
+  // Bind the chat to a signed-in client: use their stable conversation id and
+  // load their past messages from the server (so history follows them across
+  // browsers). Skips the start form since we already know who they are.
+  window.__chatBind=function(data){
+    if(!data || !data.cid) return;
+    cid=data.cid;
+    info={ nom:data.name||'', restaurant:data.name||'', courriel:data.email||'' };
+    logArr=(data.messages||[]).map(function(mm){ return { s:(mm.sender==='admin'?'admin':'you'), t:mm.body }; });
+    seen=0; (data.messages||[]).forEach(function(mm){ var cc=mm.created_at||0; if(cc>seen) seen=cc; });
+    try{ localStorage.setItem(K_CID,cid); localStorage.setItem(K_INFO,JSON.stringify(info)); }catch(_){}
+    persist(); try{ paint(); }catch(_){} startPoll();
+  };
   var ltog=document.getElementById('langtog'); if(ltog) ltog.addEventListener('click', function(){ if(opened) setTimeout(paint, 0); });
   msgI.addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); cf.requestSubmit(); } });
   cf.addEventListener('submit', function(e){
