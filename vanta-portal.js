@@ -54,7 +54,11 @@
     selectConv: { en: "Select a conversation to read and reply.", fr: "Choisissez une conversation pour lire et répondre." },
     replyPh:    { en: "Type your reply…",   fr: "Écrivez votre réponse…" },
     sendReply:  { en: "Send",               fr: "Envoyer" },
-    noReplyYet: { en: "No messages.",       fr: "Aucun message." }
+    noReplyYet: { en: "No messages.",       fr: "Aucun message." },
+    managePlans:{ en: "Manage plans",       fr: "Gérer les forfaits" },
+    plansTitle: { en: "Plans",              fr: "Forfaits" },
+    plansHint:  { en: "One plan per line (e.g. $97/mo). These appear in the client's Plan dropdown.", fr: "Un forfait par ligne (ex. 97 $/mois). Ils apparaissent dans le menu Forfait du client." },
+    planNone:   { en: "— No plan —",         fr: "— Aucun forfait —" }
   };
   function t(k) { var e = T[k] || {}; return FR() ? (e.fr || e.en || k) : (e.en || k); }
 
@@ -270,9 +274,12 @@
     api("/admin-clients").then(function (res) {
       if (res.status === 401 || res.status === 403) { logout(); return; }
       var clients = (res.data && res.data.clients) || [];
-      host.innerHTML = adminHTML(clients);
-      wireCommon();
-      wireAdmin(clients);
+      api("/admin-plans").then(function (pres) {
+        var plans = (pres.data && pres.data.plans) || [];
+        host.innerHTML = adminHTML(clients);
+        wireCommon();
+        wireAdmin(clients, plans);
+      });
     }).catch(function () {
       host.innerHTML = '<div class="sec"><div class="wrap">' + topbar(t("adminTitle")) +
         '<p class="lead">' + esc(t("netErr")) + "</p></div></div>";
@@ -300,7 +307,8 @@
         '<button class="dash-tab" data-tab="messages">' + esc(t("tabMessages")) + "</button>" +
       "</div>" +
       '<div class="dash-panel" data-panel="clients">' +
-        '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button></div>" +
+        '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button>" +
+          ' <button class="btn ghost" id="vpPlans">' + esc(t("managePlans")) + "</button></div>" +
         '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
           "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("views")) +
           "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
@@ -313,11 +321,23 @@
     "</div></div>";
   }
 
-  function clientForm(c, isNew) {
+  function clientForm(c, isNew, plans) {
     c = c || {}; var m = c.metrics || {};
+    plans = plans || [];
     function f(label, name, val, type) {
       return '<label class="vpf">' + esc(label) +
         '<input name="' + name + '" type="' + (type || "text") + '" value="' + esc(val == null ? "" : val) + '"></label>';
+    }
+    function planSel(current) {
+      var opts = '<option value="">' + esc(t("planNone")) + "</option>";
+      var found = false;
+      plans.forEach(function (p) {
+        var sel = p === current ? " selected" : "";
+        if (p === current) found = true;
+        opts += '<option value="' + esc(p) + '"' + sel + ">" + esc(p) + "</option>";
+      });
+      if (current && !found) opts += '<option value="' + esc(current) + '" selected>' + esc(current) + "</option>";
+      return '<label class="vpf">' + esc(FR() ? "Forfait" : "Plan") + '<select name="plan">' + opts + "</select></label>";
     }
     return '<div class="dash-modal-bg" id="vpModalBg"><form class="dash-modal" id="vpForm">' +
       '<div class="dash-modal-head">' +
@@ -328,7 +348,7 @@
         '<div class="vpf-section">' + esc(t("secAccount")) + "</div>" +
         f("Email", "email", c.email, "email") + (isNew ? "" : '<input type="hidden" name="_email" value="' + esc(c.email) + '">') +
         f(FR() ? "Nom / entreprise" : "Name / business", "name", c.name) +
-        f(FR() ? "Forfait" : "Plan", "plan", c.plan) +
+        planSel(c.plan) +
         f(isNew ? (FR() ? "Mot de passe" : "Password") : (FR() ? "Nouveau mot de passe (laisser vide)" : "New password (blank = keep)"), "password", "", "text") +
         '<div class="vpf-section">' + esc(t("secNumbers")) + "</div>" +
         '<div class="vpf-row">' +
@@ -400,7 +420,8 @@
     return payload;
   }
 
-  function wireAdmin(clients) {
+  function wireAdmin(clients, plans) {
+    plans = plans || [];
     var modal = el("vpModal");
     function onKey(e) { if (e.key === "Escape") close(); }
     function close() {
@@ -410,7 +431,7 @@
     }
     function openForm(client, isNew) {
       if (!modal) return;
-      modal.innerHTML = clientForm(client, isNew);
+      modal.innerHTML = clientForm(client, isNew, plans);
       try { document.body.style.overflow = "hidden"; } catch (e) {}
       document.addEventListener("keydown", onKey);
       var cancel = el("vpCancel"); if (cancel) cancel.onclick = close;
@@ -434,6 +455,34 @@
     }
 
     var add = el("vpAdd"); if (add) add.onclick = function () { openForm({}, true); };
+
+    // ---- manage plans ----
+    function openPlans() {
+      if (!modal) return;
+      modal.innerHTML =
+        '<div class="dash-modal-bg" id="vpModalBg"><div class="dash-modal">' +
+          '<div class="dash-modal-head"><h3>' + esc(t("plansTitle")) + "</h3>" +
+            '<button type="button" class="dash-modal-x" id="vpClose" aria-label="' + esc(t("close")) + '">&#10005;</button></div>' +
+          '<div class="dash-modal-body"><label class="vpf">' + esc(t("plansHint")) +
+            '<textarea id="vpPlansBox" rows="7">' + esc(plans.join("\n")) + "</textarea></label></div>" +
+          '<div class="dash-modal-foot"><div class="hint" id="vpPlansMsg"></div>' +
+            '<div class="vpf-actions"><button type="button" class="btn ghost" id="vpCancel">' + esc(t("cancel")) + "</button>" +
+            '<button type="button" class="btn primary" id="vpPlansSave">' + esc(t("save")) + "</button></div></div>" +
+        "</div></div>";
+      try { document.body.style.overflow = "hidden"; } catch (e) {}
+      document.addEventListener("keydown", onKey);
+      var cancel = el("vpCancel"); if (cancel) cancel.onclick = close;
+      var xBtn = el("vpClose"); if (xBtn) xBtn.onclick = close;
+      var bg = el("vpModalBg"); if (bg) bg.onclick = function (e) { if (e.target === bg) close(); };
+      el("vpPlansSave").onclick = function () {
+        var lines = (el("vpPlansBox").value || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+        api("/admin-plans", { method: "PUT", body: { plans: lines } }).then(function (res) {
+          if (res.ok) { close(); renderAdmin(); }
+          else { var m = el("vpPlansMsg"); if (m) m.textContent = (res.data && res.data.error) || "Error."; }
+        });
+      };
+    }
+    var plansBtn = el("vpPlans"); if (plansBtn) plansBtn.onclick = openPlans;
 
     var editBtns = document.querySelectorAll(".vp-edit");
     for (var i = 0; i < editBtns.length; i++) {
@@ -617,6 +666,7 @@
     ".vpf input,.vpf textarea{font:inherit;font-size:14px;color:var(--white,#fff);background:rgba(255,255,255,.05);border:1px solid var(--line2,#2a2145);border-radius:9px;padding:10px 12px;outline:none;width:100%;box-sizing:border-box}" +
     ".vpf input:focus,.vpf textarea:focus{border-color:var(--royal,#7c3aed);background:rgba(124,58,237,.08)}" +
     ".vpf textarea{resize:vertical}" +
+    ".vpf select{width:100%;box-sizing:border-box;font-size:14px;color:var(--white,#fff)}" +
     ".vpf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}" +
     ".vpf-actions{display:flex;justify-content:flex-end;gap:10px}" +
     "@media(max-width:820px){.dash-stats{grid-template-columns:1fr 1fr}.dash-grid2{grid-template-columns:1fr}}" +

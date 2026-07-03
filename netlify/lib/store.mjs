@@ -68,6 +68,7 @@ function ensureSchema() {
           created_at bigint
         )`;
       await sql`CREATE INDEX IF NOT EXISTS chat_messages_cid_idx ON chat_messages (cid, created_at)`;
+      await sql`CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, value jsonb NOT NULL DEFAULT '[]'::jsonb)`;
     })();
   }
   return _schema;
@@ -174,6 +175,21 @@ async function pgChatList() {
     lastAt: Number(r.last_at) || 0, last: r.last_body || '', count: Number(r.msg_count) || 0 }));
 }
 
+/* ===================== plans/settings: Postgres ===================== */
+async function pgGetPlans() {
+  await ensureSchema();
+  const rows = await sqlc()`SELECT value FROM settings WHERE key = 'plans'`;
+  const v = rows[0] && rows[0].value;
+  return Array.isArray(v) ? v : [];
+}
+async function pgSetPlans(plans) {
+  await ensureSchema();
+  await sqlc()`
+    INSERT INTO settings (key, value) VALUES ('plans', ${JSON.stringify(plans)}::jsonb)
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
+  return plans;
+}
+
 /* ===================== chat: Blobs (fallback) ===================== */
 function chatStore() { return getStore({ name: 'vanta-chats', consistency: 'strong' }); }
 async function blobConv(cid) { return (await chatStore().get(cid, { type: 'json' })) || null; }
@@ -216,6 +232,14 @@ async function blobChatList() {
   return out;
 }
 
+/* ===================== plans/settings: Blobs (fallback) ===================== */
+function settingsStore() { return getStore({ name: 'vanta-settings', consistency: 'strong' }); }
+async function blobGetPlans() {
+  const v = await settingsStore().get('plans', { type: 'json' });
+  return Array.isArray(v) ? v : [];
+}
+async function blobSetPlans(plans) { await settingsStore().setJSON('plans', plans); return plans; }
+
 /* ===================== public API (dispatches) ===================== */
 export function getUser(email)  { return usePg() ? pgGet(email)  : blobGet(email); }
 export function putUser(user)   { return usePg() ? pgPut(user)   : blobPut(user); }
@@ -226,6 +250,9 @@ export function chatSend(m)             { return usePg() ? pgChatSend(m)        
 export function chatReply(m)            { return usePg() ? pgChatReply(m)             : blobChatReply(m); }
 export function chatMessagesAfter(c, a) { return usePg() ? pgChatMessagesAfter(c, a)  : blobChatMessagesAfter(c, a); }
 export function chatList()              { return usePg() ? pgChatList()               : blobChatList(); }
+
+export function getPlans()        { return usePg() ? pgGetPlans()      : blobGetPlans(); }
+export function setPlans(plans)   { return usePg() ? pgSetPlans(plans) : blobSetPlans(plans); }
 
 // Read straight from Blobs regardless of backend — used by the one-time
 // migration to copy legacy records into Postgres.
