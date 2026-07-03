@@ -96,6 +96,16 @@
     emBodyLabel:{ en: "Message",              fr: "Message" },
     emReason:   { en: "Reason",               fr: "Raison" },
     viewLeads:  { en: "View leads",           fr: "Voir les prospects" },
+    ngTitle:    { en: "Your sites & SEO",      fr: "Vos sites et SEO" },
+    ngAvgSeo:   { en: "Avg SEO score",         fr: "Score SEO moyen" },
+    ngSitesN:   { en: "Sites",                 fr: "Sites" },
+    ngActiveN:  { en: "Active",                fr: "Actifs" },
+    ngSiteCol:  { en: "Site",                  fr: "Site" },
+    ngSeoCol:   { en: "SEO",                   fr: "SEO" },
+    ngLatestCol:{ en: "Latest post",           fr: "Dernier article" },
+    ngNoScan:   { en: "Not scanned yet",       fr: "Pas encore analysé" },
+    ngNoPost:   { en: "No posts yet",          fr: "Aucun article" },
+    ngNone:     { en: "No sites connected yet.", fr: "Aucun site connecté." },
     settingsTab:{ en: "Settings",            fr: "Paramètres" },
     setHint:    { en: "Configure reminder timing and the emails clients receive. Placeholders: {name} {plan} {date} {days} {brand} {link} (the client's plan checkout link).", fr: "Configurez le moment des rappels et les courriels reçus par les clients. Variables : {name} {plan} {date} {days} {brand} {link} (lien de paiement du forfait du client)." },
     setLeadDays:{ en: "Send renewal reminder this many days before expiry", fr: "Envoyer le rappel de renouvellement ce nombre de jours avant l'expiration" },
@@ -393,6 +403,7 @@
       var m = user.metrics || {};
       host.innerHTML = clientHTML(user, m);
       wireCommon();
+      loadNetgrid();
       maybeShowExpiry(user, (res.data && res.data.planLink) || "");
     }).catch(function () {
       host.innerHTML = '<div class="sec"><div class="wrap">' + topbar(getName() || "") +
@@ -462,8 +473,51 @@
         '<div class="dash-card"><h3>' + esc(t("sources")) + "</h3>" + sourceList(m.sources) + "</div>" +
       "</div>" +
       '<div class="dash-card"><h3>' + esc(t("articles")) + "</h3>" + articleList(m.articles) + "</div>" +
+      '<div id="vpNetgrid"></div>' +
       (m.note ? '<p class="dash-note">' + esc(m.note) + "</p>" : "") +
     '</div></div><div id="vpExpiry"></div>';
+  }
+
+  // ---- netgrid: live sites + SEO scores (client dashboard) ----
+  function seoClass(n) { n = num(n); return n >= 80 ? "ok" : n >= 50 ? "pend" : "exp"; }
+  function ngDate(iso) {
+    if (!iso) return "";
+    try { return new Date(iso).toLocaleDateString(FR() ? "fr-CA" : "en-CA", { year: "numeric", month: "short", day: "numeric" }); }
+    catch (e) { return ""; }
+  }
+  function netgridHTML(c, sites) {
+    c = c || {}; sites = sites || [];
+    var avg = c.avgSeoScore == null ? "—" : Math.round(num(c.avgSeoScore));
+    var avgPill = c.avgSeoScore == null ? '<span class="ng-kpi-v">—</span>'
+      : '<span class="ng-kpi-v ng-score ' + seoClass(c.avgSeoScore) + '">' + avg + "</span>";
+    var summary = '<div class="ng-summary">' +
+      '<div class="ng-kpi">' + avgPill + '<span class="ng-kpi-l">' + esc(t("ngAvgSeo")) + "</span></div>" +
+      '<div class="ng-kpi"><span class="ng-kpi-v">' + num(c.blogCount) + '</span><span class="ng-kpi-l">' + esc(t("ngSitesN")) + "</span></div>" +
+      (c.activeBlogCount == null ? "" :
+        '<div class="ng-kpi"><span class="ng-kpi-v">' + num(c.activeBlogCount) + '</span><span class="ng-kpi-l">' + esc(t("ngActiveN")) + "</span></div>") +
+      "</div>";
+    var rows = sites.length ? sites.map(function (s) {
+      var score = s.seoScore == null ? '<span class="dash-muted">' + esc(t("ngNoScan")) + "</span>"
+        : '<span class="ng-score ' + seoClass(s.seoScore) + '">' + Math.round(num(s.seoScore)) + "</span>";
+      var post = s.lastPostTitle
+        ? esc(s.lastPostTitle) + (s.lastPostAt ? ' <span class="dash-muted">· ' + esc(ngDate(s.lastPostAt)) + "</span>" : "")
+        : '<span class="dash-muted">' + esc(t("ngNoPost")) + "</span>";
+      return "<tr><td><b>" + esc(s.domain || "—") + "</b>" +
+        (s.platform ? ' <span class="ng-plat">' + esc(s.platform) + "</span>" : "") + "</td>" +
+        "<td>" + score + "</td><td>" + post + "</td></tr>";
+    }).join("") : '<tr><td colspan="3" class="dash-empty">' + esc(t("ngNone")) + "</td></tr>";
+    return '<div class="dash-card ng-card"><div class="ng-head"><h3>' + esc(t("ngTitle")) + "</h3>" + summary + "</div>" +
+      '<div style="overflow-x:auto"><table class="dash-table ng-table"><thead><tr><th>' + esc(t("ngSiteCol")) +
+      "</th><th>" + esc(t("ngSeoCol")) + "</th><th>" + esc(t("ngLatestCol")) + "</th></tr></thead><tbody>" + rows + "</tbody></table></div></div>";
+  }
+  function loadNetgrid() {
+    var host = el("vpNetgrid"); if (!host) return;
+    api("/client-netgrid").then(function (res) {
+      var d = res.data || {};
+      // Only show the section when netgrid is configured and this client has data.
+      if (!d.configured || !d.ok || !d.client) { host.innerHTML = ""; return; }
+      host.innerHTML = netgridHTML(d.client, d.sites || []);
+    }).catch(function () { host.innerHTML = ""; });
   }
 
   function stat(value, label, sub) {
@@ -831,7 +885,7 @@
           "</div>" +
           '<div style="overflow-x:auto">' +
           (list.length
-            ? '<table class="dash-table"><thead><tr><th>' + esc(t("emTo")) + "</th><th>" + esc(t("emSubject")) +
+            ? '<table class="dash-table em-table"><thead><tr><th>' + esc(t("emTo")) + "</th><th>" + esc(t("emSubject")) +
               "</th><th>" + esc(t("statusCol")) + "</th><th>" + esc(t("emWhen")) + "</th><th></th></tr></thead><tbody>" +
               list.map(function (e) {
                 return '<tr data-id="' + esc(e.id) + '"><td>' + esc(e.to || "—") + "</td>" +
@@ -1198,6 +1252,21 @@
     ".dash-art-badge.up{background:rgba(255,255,255,.08);color:var(--mut,#9aa)}" +
     ".dash-empty{color:var(--mut2,#77809a);font-size:13px;padding:8px 0}" +
     ".dash-note{color:var(--mut,#9aa);font-size:13px;margin-top:14px;font-style:italic}" +
+    ".ng-card{margin-top:14px}" +
+    ".ng-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}" +
+    ".ng-head h3{margin:0}" +
+    ".ng-summary{display:flex;gap:20px;flex-wrap:wrap}" +
+    ".ng-kpi{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}" +
+    ".ng-kpi-v{font-size:22px;font-weight:800;color:var(--white,#fff)}" +
+    ".ng-kpi-l{font-size:11px;color:var(--mut2,#77809a);margin-top:3px}" +
+    ".ng-score{display:inline-flex;align-items:center;justify-content:center;min-width:34px;padding:2px 8px;border-radius:8px;font-weight:800;font-size:13px}" +
+    ".ng-score.ok{background:rgba(57,217,138,.16);color:#39d98a}" +
+    ".ng-score.pend{background:rgba(245,183,49,.16);color:#f5c451}" +
+    ".ng-score.exp{background:rgba(255,122,122,.16);color:#ff8f8f}" +
+    ".ng-kpi-v.ng-score{font-size:20px}" +
+    ".ng-plat{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut2,#77809a);border:1px solid var(--line2,#2a2145);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}" +
+    ".ng-table{min-width:0}" +
+    ".ng-table td{font-size:13px}" +
     ".dash-toolbar{margin:0 0 14px}" +
     ".dash-table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}" +
     ".dash-table th{text-align:left;color:var(--mut2,#77809a);font-size:12px;font-weight:600;padding:0 10px 10px}" +
@@ -1223,8 +1292,14 @@
     ".em-tab:hover{color:var(--white,#fff)}" +
     ".em-tab.is-on{color:var(--white,#fff);background:rgba(124,58,237,.2);border-color:transparent}" +
     ".em-tab-n{opacity:.6;font-weight:700;margin-left:2px}" +
-    ".em-subcell{cursor:pointer}" +
-    ".em-prev{max-width:460px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}" +
+    ".em-table{min-width:0;font-size:13px}" +
+    ".em-table th,.em-table td{padding:10px 8px}" +
+    ".em-table .btn.sm{padding:5px 9px;font-size:12px}" +
+    ".em-table .dash-actions{white-space:nowrap}" +
+    ".em-subcell{cursor:pointer;max-width:300px}" +
+    ".em-subcell b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+    ".em-prev{max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}" +
+    "@media(max-width:1150px){.em-subcell,.em-subcell b,.em-prev{max-width:170px}}" +
     ".em-modal-body{white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.5;color:var(--white,#fff);background:rgba(255,255,255,.04);border:1px solid var(--line2,#2a2145);border-radius:10px;padding:12px 14px;margin-top:4px}" +
     ".admin-nav-logout{color:var(--mut2,#77809a)}" +
     ".admin-nav-logout:hover{color:#ff8f8f;background:rgba(255,122,122,.12)}" +
