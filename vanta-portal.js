@@ -510,6 +510,10 @@
 
 
   function seoClass(n) { n = num(n); return n >= 80 ? "ok" : n >= 50 ? "pend" : "exp"; }
+  // Big colored SEO number for stat tiles (inherits the big tile size).
+  function seoBig(score) {
+    return score == null ? "—" : '<span class="ng-score-big ' + seoClass(score) + '">' + Math.round(num(score)) + "</span>";
+  }
   function ngDate(iso) {
     if (!iso) return "";
     try { return new Date(iso).toLocaleDateString(FR() ? "fr-CA" : "en-CA", { year: "numeric", month: "short", day: "numeric" }); }
@@ -599,7 +603,7 @@
     var canDrill = ngSites && ngSites.length;
     var tiles = "";
     if (ng) {
-      if (show("seo")) tiles += stat(ng.avgSeoScore == null ? "—" : '<span class="ng-score ' + seoClass(ng.avgSeoScore) + '">' + Math.round(num(ng.avgSeoScore)) + "</span>", t("ngAvgSeo"), "", canDrill ? "seo" : "");
+      if (show("seo")) tiles += stat(seoBig(ng.avgSeoScore), t("ngAvgSeo"), "", canDrill ? "seo" : "");
       if (show("sites")) tiles += stat(num(ng.blogCount), t("ngSitesN"), "", canDrill ? "sites" : "");
       if (show("active")) tiles += stat(ng.activeBlogCount == null ? "—" : num(ng.activeBlogCount), t("ngActiveN"), "", canDrill ? "active" : "");
       if (show("posts") && ng.postCount != null) tiles += stat(fmt(ng.postCount), t("cdTotalPosts"), "");
@@ -650,8 +654,7 @@
     if (!d.configured) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoNetgrid")) + "</div></div>";
     if (!d.ok || !d.client) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoMatch")) + "</div></div>";
     var c = d.client;
-    var seoVal = c.avgSeoScore == null ? "—"
-      : '<span class="ng-score ' + seoClass(c.avgSeoScore) + '">' + Math.round(num(c.avgSeoScore)) + "</span>";
+    var seoVal = seoBig(c.avgSeoScore);
     var ctr = (c.views != null && num(c.views) > 0) ? (num(c.clicks) / num(c.views) * 100).toFixed(1) + "%" : "—";
     var activeSub = c.activeBlogCount == null ? "" : num(c.activeBlogCount) + " " + esc(t("cdActiveLc"));
     var dash = function (v) { return v == null ? "—" : fmt(v); };
@@ -1534,6 +1537,7 @@
     ".ng-score.ok{background:rgba(57,217,138,.16);color:#39d98a}" +
     ".ng-score.pend{background:rgba(245,183,49,.16);color:#f5c451}" +
     ".ng-score.exp{background:rgba(255,122,122,.16);color:#ff8f8f}" +
+    ".ng-score-big.ok{color:#39d98a}.ng-score-big.pend{color:#f5c451}.ng-score-big.exp{color:#ff8f8f}" +
     ".ng-kpi-v.ng-score{font-size:20px}" +
     ".ng-plat{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut2,#77809a);border:1px solid var(--line2,#2a2145);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}" +
     ".ng-table{min-width:0}" +
