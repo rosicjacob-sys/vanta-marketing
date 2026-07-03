@@ -396,6 +396,16 @@
         (hideLogout ? "" : '<button class="btn ghost" id="vpLogout">' + esc(t("logout")) + '</button>') +
       "</div></div>";
   }
+  // Measure the sticky header so the sticky admin nav can pin right below it.
+  function syncDashTop() {
+    try {
+      var h = 0;
+      document.querySelectorAll(".dash-top").forEach(function (dt) {
+        if (dt.offsetParent !== null) h = dt.offsetHeight;
+      });
+      if (h) document.documentElement.style.setProperty("--dash-top-h", (h + 10) + "px");
+    } catch (e) {}
+  }
   function relTime(ms) {
     var s = Math.floor((Date.now() - ms) / 1000);
     if (s < 60) return t("justNow");
@@ -1235,6 +1245,7 @@
           host.innerHTML = adminHTML(clients, ng);
           wireCommon();
           wireAdmin(clients, plans);
+          syncDashTop();
         });
       });
     }).catch(function () {
@@ -1919,7 +1930,7 @@
   function injectCSS() {
     if (el("vp-css")) return;
     var css =
-    ".dash-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px;flex-wrap:wrap}" +
+    ".dash-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:16px;flex-wrap:wrap;position:sticky;top:0;z-index:30;padding:14px 0;background:rgba(10,8,23,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.06)}" +
     ".dash-top-actions{display:flex;align-items:center;gap:10px}" +
     ".vp-bell-wrap{position:relative}" +
     ".vp-bell{position:relative;width:44px;height:44px;border-radius:12px;border:1px solid var(--line2,#2a2145);background:rgba(255,255,255,.04);color:var(--white,#fff);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}" +
@@ -2071,7 +2082,7 @@
     "#view-admin>.sec,#view-dashboard>.sec{padding-top:34px}" +
     ".dash-table tbody tr:hover td{background:rgba(124,58,237,.06)}" +
     ".admin-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;margin-top:4px;min-height:62vh}" +
-    ".admin-nav{display:flex;flex-direction:column;gap:4px;align-self:start;position:sticky;top:20px;max-height:calc(100vh - 40px);overflow-y:auto}" +
+    ".admin-nav{display:flex;flex-direction:column;gap:4px;align-self:start;position:sticky;top:var(--dash-top-h,84px);max-height:calc(100vh - var(--dash-top-h,84px) - 16px);overflow-y:auto}" +
     ".admin-nav-foot{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:6px}" +
     ".admin-nav-item{font:inherit;font-size:14.5px;font-weight:600;text-align:left;color:var(--mut,#9aa);background:none;border:none;border-radius:10px;padding:11px 14px;cursor:pointer;white-space:nowrap}" +
     ".admin-nav-item:hover{color:var(--white,#fff);background:rgba(255,255,255,.05)}" +
@@ -2171,6 +2182,7 @@
   function boot() {
     injectCSS();
     window.addEventListener("hashchange", updateChrome);
+    window.addEventListener("resize", syncDashTop);
     // If already signed in and sitting on the login screen, jump to the dashboard.
     var h = location.hash || "";
     if (getToken() && (h === "" || h === "#/" || h.indexOf("#/login") === 0)) {
