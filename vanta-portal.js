@@ -57,9 +57,25 @@
     noReplyYet: { en: "No messages.",       fr: "Aucun message." },
     managePlans:{ en: "Manage plans",       fr: "Gérer les forfaits" },
     plansTitle: { en: "Plans",              fr: "Forfaits" },
-    plansHint:  { en: "One plan per line (e.g. $97/mo). These appear in the client's Plan dropdown.", fr: "Un forfait par ligne (ex. 97 $/mois). Ils apparaissent dans le menu Forfait du client." },
-    planNone:   { en: "— No plan —",         fr: "— Aucun forfait —" }
+    plansHint:  { en: "Define your plans. They appear in the client Plan dropdown; the buy link is your Whop/Stripe checkout.", fr: "Définissez vos forfaits. Ils apparaissent dans le menu Forfait du client; le lien d'achat est votre paiement Whop/Stripe." },
+    planNone:   { en: "— No plan —",         fr: "— Aucun forfait —" },
+    planName:   { en: "Plan name",           fr: "Nom du forfait" },
+    planPrice:  { en: "Price (e.g. $97/mo)",  fr: "Prix (ex. 97 $/mois)" },
+    planLink:   { en: "Buy link (Whop, Stripe…)", fr: "Lien d'achat (Whop, Stripe…)" },
+    addPlan:    { en: "+ Add plan",           fr: "+ Ajouter un forfait" },
+    savePlans:  { en: "Save plans",           fr: "Enregistrer" },
+    plansSaved: { en: "Saved.",               fr: "Enregistré." },
+    noPlans:    { en: "No plans yet. Add your first one.", fr: "Aucun forfait. Ajoutez le premier." }
   };
+
+  // Plans may be stored as strings (legacy) or {name, price, link} objects.
+  function normPlans(arr) {
+    return (arr || []).map(function (p) {
+      return (typeof p === "string")
+        ? { name: p, price: "", link: "" }
+        : { name: p.name || "", price: p.price || "", link: p.link || "" };
+    }).filter(function (p) { return p.name; });
+  }
   function t(k) { var e = T[k] || {}; return FR() ? (e.fr || e.en || k) : (e.en || k); }
 
   // ---- helpers ----
@@ -275,7 +291,7 @@
       if (res.status === 401 || res.status === 403) { logout(); return; }
       var clients = (res.data && res.data.clients) || [];
       api("/admin-plans").then(function (pres) {
-        var plans = (pres.data && pres.data.plans) || [];
+        var plans = normPlans((pres.data && pres.data.plans) || []);
         host.innerHTML = adminHTML(clients);
         wireCommon();
         wireAdmin(clients, plans);
@@ -300,22 +316,30 @@
         "</td></tr>";
     }).join("") : '<tr><td colspan="5" class="dash-empty">' + esc(t("noClients")) + "</td></tr>";
 
+    function navItem(id, label, on) {
+      return '<button class="admin-nav-item' + (on ? " is-on" : "") + '" data-nav="' + id + '">' + esc(label) + "</button>";
+    }
     return '<div class="sec"><div class="wrap">' +
       topbar(t("adminTitle")) +
-      '<div class="dash-tabs">' +
-        '<button class="dash-tab is-on" data-tab="clients">' + esc(t("clients")) + "</button>" +
-        '<button class="dash-tab" data-tab="messages">' + esc(t("tabMessages")) + "</button>" +
-      "</div>" +
-      '<div class="dash-panel" data-panel="clients">' +
-        '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button>" +
-          ' <button class="btn ghost" id="vpPlans">' + esc(t("managePlans")) + "</button></div>" +
-        '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
-          "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("views")) +
-          "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
-      "</div>" +
-      '<div class="dash-panel" data-panel="messages" style="display:none">' +
-        '<div class="vpc-admin"><div class="vpc-list" id="vpChatList"><div class="dash-empty">…</div></div>' +
-        '<div class="vpc-pane" id="vpChatPane"><div class="vpc-empty">' + esc(t("selectConv")) + "</div></div></div>" +
+      '<div class="admin-layout">' +
+        '<aside class="admin-nav">' +
+          navItem("clients", t("clients"), true) +
+          navItem("messages", t("tabMessages"), false) +
+          navItem("plans", t("managePlans"), false) +
+        "</aside>" +
+        '<div class="admin-main">' +
+          '<div class="dash-panel" data-panel="clients">' +
+            '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button></div>" +
+            '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
+              "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("views")) +
+              "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
+          "</div>" +
+          '<div class="dash-panel" data-panel="messages" style="display:none">' +
+            '<div class="vpc-admin"><div class="vpc-list" id="vpChatList"><div class="dash-empty">…</div></div>' +
+            '<div class="vpc-pane" id="vpChatPane"><div class="vpc-empty">' + esc(t("selectConv")) + "</div></div></div>" +
+          "</div>" +
+          '<div class="dash-panel" data-panel="plans" style="display:none" id="vpPlansPanel"></div>' +
+        "</div>" +
       "</div>" +
       '<div id="vpModal"></div>' +
     "</div></div>";
@@ -332,9 +356,10 @@
       var opts = '<option value="">' + esc(t("planNone")) + "</option>";
       var found = false;
       plans.forEach(function (p) {
-        var sel = p === current ? " selected" : "";
-        if (p === current) found = true;
-        opts += '<option value="' + esc(p) + '"' + sel + ">" + esc(p) + "</option>";
+        var label = p.name + (p.price ? " — " + p.price : "");
+        var sel = p.name === current ? " selected" : "";
+        if (p.name === current) found = true;
+        opts += '<option value="' + esc(p.name) + '"' + sel + ">" + esc(label) + "</option>";
       });
       if (current && !found) opts += '<option value="' + esc(current) + '" selected>' + esc(current) + "</option>";
       return '<label class="vpf">' + esc(FR() ? "Forfait" : "Plan") + '<select name="plan">' + opts + "</select></label>";
@@ -456,33 +481,70 @@
 
     var add = el("vpAdd"); if (add) add.onclick = function () { openForm({}, true); };
 
-    // ---- manage plans ----
-    function openPlans() {
-      if (!modal) return;
-      modal.innerHTML =
-        '<div class="dash-modal-bg" id="vpModalBg"><div class="dash-modal">' +
-          '<div class="dash-modal-head"><h3>' + esc(t("plansTitle")) + "</h3>" +
-            '<button type="button" class="dash-modal-x" id="vpClose" aria-label="' + esc(t("close")) + '">&#10005;</button></div>' +
-          '<div class="dash-modal-body"><label class="vpf">' + esc(t("plansHint")) +
-            '<textarea id="vpPlansBox" rows="7">' + esc(plans.join("\n")) + "</textarea></label></div>" +
-          '<div class="dash-modal-foot"><div class="hint" id="vpPlansMsg"></div>' +
-            '<div class="vpf-actions"><button type="button" class="btn ghost" id="vpCancel">' + esc(t("cancel")) + "</button>" +
-            '<button type="button" class="btn primary" id="vpPlansSave">' + esc(t("save")) + "</button></div></div>" +
-        "</div></div>";
-      try { document.body.style.overflow = "hidden"; } catch (e) {}
-      document.addEventListener("keydown", onKey);
-      var cancel = el("vpCancel"); if (cancel) cancel.onclick = close;
-      var xBtn = el("vpClose"); if (xBtn) xBtn.onclick = close;
-      var bg = el("vpModalBg"); if (bg) bg.onclick = function (e) { if (e.target === bg) close(); };
+    // ---- left-nav switching ----
+    var plansRendered = false, chatLoaded = false;
+    document.querySelectorAll(".admin-nav-item").forEach(function (item) {
+      item.onclick = function () {
+        var name = item.getAttribute("data-nav");
+        document.querySelectorAll(".admin-nav-item").forEach(function (b) { b.classList.toggle("is-on", b === item); });
+        document.querySelectorAll(".admin-main .dash-panel").forEach(function (pnl) {
+          pnl.style.display = pnl.getAttribute("data-panel") === name ? "" : "none";
+        });
+        if (name === "messages" && !chatLoaded) { chatLoaded = true; loadChats(); }
+        if (name === "plans" && !plansRendered) { plansRendered = true; renderPlansPanel(); }
+      };
+    });
+
+    // ---- manage plans (panel) ----
+    function planRow(p) {
+      p = p || { name: "", price: "", link: "" };
+      return '<div class="vpp-row">' +
+        '<input class="vpp-f vpp-name" placeholder="' + esc(t("planName")) + '" value="' + esc(p.name) + '">' +
+        '<input class="vpp-f vpp-price" placeholder="' + esc(t("planPrice")) + '" value="' + esc(p.price) + '">' +
+        '<input class="vpp-f vpp-link" placeholder="' + esc(t("planLink")) + '" value="' + esc(p.link) + '">' +
+        '<button type="button" class="vpp-del" aria-label="remove">&#10005;</button></div>';
+    }
+    function renderPlansPanel() {
+      var host = el("vpPlansPanel"); if (!host) return;
+      host.innerHTML =
+        '<div class="dash-card">' +
+          '<p class="dash-muted" style="margin:0 0 16px">' + esc(t("plansHint")) + "</p>" +
+          '<div class="vpp-cols"><span>' + esc(t("planName")) + "</span><span>" + esc(t("planPrice")) +
+            "</span><span>" + esc(t("planLink")) + "</span><span></span></div>" +
+          '<div id="vpPlanRows">' + (plans.length ? plans.map(planRow).join("") : "") + "</div>" +
+          (plans.length ? "" : '<div class="dash-empty" id="vpPlanEmpty">' + esc(t("noPlans")) + "</div>") +
+          '<div class="plans-foot"><button type="button" class="btn ghost sm" id="vpPlanAdd">' + esc(t("addPlan")) + "</button>" +
+            '<span class="plans-foot-r"><span class="hint" id="vpPlansMsg"></span>' +
+            '<button type="button" class="btn primary" id="vpPlansSave">' + esc(t("savePlans")) + "</button></span></div>" +
+        "</div>";
+      wirePlansPanel();
+    }
+    function wirePlansPanel() {
+      function wireDel() {
+        el("vpPlanRows").querySelectorAll(".vpp-del").forEach(function (b) {
+          b.onclick = function () { b.closest(".vpp-row").remove(); };
+        });
+      }
+      wireDel();
+      el("vpPlanAdd").onclick = function () {
+        var empty = el("vpPlanEmpty"); if (empty) empty.remove();
+        el("vpPlanRows").insertAdjacentHTML("beforeend", planRow());
+        wireDel();
+      };
       el("vpPlansSave").onclick = function () {
-        var lines = (el("vpPlansBox").value || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
-        api("/admin-plans", { method: "PUT", body: { plans: lines } }).then(function (res) {
-          if (res.ok) { close(); renderAdmin(); }
-          else { var m = el("vpPlansMsg"); if (m) m.textContent = (res.data && res.data.error) || "Error."; }
+        var out = [];
+        el("vpPlanRows").querySelectorAll(".vpp-row").forEach(function (r) {
+          var name = r.querySelector(".vpp-name").value.trim();
+          if (!name) return;
+          out.push({ name: name, price: r.querySelector(".vpp-price").value.trim(), link: r.querySelector(".vpp-link").value.trim() });
+        });
+        var msg = el("vpPlansMsg"); if (msg) { msg.textContent = "…"; msg.style.color = ""; }
+        api("/admin-plans", { method: "PUT", body: { plans: out } }).then(function (res) {
+          if (res.ok) { plans = normPlans((res.data && res.data.plans) || out); if (msg) { msg.textContent = t("plansSaved"); msg.style.color = "#39d98a"; } }
+          else if (msg) { msg.textContent = (res.data && res.data.error) || "Error."; msg.style.color = "#ff8080"; }
         });
       };
     }
-    var plansBtn = el("vpPlans"); if (plansBtn) plansBtn.onclick = openPlans;
 
     var editBtns = document.querySelectorAll(".vp-edit");
     for (var i = 0; i < editBtns.length; i++) {
@@ -500,17 +562,6 @@
         api("/admin-clients", { method: "DELETE", body: { email: email } }).then(function () { renderAdmin(); });
       };
     }
-
-    // ---- tabs (Clients / Messages) ----
-    var chatLoaded = false;
-    document.querySelectorAll(".dash-tab").forEach(function (tab) {
-      tab.onclick = function () {
-        var name = tab.getAttribute("data-tab");
-        document.querySelectorAll(".dash-tab").forEach(function (b) { b.classList.toggle("is-on", b === tab); });
-        document.querySelectorAll(".dash-panel").forEach(function (p) { p.style.display = p.getAttribute("data-panel") === name ? "" : "none"; });
-        if (name === "messages" && !chatLoaded) { chatLoaded = true; loadChats(); }
-      };
-    });
 
     // ---- messages ----
     var curCid = null, chatSeen = 0, convs = [];
@@ -629,6 +680,21 @@
     ".dash-tab{font:inherit;font-size:14px;font-weight:600;color:var(--mut,#9aa);background:none;border:none;border-bottom:2px solid transparent;padding:10px 14px;margin-bottom:-1px;cursor:pointer}" +
     ".dash-tab:hover{color:var(--white,#fff)}" +
     ".dash-tab.is-on{color:var(--white,#fff);border-bottom-color:var(--royal,#7c3aed)}" +
+    ".admin-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;margin-top:4px}" +
+    ".admin-nav{display:flex;flex-direction:column;gap:4px;position:sticky;top:20px}" +
+    ".admin-nav-item{font:inherit;font-size:14.5px;font-weight:600;text-align:left;color:var(--mut,#9aa);background:none;border:none;border-radius:10px;padding:11px 14px;cursor:pointer;white-space:nowrap}" +
+    ".admin-nav-item:hover{color:var(--white,#fff);background:rgba(255,255,255,.05)}" +
+    ".admin-nav-item.is-on{color:var(--white,#fff);background:rgba(124,58,237,.18)}" +
+    ".admin-main{min-width:0}" +
+    ".vpp-cols{display:grid;grid-template-columns:1fr 1fr 1.5fr 36px;gap:10px;font-size:11.5px;color:var(--mut2,#77809a);font-weight:600;padding:0 2px 9px;border-bottom:1px solid var(--line2,#2a2145);margin-bottom:12px}" +
+    ".vpp-row{display:grid;grid-template-columns:1fr 1fr 1.5fr 36px;gap:10px;margin-bottom:10px;align-items:center}" +
+    ".vpp-f{font:inherit;font-size:14px;color:var(--white,#fff);background:rgba(255,255,255,.05);border:1px solid var(--line2,#2a2145);border-radius:9px;padding:9px 11px;outline:none;width:100%;box-sizing:border-box}" +
+    ".vpp-f:focus{border-color:var(--royal,#7c3aed)}" +
+    ".vpp-del{width:36px;height:38px;border-radius:9px;border:1px solid var(--line2,#2a2145);background:rgba(255,255,255,.04);color:var(--mut,#9aa);font-size:13px;cursor:pointer}" +
+    ".vpp-del:hover{color:#fff;background:rgba(255,122,122,.18)}" +
+    ".plans-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}" +
+    ".plans-foot-r{display:flex;align-items:center;gap:12px}" +
+    "@media(max-width:820px){.admin-layout{grid-template-columns:1fr}.admin-nav{flex-direction:row;overflow-x:auto;position:static;margin-bottom:8px}.vpp-cols{display:none}.vpp-row{grid-template-columns:1fr 1fr;gap:8px}.vpp-row .vpp-link{grid-column:1/-1}.vpp-del{width:auto}}" +
     ".vpc-admin{display:grid;grid-template-columns:300px 1fr;gap:14px;height:min(66vh,620px)}" +
     ".vpc-list{overflow-y:auto;background:linear-gradient(180deg,var(--panel,#140e29),#0a0817);border:1px solid var(--line2,#2a2145);border-radius:16px;padding:8px}" +
     ".vpc-conv{display:block;width:100%;text-align:left;background:none;border:none;border-radius:10px;padding:11px 12px;cursor:pointer;color:var(--white,#fff);font:inherit}" +

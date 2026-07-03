@@ -193,7 +193,10 @@ addEventListener('pageshow',function(){ document.body.style.overflow=''; });</sc
   .chat-head{display:flex;align-items:flex-start;gap:10px;padding:15px 18px;background:linear-gradient(120deg,#15A34A,#0E7A38)}
   .chat-head b{display:block;font-size:15px;color:#fff;font-weight:700;line-height:1.25}
   .chat-head span{display:block;font-size:11.5px;color:rgba(255,255,255,.85);margin-top:3px}
-  .chat-x{margin-left:auto;background:transparent;border:none;color:rgba(255,255,255,.85);font-size:16px;cursor:pointer;line-height:1;padding:12px;margin-top:-10px;margin-right:-10px}
+  .chat-head-btns{margin-left:auto;display:flex;align-items:flex-start;gap:0}
+  .chat-x{background:transparent;border:none;color:rgba(255,255,255,.85);font-size:16px;cursor:pointer;line-height:1;padding:12px;margin-top:-10px}
+  .chat-x#chatClose{margin-right:-10px}
+  #chatNew{font-size:17px}
   .chat-x:hover{color:#fff}
   .chat-body{padding:0}
   .chat-thread{max-height:300px;min-height:130px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px}
@@ -347,7 +350,7 @@ addEventListener('pageshow',function(){ document.body.style.overflow=''; });</sc
   <div class="chat-panel">
     <div class="chat-head">
       <div><b data-i18n="chat.title">Have a question? Message us</b><span data-i18n="chat.sla">We answer most messages within 2 to 4 hours.</span></div>
-      <button class="chat-x" id="chatClose" aria-label="Close">✕</button>
+      <div class="chat-head-btns"><button class="chat-x" id="chatNew" aria-label="Start new conversation" title="Start new conversation">&#8635;</button><button class="chat-x" id="chatClose" aria-label="Close">✕</button></div>
     </div>
     <div class="chat-body" id="chatBody">
       <div class="chat-thread" id="chatThread"></div>
@@ -865,6 +868,8 @@ document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on', b.g
   function startPoll(){ if(poll) return; poll=setInterval(function(){ if(opened) doPoll(); }, 7000); }
   fab.addEventListener('click', function(){ var willOpen=!w.classList.contains('open'); w.classList.toggle('open'); opened=willOpen; if(willOpen){ paint(); if(cid){ startPoll(); doPoll(); } setTimeout(function(){ (info?msgI:nomI).focus(); },60); } });
   x.addEventListener('click', function(){ w.classList.remove('open'); opened=false; });
+  var newBtn=document.getElementById('chatNew');
+  if(newBtn){ newBtn.title=(lang==='fr'?'Nouvelle conversation':'Start new conversation'); newBtn.addEventListener('click', function(){ if(logArr.length && !confirm(lang==='fr'?'Démarrer une nouvelle conversation? La conversation actuelle sera effacée de ce navigateur.':'Start a new conversation? This clears the current one from this browser.')) return; cid=''; info=null; logArr=[]; seen=0; try{ localStorage.removeItem(K_CID); localStorage.removeItem(K_INFO); localStorage.removeItem(K_LOG); localStorage.removeItem(K_SEEN); }catch(_){} if(poll){ clearInterval(poll); poll=null; } paint(); setTimeout(function(){ if(nomI) nomI.focus(); },40); }); }
   var ltog=document.getElementById('langtog'); if(ltog) ltog.addEventListener('click', function(){ if(opened) setTimeout(paint, 0); });
   msgI.addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); cf.requestSubmit(); } });
   cf.addEventListener('submit', function(e){
