@@ -437,6 +437,9 @@
         var ngSites = ng ? (d.sites || []) : [];
         host.innerHTML = clientHTML(user, m, ng, ngSites);
         wireCommon();
+        host.querySelectorAll(".dash-stat-click").forEach(function (tl) {
+          tl.onclick = function () { openSiteModal(tl.getAttribute("data-modal"), ngSites); };
+        });
         try { if (window.__chatIdentify) window.__chatIdentify(user.name, user.email); } catch (e) {}
         // Auto-load this client's past chat messages into the floating chat.
         api("/client-chat").then(function (cr) {
@@ -539,6 +542,45 @@
       "</th><th>" + esc(t("ngSeoCol")) + "</th><th>" + esc(t("ngLatestCol")) +
       "</th></tr></thead><tbody>" + rows + "</tbody></table></div></div>";
   }
+  function statusPill(st) {
+    st = String(st || "").toLowerCase();
+    var cls = st === "active" ? "ok" : (st === "decommissioned" ? "exp" : "pend");
+    return '<span class="sub-pill ' + cls + '">' + esc(st || "—") + "</span>";
+  }
+  // Drill-down modal for the SEO / Sites / Active tiles: a per-site table.
+  function openSiteModal(mode, sites) {
+    sites = sites || [];
+    var title = mode === "seo" ? t("ngAvgSeo") : mode === "active" ? t("ngActiveN") : t("ngSitesN");
+    var col2 = mode === "seo" ? t("ngSeoCol") : mode === "active" ? t("statusCol") : t("ngLatestCol");
+    var rows = sites.map(function (s) {
+      var url = siteUrl(s.domain);
+      var name = url
+        ? '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="ng-site-link">' + esc(s.domain) + " ↗</a>"
+        : "<b>" + esc(s.domain || "—") + "</b>";
+      name += (s.platform ? ' <span class="ng-plat">' + esc(s.platform) + "</span>" : "");
+      var second;
+      if (mode === "seo") second = s.seoScore == null ? '<span class="dash-muted">' + esc(t("ngNoScan")) + "</span>" : '<span class="ng-score ' + seoClass(s.seoScore) + '">' + Math.round(num(s.seoScore)) + "</span>";
+      else if (mode === "active") second = statusPill(s.status);
+      else second = s.lastPostTitle ? esc(s.lastPostTitle) + (s.lastPostAt ? ' <span class="dash-muted">· ' + esc(ngDate(s.lastPostAt)) + "</span>" : "") : '<span class="dash-muted">' + esc(t("ngNoPost")) + "</span>";
+      return "<tr><td>" + name + "</td><td>" + second + "</td></tr>";
+    }).join("");
+    var host = document.createElement("div");
+    host.innerHTML =
+      '<div class="dash-modal-bg" id="vpSiteBg"><div class="dash-modal" style="max-width:560px">' +
+        '<div class="dash-modal-head"><h3>' + esc(title) + "</h3>" +
+          '<button type="button" class="dash-modal-x" id="vpSiteX" aria-label="' + esc(t("close")) + '">&#10005;</button></div>' +
+        '<div class="dash-modal-body"><div style="overflow-x:auto"><table class="dash-table ng-table"><thead><tr><th>' +
+          esc(t("ngSiteCol")) + "</th><th>" + esc(col2) + "</th></tr></thead><tbody>" +
+          (rows || '<tr><td colspan="2" class="dash-empty">—</td></tr>') + "</tbody></table></div></div>" +
+      "</div></div>";
+    document.body.appendChild(host);
+    try { document.body.style.overflow = "hidden"; } catch (e) {}
+    function close() { try { document.body.removeChild(host); } catch (e) {} try { document.body.style.overflow = ""; } catch (e) {} document.removeEventListener("keydown", onKey); }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    document.addEventListener("keydown", onKey);
+    host.querySelector("#vpSiteX").onclick = close;
+    host.querySelector("#vpSiteBg").onclick = function (e) { if (e.target === host.querySelector("#vpSiteBg")) close(); };
+  }
   function clientHTML(user, m, ng, ngSites) {
     var name = user.name || getName() || "";
     var vis = user.visible;
@@ -553,11 +595,13 @@
       '<div class="dash-refresh">' + esc(t("refreshNote")) + "</div>";
 
     // Stat tiles — real (netgrid) + manual, in one grid, each card toggleable.
+    // SEO / Sites / Active open a detail modal when there are sites to show.
+    var canDrill = ngSites && ngSites.length;
     var tiles = "";
     if (ng) {
-      if (show("seo")) tiles += stat(ng.avgSeoScore == null ? "—" : '<span class="ng-score ' + seoClass(ng.avgSeoScore) + '">' + Math.round(num(ng.avgSeoScore)) + "</span>", t("ngAvgSeo"), "");
-      if (show("sites")) tiles += stat(num(ng.blogCount), t("ngSitesN"), "");
-      if (show("active")) tiles += stat(ng.activeBlogCount == null ? "—" : num(ng.activeBlogCount), t("ngActiveN"), "");
+      if (show("seo")) tiles += stat(ng.avgSeoScore == null ? "—" : '<span class="ng-score ' + seoClass(ng.avgSeoScore) + '">' + Math.round(num(ng.avgSeoScore)) + "</span>", t("ngAvgSeo"), "", canDrill ? "seo" : "");
+      if (show("sites")) tiles += stat(num(ng.blogCount), t("ngSitesN"), "", canDrill ? "sites" : "");
+      if (show("active")) tiles += stat(ng.activeBlogCount == null ? "—" : num(ng.activeBlogCount), t("ngActiveN"), "", canDrill ? "active" : "");
       if (show("posts") && ng.postCount != null) tiles += stat(fmt(ng.postCount), t("cdTotalPosts"), "");
       if (show("rviews") && ng.views != null) tiles += stat(fmt(ng.views), t("cdViews"), "");
       if (show("rclicks") && ng.clicks != null) tiles += stat(fmt(ng.clicks), t("cdClicks"), "");
@@ -716,9 +760,11 @@
       });
     };
   }
-  function stat(value, label, sub) {
-    return '<div class="dash-stat"><div class="dash-stat-v">' + value + "</div>" +
-      '<div class="dash-stat-l">' + esc(label) + "</div>" + (sub || "") + "</div>";
+  function stat(value, label, sub, modal) {
+    return '<div class="dash-stat' + (modal ? " dash-stat-click" : "") + '"' + (modal ? ' data-modal="' + modal + '"' : "") + ">" +
+      '<div class="dash-stat-v">' + value + "</div>" +
+      '<div class="dash-stat-l">' + esc(label) + "</div>" + (sub || "") +
+      (modal ? '<span class="dash-stat-more">›</span>' : "") + "</div>";
   }
 
   // ================= ADMIN DASHBOARD =================
@@ -1494,6 +1540,10 @@
     ".ng-table td{font-size:13px}" +
     ".ng-site-link{color:#c4b5fd;font-weight:700;text-decoration:none;white-space:nowrap}" +
     ".ng-site-link:hover{text-decoration:underline}" +
+    ".dash-stat-click{position:relative;cursor:pointer;transition:border-color .12s,background .12s}" +
+    ".dash-stat-click:hover{border-color:var(--royal,#7c3aed);background:linear-gradient(180deg,rgba(124,58,237,.12),#0c0918)}" +
+    ".dash-stat-more{position:absolute;top:14px;right:16px;color:var(--mut2,#77809a);font-size:18px;line-height:1}" +
+    ".dash-stat-click:hover .dash-stat-more{color:#c4b5fd}" +
     ".cd-head{margin:14px 0 16px}" +
     ".cd-head h3{margin:0;font-size:22px;color:var(--white,#fff)}" +
     ".cd-tabs{display:flex;gap:10px;margin:0 0 18px;flex-wrap:wrap}" +
