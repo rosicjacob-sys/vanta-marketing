@@ -62,9 +62,13 @@
     justNow:    { en: "just now",            fr: "à l'instant" },
     payments:   { en: "Payments",            fr: "Paiements" },
     claimed:    { en: "Claimed",             fr: "Réclamé" },
-    confirmPay: { en: "Payment confirmed",   fr: "Paiement confirmé" },
-    rejectPay:  { en: "Not confirmed",       fr: "Non confirmé" },
-    noClaims:   { en: "No payment claims to review.", fr: "Aucune réclamation de paiement à vérifier." },
+    confirmPay: { en: "Confirm",             fr: "Confirmer" },
+    rejectPay:  { en: "Reject",              fr: "Rejeter" },
+    statusCol:  { en: "Status",              fr: "Statut" },
+    stPending:  { en: "Pending",             fr: "En attente" },
+    stConfirmed:{ en: "Confirmed",           fr: "Confirmé" },
+    stRejected: { en: "Rejected",            fr: "Rejeté" },
+    noClaims:   { en: "No payment claims yet.", fr: "Aucune réclamation de paiement." },
     rejectConfirm:{ en: "Mark this payment as NOT confirmed?", fr: "Marquer ce paiement comme NON confirmé?" },
     underReview:{ en: "Payment under review", fr: "Paiement en vérification" },
     reviewNote: { en: "We're verifying your payment — we'll confirm shortly.", fr: "On vérifie votre paiement — confirmation sous peu." },
@@ -676,13 +680,20 @@
         host.innerHTML = '<div class="dash-card" style="overflow-x:auto">' +
           (claims.length
             ? '<table class="dash-table"><thead><tr><th>' + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) +
-              "</th><th>" + esc(t("claimed")) + "</th><th></th></tr></thead><tbody>" +
+              "</th><th>" + esc(t("claimed")) + "</th><th>" + esc(t("statusCol")) + "</th></tr></thead><tbody>" +
               claims.map(function (c) {
+                var statusCell;
+                if (c.status === "pending") {
+                  statusCell = '<div class="dash-actions"><button class="btn primary sm pay-ok">' + esc(t("confirmPay")) +
+                    '</button> <button class="btn ghost sm pay-no">' + esc(t("rejectPay")) + "</button></div>";
+                } else {
+                  var ok = c.status === "confirmed";
+                  statusCell = '<span class="sub-pill ' + (ok ? "ok" : "exp") + '">' + esc(t(ok ? "stConfirmed" : "stRejected")) +
+                    "</span>" + (c.decidedAt ? ' <span class="dash-muted">' + esc(relTime(c.decidedAt)) + "</span>" : "");
+                }
                 return '<tr data-email="' + esc(c.email) + '"><td><b>' + esc(c.name || "—") + '</b><div class="dash-muted">' +
                   esc(c.email) + "</div></td><td>" + esc(c.plan || "—") + '</td><td class="dash-muted">' +
-                  esc(relTime(c.claimAt || Date.now())) + '</td><td class="dash-actions">' +
-                  '<button class="btn primary sm pay-ok">' + esc(t("confirmPay")) + "</button> " +
-                  '<button class="btn ghost sm pay-no">' + esc(t("rejectPay")) + "</button></td></tr>";
+                  esc(relTime(c.claimedAt || Date.now())) + "</td><td>" + statusCell + "</td></tr>";
               }).join("") + "</tbody></table>"
             : '<div class="dash-empty">' + esc(t("noClaims")) + "</div>") + "</div>";
         host.querySelectorAll(".pay-ok").forEach(function (btn) {

@@ -8,6 +8,7 @@ import {
   getUser, putUser, deleteUser, listUsers,
   normEmail, defaultMetrics, publicUser, addNotification,
 } from '../lib/store.mjs';
+import { notifyClient } from '../lib/notify.mjs';
 
 function requireAdmin(req) {
   const u = userFromRequest(req);
@@ -46,8 +47,8 @@ export default async (req) => {
     };
     await putUser(user);
     try {
-      await addNotification({ audience: 'client', recipient: email, title: 'Welcome to Vanta',
-        body: 'Your client dashboard is ready. Log in any time to see your traffic, articles and plan.', type: 'welcome' });
+      await notifyClient(email, 'Welcome to Vanta',
+        'Your client dashboard is ready. Log in any time to see your traffic, articles and plan.', 'welcome');
       await addNotification({ audience: 'admin', recipient: '', title: 'New client added',
         body: (user.name || email) + ' was added' + (user.plan ? ' on ' + user.plan : '') + '.', type: 'client_added' });
     } catch (e) { /* notifications are best-effort */ }

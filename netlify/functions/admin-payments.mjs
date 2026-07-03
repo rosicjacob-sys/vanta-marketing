@@ -4,7 +4,8 @@
 //     confirm -> restart the subscription from today + notify the client
 //     reject  -> clear the claim + notify the client
 import { userFromRequest, json } from '../lib/auth.mjs';
-import { getUser, putUser, listUsers, publicUser, addNotification, normEmail } from '../lib/store.mjs';
+import { getUser, putUser, normEmail, listClaims, resolveClaim } from '../lib/store.mjs';
+import { notifyClient } from '../lib/notify.mjs';
 
 function pad(n) { return String(n).padStart(2, '0'); }
 function toStr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
@@ -21,10 +22,8 @@ export default async (req) => {
   if (!u || u.role !== 'admin') return json({ error: 'forbidden' }, 403);
 
   if (req.method === 'GET') {
-    const clients = await listUsers();
-    const claims = clients.filter(c => c.claimStatus === 'pending')
-      .map(publicUser).sort((a, b) => (b.claimAt || 0) - (a.claimAt || 0));
-    return json({ claims });
+    // full history: pending claims to review + resolved (confirmed/rejected)
+    return json({ claims: await listClaims() });
   }
 
   if (req.method === 'POST') {
@@ -45,19 +44,20 @@ export default async (req) => {
       user.snoozeUntil = 0;
       const newExpiry = addPeriod(today, user.period === 'yearly' ? 'yearly' : 'monthly');
       await putUser(user);
+      try { await resolveClaim(email, 'confirmed'); } catch (e) { /* best effort */ }
       try {
-        await addNotification({ audience: 'client', recipient: email, title: 'Payment confirmed',
-          body: 'Thanks! Your plan is active until ' + newExpiry + '.', type: 'payment_confirmed' });
+        await notifyClient(email, 'Payment confirmed', 'Thanks! Your plan is active until ' + newExpiry + '.', 'payment_confirmed');
       } catch (e) { /* best effort */ }
-      return json({ ok: true, client: publicUser(user) });
+      return json({ ok: true });
     }
 
     await putUser(user);
+    try { await resolveClaim(email, 'rejected'); } catch (e) { /* best effort */ }
     try {
-      await addNotification({ audience: 'client', recipient: email, title: 'Payment not verified',
-        body: "We couldn't verify your payment yet. Please try again, or reach us in the chat.", type: 'payment_rejected' });
+      await notifyClient(email, 'Payment not verified',
+        "We couldn't verify your payment yet. Please try again, or reach us in the chat.", 'payment_rejected');
     } catch (e) { /* best effort */ }
-    return json({ ok: true, client: publicUser(user) });
+    return json({ ok: true });
   }
 
   return json({ error: 'method_not_allowed' }, 405);

@@ -31,6 +31,8 @@ export default async () => {
     hasDatabaseUrl: hasDb,
     dbConnected,
     dbError,
+    emailEnabled: !!process.env.RESEND_API_KEY,
+    hasEmailFrom: !!process.env.EMAIL_FROM,
     ready: !!process.env.SESSION_SECRET && !!process.env.ADMIN_EMAIL &&
            hash.startsWith('scrypt$') && hash.split('$').length === 3 &&
            (!hasDb || dbConnected),
