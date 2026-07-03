@@ -116,6 +116,23 @@
     cadenceSub: { en: "Posts per week",        fr: "Articles par semaine" },
     noPostsYet: { en: "No posts published yet.", fr: "Aucun article publié pour l'instant." },
     postViews:  { en: "views",                 fr: "vues" },
+    postsUnit:  { en: "posts",                 fr: "articles" },
+    weekOf:     { en: "week of",               fr: "semaine du" },
+    seoHistTitle:{ en: "SEO score over time",  fr: "Score SEO dans le temps" },
+    seoHistEmpty:{ en: "No SEO scans yet — this fills in after the first scan.", fr: "Aucune analyse SEO — se remplit après la première analyse." },
+    authTitle:  { en: "SEO authority",         fr: "Autorité SEO" },
+    authNoData: { en: "No third-party SEO data yet for these sites.", fr: "Aucune donnée SEO tierce pour ces sites." },
+    authDA:     { en: "Domain authority",      fr: "Autorité de domaine" },
+    authBacklinks:{ en: "Backlinks",           fr: "Backlinks" },
+    authRefDomains:{ en: "Referring domains",  fr: "Domaines référents" },
+    authKeywords:{ en: "Organic keywords",     fr: "Mots-clés organiques" },
+    authTraffic:{ en: "Est. organic traffic",  fr: "Trafic organique est." },
+    authTopKw:  { en: "Top keywords",          fr: "Mots-clés principaux" },
+    authFetched:{ en: "updated",               fr: "mis à jour" },
+    authColDA:  { en: "DA",                    fr: "DA" },
+    authColBl:  { en: "Backlinks",             fr: "Backlinks" },
+    authColKw:  { en: "Keywords",              fr: "Mots-clés" },
+    authColTr:  { en: "Traffic",               fr: "Trafic" },
     cdView:     { en: "View",                  fr: "Voir" },
     cdBack:     { en: "Back to clients",       fr: "Retour aux clients" },
     cdReal:     { en: "Real data",             fr: "Données réelles" },
@@ -428,14 +445,14 @@
 
   // ================= CLIENT DASHBOARD =================
   // Cached client-data so the range toggle can re-render without re-fetching it.
-  var _cUser = null, _cM = null, _cPlanLink = "", _cDays = "", _cPosts = null;
+  var _cUser = null, _cM = null, _cPlanLink = "", _cDays = "", _cPosts = null, _cHist = null;
   function renderClient() {
     if (!requireRole("client")) return;
     var host = el("view-dashboard");
     if (!host) return;
     host.innerHTML = '<div class="sec"><div class="wrap"><p class="lead">…</p></div></div>';
     showView("view-dashboard");
-    _cUser = null; _cM = null; _cPlanLink = ""; _cDays = ""; _cPosts = null;
+    _cUser = null; _cM = null; _cPlanLink = ""; _cDays = ""; _cPosts = null; _cHist = null;
 
     api("/client-data").then(function (res) {
       if (res.status === 401) { logout(); return; }
@@ -459,7 +476,7 @@
     var win = days ? "?days=" + encodeURIComponent(days) : "";
     var pNg = api("/client-netgrid" + win).catch(function () { return { data: {} }; });
     var pTr = api("/client-traffic" + win).catch(function () { return { data: {} }; });
-    // Posts don't depend on the range window — fetch once, reuse on toggle.
+    // Posts + SEO history don't depend on the range window — fetch once, reuse on toggle.
     var pPo = (_cPosts !== null)
       ? Promise.resolve(null)
       : api("/client-posts").then(function (pr) {
@@ -467,17 +484,26 @@
           _cPosts = (pd.configured && pd.ok) ? (pd.posts || []) : [];
           return null;
         }).catch(function () { _cPosts = []; return null; });
+    var pHi = (_cHist !== null)
+      ? Promise.resolve(null)
+      : api("/client-seo-history").then(function (hr) {
+          var hd = hr.data || {};
+          _cHist = (hd.configured && hd.ok) ? { sites: hd.sites || [] } : { sites: [] };
+          return null;
+        }).catch(function () { _cHist = { sites: [] }; return null; });
     pNg.then(function (nres) {
       pTr.then(function (tres) {
         pPo.then(function () {
+        pHi.then(function () {
         var d = nres.data || {};
         var ng = (d.configured && d.ok && d.client) ? d.client : null;
         var ngSites = ng ? (d.sites || []) : [];
         var td = tres.data || {};
         var traffic = (td.configured && td.ok) ? (td.series || []) : [];
-        host.innerHTML = clientHTML(user, m, ng, ngSites, traffic, days, _cPosts || []);
+        host.innerHTML = clientHTML(user, m, ng, ngSites, traffic, days, _cPosts || [], _cHist || { sites: [] });
         wireCommon();
         wireCharts(host);
+        wireAuthority(host, ngSites, _cHist || { sites: [] });
         host.querySelectorAll(".dash-stat-click").forEach(function (tl) {
           tl.onclick = function () { openSiteModal(tl.getAttribute("data-modal"), ngSites); };
         });
@@ -494,6 +520,7 @@
           maybeShowExpiry(user, _cPlanLink);
         }
         });
+        });
       });
     });
   }
@@ -504,7 +531,8 @@
     ["seo", "ngAvgSeo"], ["sites", "ngSitesN"], ["active", "ngActiveN"],
     ["posts", "cdTotalPosts"], ["rviews", "cdViews"], ["rclicks", "cdClicks"],
     ["sitelist", "ngSiteList"], ["traffic", "trTitle"],
-    ["recentposts", "recentTitle"], ["cadence", "cadenceTitle"],
+    ["seohist", "seoHistTitle"], ["recentposts", "recentTitle"],
+    ["cadence", "cadenceTitle"], ["authority", "authTitle"],
   ];
   var NG_MANUAL_CARDS = [
     ["mviews", "views"], ["mclicks", "clicks"], ["mai", "ai"],
@@ -595,14 +623,14 @@
   }
   // Single-series area+line chart (never dual-axis). Title names the series (no legend).
   // Points are embedded as data-pts for the hover crosshair wired by wireCharts().
-  function lineChart(series, key, color, title) {
+  function lineChart(series, key, color, title, emptyMsg) {
     series = series || [];
     var n = series.length, vals = [];
     for (var j = 0; j < n; j++) vals.push(num(series[j][key]));
     var head = '<div class="tchart-head"><span class="tchart-title">' + esc(title) + "</span>" +
       (n ? '<span class="tchart-last">' + fmt(vals[n - 1]) + "</span>" : "") + "</div>";
     // No buckets at all -> genuine empty state.
-    if (n < 1) return '<div class="tchart">' + head + '<div class="dash-empty">' + esc(t("trNoData")) + "</div></div>";
+    if (n < 1) return '<div class="tchart">' + head + '<div class="dash-empty">' + esc(emptyMsg || t("trNoData")) + "</div></div>";
     var W = 320, H = 90, mx = 6, my = 8, base = H - my;
     var max = 0; for (var a = 0; a < n; a++) max = Math.max(max, vals[a]); max = max || 1;
     var line = [], pdata = [], x0 = 0, xn = 0;
@@ -717,6 +745,7 @@
     return '<div class="dash-card ng-card"><h3>' + esc(t("recentTitle")) + "</h3>" + postsListHTML(posts) + "</div>";
   }
   // Publishing cadence: posts published per week over the last 8 weeks.
+  // Bars carry a hover tooltip with the count; x-labels are month over day.
   function cadenceBars(posts) {
     posts = posts || [];
     var WEEKS = 8;
@@ -739,8 +768,22 @@
       var ws = weekStart(pd).getTime();
       for (var b = 0; b < buckets.length; b++) { if (buckets[b].start.getTime() === ws) { buckets[b].count++; break; } }
     });
-    var series = buckets.map(function (b) { return { label: chartDate(b.start.toISOString()), value: b.count }; });
-    return '<p class="dash-muted" style="margin:-6px 0 12px">' + esc(t("cadenceSub")) + "</p>" + bars(series);
+    var max = 0; buckets.forEach(function (b) { if (b.count > max) max = b.count; }); max = max || 1;
+    var loc = FR() ? "fr-CA" : "en-CA";
+    var cols = buckets.map(function (b) {
+      var h = Math.round((b.count / max) * 100);
+      var mon = b.start.toLocaleDateString(loc, { month: "short" });
+      var day = b.start.getDate();
+      return '<div class="bchart-col">' +
+        '<div class="bchart-barwrap"><div class="bchart-bar" style="height:' + h + '%">' +
+          '<span class="bchart-tip"><b>' + b.count + "</b> " + esc(t("postsUnit")) +
+            "<span>" + esc(t("weekOf")) + " " + esc(chartDate(b.start.toISOString())) + "</span></span>" +
+        "</div></div>" +
+        '<div class="bchart-xl"><b>' + esc(mon) + "</b><span>" + day + "</span></div>" +
+      "</div>";
+    }).join("");
+    return '<p class="dash-muted" style="margin:-6px 0 12px">' + esc(t("cadenceSub")) + "</p>" +
+      '<div class="bchart">' + cols + "</div>";
   }
   function cadenceCardHTML(posts) {
     return '<div class="dash-card ng-card"><h3>' + esc(t("cadenceTitle")) + "</h3>" + cadenceBars(posts) + "</div>";
@@ -753,6 +796,118 @@
     if (cards.length === 2) return '<div class="dash-grid2">' + cards.join("") + "</div>";
     if (cards.length === 1) return cards[0];
     return "";
+  }
+  // Average overall SEO score across all sites, bucketed by month -> one series.
+  function avgSeoSeries(hist) {
+    var sites = (hist && hist.sites) || [];
+    var byMonth = {};
+    sites.forEach(function (s) {
+      (s.points || []).forEach(function (p) {
+        var dt = new Date(p.date); if (isNaN(dt.getTime())) return;
+        var mk = dt.getUTCFullYear() + "-" + (dt.getUTCMonth() + 1);
+        if (!byMonth[mk]) byMonth[mk] = { sum: 0, n: 0, t: Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), 1) };
+        byMonth[mk].sum += num(p.score); byMonth[mk].n++;
+      });
+    });
+    return Object.keys(byMonth)
+      .sort(function (a, b) { return byMonth[a].t - byMonth[b].t; })
+      .map(function (k) { return { date: new Date(byMonth[k].t).toISOString(), score: Math.round(byMonth[k].sum / byMonth[k].n) }; });
+  }
+  // SEO score over time — averaged across the client's sites (single series).
+  function seoHistCardHTML(hist) {
+    var series = avgSeoSeries(hist);
+    return '<div class="dash-card ng-card"><h3>' + esc(t("seoHistTitle")) + "</h3>" +
+      lineChart(series, "score", "#7c3aed", t("cdOverallSeo"), t("seoHistEmpty")) + "</div>";
+  }
+  function kwText(k) {
+    if (k == null) return "";
+    if (typeof k === "string") return k;
+    return String(k.keyword || k.kw || k.term || k.query || "").trim();
+  }
+  // Per-site third-party SEO authority table (DA / backlinks / keywords / traffic).
+  // Rows are clickable to open the per-site authority drill-down.
+  function authorityCardHTML(sites, hist) {
+    sites = sites || [];
+    if (!sites.length) return "";
+    var anyM = sites.some(function (s) { return s.metrics; });
+    var body;
+    if (!anyM) {
+      body = '<div class="dash-empty">' + esc(t("authNoData")) + "</div>";
+    } else {
+      var rows = sites.map(function (s) {
+        var m = s.metrics || {};
+        var da = m.domainAuthority != null ? num(m.domainAuthority) : "—";
+        var bl = m.backlinks != null ? fmt(m.backlinks) : "—";
+        var kw = m.organicKeywords != null ? fmt(m.organicKeywords) : "—";
+        var tr = m.organicTrafficEst != null ? fmt(m.organicTrafficEst) : "—";
+        return '<tr class="auth-row" data-bid="' + esc(s.id) + '" tabindex="0">' +
+          "<td>" + esc(s.domain || "—") + (s.platform ? ' <span class="ng-plat">' + esc(s.platform) + "</span>" : "") +
+            ' <span class="dash-stat-more auth-more">›</span></td>' +
+          '<td class="auth-num">' + da + '</td><td class="auth-num">' + bl + '</td>' +
+          '<td class="auth-num">' + kw + '</td><td class="auth-num">' + tr + "</td></tr>";
+      }).join("");
+      body = '<div style="overflow-x:auto"><table class="dash-table ng-table auth-table"><thead><tr><th>' +
+        esc(t("ngSiteCol")) + '</th><th class="auth-num">' + esc(t("authColDA")) + '</th><th class="auth-num">' +
+        esc(t("authColBl")) + '</th><th class="auth-num">' + esc(t("authColKw")) + '</th><th class="auth-num">' +
+        esc(t("authColTr")) + "</th></tr></thead><tbody>" + rows + "</tbody></table></div>";
+    }
+    return '<div class="dash-card ng-card"><h3>' + esc(t("authTitle")) + "</h3>" + body + "</div>";
+  }
+  // Per-site authority drill-down: full metrics + top keywords + SEO score trend.
+  function openSiteAuthority(site, hist) {
+    site = site || {}; var m = site.metrics || {};
+    var pts = [];
+    ((hist && hist.sites) || []).forEach(function (h) { if (h.blogId === site.id) pts = h.points || []; });
+    var url = siteUrl(site.domain);
+    var head = url
+      ? '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="ng-site-link">' + esc(site.domain) + " ↗</a>"
+      : esc(site.domain || "—");
+    function st(label, val) {
+      return '<div class="auth-stat"><div class="auth-stat-v">' + val + "</div>" +
+        '<div class="auth-stat-l">' + esc(label) + "</div></div>";
+    }
+    var dv = function (v) { return v == null ? "—" : fmt(v); };
+    var stats = st(t("cdOverallSeo"), site.seoScore == null ? "—" : seoBig(site.seoScore)) +
+      st(t("authDA"), m.domainAuthority == null ? "—" : num(m.domainAuthority)) +
+      st(t("authBacklinks"), dv(m.backlinks)) +
+      st(t("authRefDomains"), dv(m.referringDomains)) +
+      st(t("authKeywords"), dv(m.organicKeywords)) +
+      st(t("authTraffic"), dv(m.organicTrafficEst));
+    var kws = (m.topKeywords || []).map(kwText).filter(Boolean);
+    var kwHTML = kws.length
+      ? '<div class="auth-sec-h">' + esc(t("authTopKw")) + "</div><div class=\"kw-wrap\">" +
+        kws.map(function (k) { return '<span class="kw-chip">' + esc(k) + "</span>"; }).join("") + "</div>"
+      : "";
+    var trendHTML = '<div class="auth-sec-h">' + esc(t("seoHistTitle")) + "</div>" +
+      lineChart(pts, "score", "#7c3aed", t("cdOverallSeo"), t("seoHistEmpty"));
+    var src = m.source ? '<span class="auth-src">' + esc(m.source) +
+      (m.fetchedAt ? " · " + esc(t("authFetched")) + " " + esc(ngDate(m.fetchedAt)) : "") + "</span>" : "";
+    var host = document.createElement("div");
+    host.innerHTML =
+      '<div class="dash-modal-bg" id="vpAuthBg"><div class="dash-modal" style="max-width:560px">' +
+        '<div class="dash-modal-head"><h3>' + head + "</h3>" +
+          '<button type="button" class="dash-modal-x" id="vpAuthX" aria-label="' + esc(t("close")) + '">&#10005;</button></div>' +
+        '<div class="dash-modal-body">' + src +
+          '<div class="auth-grid">' + stats + "</div>" + kwHTML + trendHTML + "</div>" +
+      "</div></div>";
+    document.body.appendChild(host);
+    try { document.body.style.overflow = "hidden"; } catch (e) {}
+    function close() { try { document.body.removeChild(host); } catch (e) {} try { document.body.style.overflow = ""; } catch (e) {} document.removeEventListener("keydown", onKey); }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    document.addEventListener("keydown", onKey);
+    host.querySelector("#vpAuthX").onclick = close;
+    host.querySelector("#vpAuthBg").onclick = function (e) { if (e.target === host.querySelector("#vpAuthBg")) close(); };
+    wireCharts(host);
+  }
+  // Wire authority-table rows (within root) to open the per-site drill-down.
+  function wireAuthority(root, sites, hist) {
+    var byId = {};
+    (sites || []).forEach(function (s) { byId[s.id] = s; });
+    (root || document).querySelectorAll(".auth-row").forEach(function (row) {
+      var open = function () { var s = byId[row.getAttribute("data-bid")]; if (s) openSiteAuthority(s, hist); };
+      row.onclick = open;
+      row.onkeydown = function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } };
+    });
   }
   // Clickable list of the client's blog sites (domain links out to the site).
   function clientSitesHTML(sites) {
@@ -815,10 +970,11 @@
     host.querySelector("#vpSiteX").onclick = close;
     host.querySelector("#vpSiteBg").onclick = function (e) { if (e.target === host.querySelector("#vpSiteBg")) close(); };
   }
-  function clientHTML(user, m, ng, ngSites, traffic, days, posts) {
+  function clientHTML(user, m, ng, ngSites, traffic, days, posts, hist) {
     var name = user.name || getName() || "";
     traffic = traffic || [];
     posts = posts || [];
+    hist = hist || { sites: [] };
     var vis = user.visible;
     function show(k) { return showCard(k, vis); }
     var change = num(m.viewsChangePct);
@@ -853,11 +1009,17 @@
     // Views/clicks over time — two small single-series charts.
     if (show("traffic") && ng) out += trafficCardHTML(traffic);
 
+    // SEO score over time (averaged across sites).
+    if (show("seohist") && ng) out += seoHistCardHTML(hist);
+
     // Recent posts list + publishing cadence.
     if (ng) out += postsBlockHTML(posts, show("recentposts"), show("cadence"));
 
     // Clickable list of blog sites.
     if (show("sitelist") && ngSites && ngSites.length) out += clientSitesHTML(ngSites);
+
+    // Per-site SEO authority table (click a row for the drill-down).
+    if (show("authority") && ng && ngSites && ngSites.length) out += authorityCardHTML(ngSites, hist);
 
     // Charts — trend and/or sources.
     var charts = [];
@@ -889,12 +1051,14 @@
         '<div class="dash-card"><h3>' + esc(t("sources")) + "</h3>" + sourceList(m.sources) + "</div>" +
       "</div>";
   }
-  function cdRealHTML(d, traffic, days, posts) {
+  function cdRealHTML(d, traffic, days, posts, hist) {
     d = d || {};
     if (!d.configured) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoNetgrid")) + "</div></div>";
     if (!d.ok || !d.client) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoMatch")) + "</div></div>";
     traffic = traffic || [];
     posts = posts || [];
+    hist = hist || { sites: [] };
+    var sites = d.sites || [];
     var c = d.client;
     var seoVal = seoBig(c.avgSeoScore);
     var ctr = (c.views != null && num(c.views) > 0) ? (num(c.clicks) / num(c.views) * 100).toFixed(1) + "%" : "—";
@@ -912,7 +1076,9 @@
       cdStat(c.lastPostAt ? esc(ngDate(c.lastPostAt)) : "—", t("cdLastPost")) +
       "</div>" +
       trafficCardHTML(traffic) +
-      '<div class="dash-grid2">' + postsCardHTML(posts) + cadenceCardHTML(posts) + "</div>";
+      seoHistCardHTML(hist) +
+      '<div class="dash-grid2">' + postsCardHTML(posts) + cadenceCardHTML(posts) + "</div>" +
+      (sites.length ? authorityCardHTML(sites, hist) : "");
   }
   // Loads (or reloads on range toggle) the admin Real-data tab for a client.
   function loadCdReal(email, days) {
@@ -924,18 +1090,25 @@
     var pNg = api("/admin-client-netgrid?email=" + em + win).catch(function () { return { data: {} }; });
     var pTr = api("/admin-client-traffic?email=" + em + win).catch(function () { return { data: {} }; });
     var pPo = api("/admin-client-posts?email=" + em).catch(function () { return { data: {} }; });
+    var pHi = api("/admin-client-seo-history?email=" + em).catch(function () { return { data: {} }; });
     pNg.then(function (res) {
       pTr.then(function (tres) {
         pPo.then(function (pres) {
+        pHi.then(function (hres) {
         var host2 = el("cdReal"); if (!host2) return;
         var td = tres.data || {};
         var traffic = (td.configured && td.ok) ? (td.series || []) : [];
         var pd = pres.data || {};
         var posts = (pd.configured && pd.ok) ? (pd.posts || []) : [];
-        host2.innerHTML = cdRealHTML(res.data || {}, traffic, days, posts);
+        var hd = hres.data || {};
+        var hist = (hd.configured && hd.ok) ? { sites: hd.sites || [] } : { sites: [] };
+        var nd = res.data || {};
+        host2.innerHTML = cdRealHTML(nd, traffic, days, posts, hist);
         wireCharts(host2);
+        wireAuthority(host2, nd.sites || [], hist);
         host2.querySelectorAll(".rng-btn").forEach(function (bn) {
           bn.onclick = function () { if (bn.getAttribute("data-days") !== days) loadCdReal(email, bn.getAttribute("data-days")); };
+        });
         });
         });
       });
@@ -1835,7 +2008,34 @@
     ".tchart-tip span{display:block;color:var(--mut2,#77809a);font-size:11px;margin-top:1px}" +
     ".tchart-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--mut2,#77809a)}" +
     ".tchart-axis-1{justify-content:center}" +
-    "@media(max-width:640px){.tchart-grid{grid-template-columns:1fr}}" +
+    ".bchart{display:flex;align-items:flex-end;gap:8px;height:170px}" +
+    ".bchart-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;min-width:0}" +
+    ".bchart-barwrap{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;position:relative}" +
+    ".bchart-bar{position:relative;width:100%;max-width:34px;min-height:3px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#7c3aed,#4f46e5);transition:filter .12s}" +
+    ".bchart-bar:hover{filter:brightness(1.15)}" +
+    ".bchart-tip{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:8px;white-space:nowrap;background:#0a0817;border:1px solid var(--line2,#2a2145);border-radius:8px;padding:5px 9px;font-size:12px;color:var(--white,#fff);z-index:6;box-shadow:0 8px 24px -8px rgba(0,0,0,.7);pointer-events:none}" +
+    ".bchart-bar:hover .bchart-tip{display:block}" +
+    ".bchart-tip b{font-weight:800}" +
+    ".bchart-tip span{display:block;color:var(--mut2,#77809a);font-size:11px;margin-top:1px}" +
+    ".bchart-xl{margin-top:8px;text-align:center;line-height:1.15}" +
+    ".bchart-xl b{display:block;font-size:11px;color:var(--mut,#9aa);font-weight:700}" +
+    ".bchart-xl span{font-size:11px;color:var(--mut2,#77809a)}" +
+    ".auth-table td,.auth-table th{white-space:nowrap}" +
+    ".auth-num{text-align:right;font-variant-numeric:tabular-nums}" +
+    ".auth-row{cursor:pointer}" +
+    ".auth-row:hover td{background:rgba(124,58,237,.08)}" +
+    ".auth-row:focus{outline:2px solid rgba(124,58,237,.5);outline-offset:-2px}" +
+    ".auth-more{position:static;color:var(--mut2,#77809a);font-size:16px}" +
+    ".auth-row:hover .auth-more{color:#c4b5fd}" +
+    ".auth-src{display:inline-block;font-size:12px;color:var(--mut2,#77809a);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}" +
+    ".auth-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:6px}" +
+    ".auth-stat{background:rgba(255,255,255,.04);border:1px solid var(--line2,#2a2145);border-radius:12px;padding:12px 14px}" +
+    ".auth-stat-v{font-size:22px;font-weight:800;color:var(--white,#fff);line-height:1.1}" +
+    ".auth-stat-l{font-size:11.5px;color:var(--mut2,#77809a);margin-top:4px}" +
+    ".auth-sec-h{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#c4b5fd;font-weight:700;margin:18px 0 10px}" +
+    ".kw-wrap{display:flex;flex-wrap:wrap;gap:8px}" +
+    ".kw-chip{font-size:12.5px;color:var(--white,#fff);background:rgba(124,58,237,.16);border:1px solid rgba(196,181,253,.18);border-radius:20px;padding:4px 11px}" +
+    "@media(max-width:640px){.tchart-grid{grid-template-columns:1fr}.auth-grid{grid-template-columns:repeat(2,1fr)}}" +
     ".post-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}" +
     ".post-item{padding:11px 0;border-top:1px solid var(--line2,#2a2145)}" +
     ".post-item:first-child{border-top:none;padding-top:2px}" +
@@ -1871,7 +2071,7 @@
     "#view-admin>.sec,#view-dashboard>.sec{padding-top:34px}" +
     ".dash-table tbody tr:hover td{background:rgba(124,58,237,.06)}" +
     ".admin-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;margin-top:4px;min-height:62vh}" +
-    ".admin-nav{display:flex;flex-direction:column;gap:4px;align-self:stretch}" +
+    ".admin-nav{display:flex;flex-direction:column;gap:4px;align-self:start;position:sticky;top:20px;max-height:calc(100vh - 40px);overflow-y:auto}" +
     ".admin-nav-foot{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:6px}" +
     ".admin-nav-item{font:inherit;font-size:14.5px;font-weight:600;text-align:left;color:var(--mut,#9aa);background:none;border:none;border-radius:10px;padding:11px 14px;cursor:pointer;white-space:nowrap}" +
     ".admin-nav-item:hover{color:var(--white,#fff);background:rgba(255,255,255,.05)}" +

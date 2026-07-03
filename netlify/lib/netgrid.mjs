@@ -17,6 +17,23 @@ export async function resolveClientId(base, key, email) {
   return c ? c.id : null;
 }
 
+// Per-site overall SEO score over time (one series per site, oldest first).
+export async function fetchSeoHistory(base, key, id, opts) {
+  opts = opts || {};
+  const q = (opts.days ? 'days=' + encodeURIComponent(opts.days) : '') +
+    (opts.blogId ? (opts.days ? '&' : '') + 'blogId=' + encodeURIComponent(opts.blogId) : '');
+  const r = await fetch(base + '/api/v1/clients/' + encodeURIComponent(id) + '/seo-history' + (q ? '?' + q : ''), {
+    headers: { authorization: 'Bearer ' + key },
+  });
+  if (!r.ok) return { ok: false, status: r.status, sites: [] };
+  const d = await r.json().catch(() => ({}));
+  const sites = (d.sites || []).map(s => ({
+    blogId: s.blogId, domain: s.domain || '',
+    points: (s.points || []).map(p => ({ date: p.date, score: Number(p.score) || 0 })),
+  }));
+  return { ok: true, sites };
+}
+
 // Recent posts (articles) for a client, newest first.
 export async function fetchPosts(base, key, id, opts) {
   opts = opts || {};
