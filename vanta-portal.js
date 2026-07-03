@@ -538,11 +538,16 @@
     api("/admin-clients").then(function (res) {
       if (res.status === 401 || res.status === 403) { logout(); return; }
       var clients = (res.data && res.data.clients) || [];
-      api("/admin-plans").then(function (pres) {
-        var plans = normPlans((pres.data && pres.data.plans) || []);
-        host.innerHTML = adminHTML(clients);
-        wireCommon();
-        wireAdmin(clients, plans);
+      var pPlans = api("/admin-plans");
+      var pNg = api("/admin-netgrid").catch(function () { return { data: {} }; });
+      pPlans.then(function (pres) {
+        pNg.then(function (ngres) {
+          var plans = normPlans((pres.data && pres.data.plans) || []);
+          var ng = ngres.data && ngres.data.configured ? (ngres.data.clients || {}) : null;
+          host.innerHTML = adminHTML(clients, ng);
+          wireCommon();
+          wireAdmin(clients, plans);
+        });
       });
     }).catch(function () {
       host.innerHTML = '<div class="sec"><div class="wrap">' + topbar(t("adminTitle")) +
@@ -551,7 +556,15 @@
     });
   }
 
-  function adminHTML(clients) {
+  function adminHTML(clients, ng) {
+    function ngCell(email) {
+      if (!ng) return "";
+      var d = ng[email];
+      if (!d) return '<td class="dash-muted">—</td>';
+      var score = d.avgSeoScore == null ? '<span class="dash-muted">—</span>'
+        : '<span class="ng-score ' + seoClass(d.avgSeoScore) + '">' + Math.round(num(d.avgSeoScore)) + "</span>";
+      return "<td>" + score + (d.blogCount != null ? ' <span class="dash-muted">· ' + num(d.blogCount) + "</span>" : "") + "</td>";
+    }
     var rows = clients.length ? clients.map(function (c) {
       var si = subInfo(c);
       var renewal = si
@@ -564,11 +577,12 @@
         "<td>" + renewal + "</td>" +
         "<td>" + fmt(c.metrics && c.metrics.views) + "</td>" +
         "<td>" + fmt(c.metrics && c.metrics.articlesPublished) + "</td>" +
+        ngCell(c.email) +
         '<td class="dash-actions">' +
           '<button class="btn ghost sm vp-edit">' + esc(t("edit")) + "</button> " +
           '<button class="btn ghost sm vp-del">' + esc(t("del")) + "</button>" +
         "</td></tr>";
-    }).join("") : '<tr><td colspan="6" class="dash-empty">' + esc(t("noClients")) + "</td></tr>";
+    }).join("") : '<tr><td colspan="' + (ng ? 7 : 6) + '" class="dash-empty">' + esc(t("noClients")) + "</td></tr>";
 
     function navItem(id, label, on) {
       return '<button class="admin-nav-item' + (on ? " is-on" : "") + '" data-nav="' + id + '">' + esc(label) + "</button>";
@@ -597,7 +611,8 @@
               ' <a class="btn ghost" href="' + esc(LEADS_SHEET_URL) + '" target="_blank" rel="noopener">' + esc(t("viewLeads")) + "</a></div>" +
             '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
               "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("renewalCol")) +
-              "</th><th>" + esc(t("views")) + "</th><th>" + esc(t("published")) + "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
+              "</th><th>" + esc(t("views")) + "</th><th>" + esc(t("published")) + "</th>" +
+              (ng ? "<th>" + esc(t("ngSeoCol")) + "</th>" : "") + "<th></th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
           "</div>" +
           '<div class="dash-panel" data-panel="messages" style="display:none">' +
             '<div class="vpc-admin"><div class="vpc-list" id="vpChatList"><div class="dash-empty">…</div></div>' +
