@@ -1,11 +1,8 @@
-# Static asset long cache (immutable-ish; filename would change if the art changed)
-/og-card.png
-  Cache-Control: public, max-age=604800
-/apple-touch-icon.png
-  Cache-Control: public, max-age=604800
-
-# Everything else: always revalidate so deploys show immediately (ETag -> cheap 304),
-# plus baseline security headers (the site now carries a login).
+# Baseline for every response: always revalidate so deploys show immediately
+# (ETag -> cheap 304), plus security headers (the site now carries a login).
+# NOTE: Netlify applies matching rule blocks top-to-bottom; for a repeated header
+# the LAST matching block wins. So this wildcard goes FIRST and the long-cache
+# asset rules below override it for those specific files.
 /*
   Cache-Control: public, max-age=0, must-revalidate
   X-Content-Type-Options: nosniff
@@ -13,3 +10,9 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
   X-XSS-Protection: 0
+
+# Static art never changes without a filename change -> long cache (7 days).
+/og-card.png
+  Cache-Control: public, max-age=604800
+/apple-touch-icon.png
+  Cache-Control: public, max-age=604800
