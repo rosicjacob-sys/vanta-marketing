@@ -87,6 +87,17 @@ function ensureSchema() {
           created_at bigint
         )`;
       await sql`CREATE INDEX IF NOT EXISTS notifications_aud_idx ON notifications (audience, recipient, created_at)`;
+      await sql`
+        CREATE TABLE IF NOT EXISTS payment_claims (
+          id         bigserial PRIMARY KEY,
+          email      text NOT NULL,
+          name       text NOT NULL DEFAULT '',
+          plan       text NOT NULL DEFAULT '',
+          status     text NOT NULL DEFAULT 'pending',
+          claimed_at bigint,
+          decided_at bigint
+        )`;
+      await sql`CREATE INDEX IF NOT EXISTS payment_claims_status_idx ON payment_claims (status, claimed_at)`;
     })();
   }
   return _schema;
@@ -293,6 +304,53 @@ async function pgUnread(audience, recipient) {
   return Number(rows[0] && rows[0].n) || 0;
 }
 
+/* ===================== payment claims: Postgres ===================== */
+async function pgAddClaim(c) {
+  await ensureSchema();
+  await sqlc()`INSERT INTO payment_claims (email, name, plan, status, claimed_at)
+    VALUES (${normEmail(c.email)}, ${c.name || ''}, ${c.plan || ''}, 'pending', ${Date.now()})`;
+  return { ok: true };
+}
+async function pgListClaims() {
+  await ensureSchema();
+  const rows = await sqlc()`SELECT id, email, name, plan, status, claimed_at, decided_at
+    FROM payment_claims ORDER BY claimed_at DESC LIMIT 200`;
+  return rows.map(r => ({ id: Number(r.id), email: r.email, name: r.name, plan: r.plan, status: r.status,
+    claimedAt: Number(r.claimed_at) || 0, decidedAt: Number(r.decided_at) || 0 }));
+}
+async function pgResolveClaim(email, status) {
+  await ensureSchema();
+  await sqlc()`UPDATE payment_claims SET status = ${status}, decided_at = ${Date.now()}
+    WHERE id = (SELECT id FROM payment_claims WHERE email = ${normEmail(email)} AND status = 'pending' ORDER BY claimed_at DESC LIMIT 1)`;
+  return { ok: true };
+}
+
+/* ===================== payment claims: Blobs (fallback) ===================== */
+function claimStore() { return getStore({ name: 'vanta-claims', consistency: 'strong' }); }
+async function blobAddClaim(c) {
+  const st = claimStore();
+  const arr = (await st.get('all', { type: 'json' })) || [];
+  const id = arr.length ? arr[arr.length - 1].id + 1 : 1;
+  arr.push({ id, email: normEmail(c.email), name: c.name || '', plan: c.plan || '', status: 'pending', claimedAt: Date.now(), decidedAt: 0 });
+  if (arr.length > 200) arr.splice(0, arr.length - 200);
+  await st.setJSON('all', arr);
+  return { ok: true };
+}
+async function blobListClaims() {
+  const arr = (await claimStore().get('all', { type: 'json' })) || [];
+  return arr.slice().reverse();
+}
+async function blobResolveClaim(email, status) {
+  const st = claimStore();
+  const arr = (await st.get('all', { type: 'json' })) || [];
+  const e = normEmail(email);
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (arr[i].email === e && arr[i].status === 'pending') { arr[i].status = status; arr[i].decidedAt = Date.now(); break; }
+  }
+  await st.setJSON('all', arr);
+  return { ok: true };
+}
+
 /* ===================== notifications: Blobs (fallback) ===================== */
 function notifStore() { return getStore({ name: 'vanta-notifications', consistency: 'strong' }); }
 function notifKey(audience, recipient) { return audience + ':' + (recipient || ''); }
@@ -336,6 +394,10 @@ export function chatList()              { return usePg() ? pgChatList()         
 
 export function getPlans()        { return usePg() ? pgGetPlans()      : blobGetPlans(); }
 export function setPlans(plans)   { return usePg() ? pgSetPlans(plans) : blobSetPlans(plans); }
+
+export function addClaim(c)               { return usePg() ? pgAddClaim(c)      : blobAddClaim(c); }
+export function listClaims()              { return usePg() ? pgListClaims()     : blobListClaims(); }
+export function resolveClaim(email, s)    { return usePg() ? pgResolveClaim(email, s) : blobResolveClaim(email, s); }
 
 export function addNotification(n)          { return usePg() ? pgAddNotif(n)        : blobAddNotif(n); }
 export function listNotifications(a, r)     { return usePg() ? pgListNotif(a, r)    : blobListNotif(a, r); }

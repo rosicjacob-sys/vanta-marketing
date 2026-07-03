@@ -2,7 +2,8 @@
 //   { action: 'paid' }   -> file a payment claim (admin will verify)
 //   { action: 'snooze' } -> remind me later (snooze the expiry popup 24h)
 import { userFromRequest, json } from '../lib/auth.mjs';
-import { getUser, putUser, addNotification } from '../lib/store.mjs';
+import { getUser, putUser, addClaim } from '../lib/store.mjs';
+import { notifyAdmin } from '../lib/notify.mjs';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -27,10 +28,11 @@ export default async (req) => {
     user.claimStatus = 'pending';
     user.claimAt = Date.now();
     await putUser(user);
+    try { await addClaim({ email: user.email, name: user.name, plan: user.plan }); } catch (e) { /* best effort */ }
     try {
-      await addNotification({ audience: 'admin', recipient: '', title: 'Payment claim to verify',
-        body: (user.name || user.email) + ' says they paid' + (user.plan ? ' for ' + user.plan : '') + '. Verify in Payments.',
-        type: 'payment_claim' });
+      await notifyAdmin('Payment claim to verify',
+        (user.name || user.email) + ' says they paid' + (user.plan ? ' for ' + user.plan : '') + '. Verify in Payments.',
+        'payment_claim');
     } catch (e) { /* best effort */ }
     return json({ ok: true, claimStatus: 'pending' });
   }
