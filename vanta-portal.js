@@ -653,11 +653,10 @@
       pdata.push({ fx: +(x / W).toFixed(4), fy: +(y / H).toFixed(4), v: vals[i], d: series[i].date });
     }
     var gid = "tgrad-" + key;
-    var body;
-    if (n === 1) {
-      var one = line[0].split(",");
-      body = '<circle cx="' + one[0] + '" cy="' + one[1] + '" r="4" fill="' + color + '"/>';
-    } else {
+    // Body is empty for a single bucket — it's shown as the round HTML end-dot below
+    // (an SVG circle would be squashed into an ellipse by preserveAspectRatio="none").
+    var body = "";
+    if (n > 1) {
       var area = "M" + x0.toFixed(1) + "," + base + " L" + line.join(" L") + " L" + xn.toFixed(1) + "," + base + " Z";
       body = '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
           '<stop offset="0" stop-color="' + color + '" stop-opacity="0.28"/>' +
@@ -668,7 +667,11 @@
     }
     var svg = '<svg viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" class="tchart-svg" aria-hidden="true">' +
       body + "</svg>";
-    var overlay = '<span class="tchart-cross"></span><span class="tchart-dot" style="background:' + color +
+    // Persistent round end-cap dot anchoring the latest value (undistorted HTML).
+    var last = pdata[n - 1];
+    var endDot = '<span class="tchart-end" style="left:' + (last.fx * 100).toFixed(2) + "%;top:" +
+      (last.fy * 100).toFixed(2) + '%;background:' + color + '"></span>';
+    var overlay = '<span class="tchart-cross"></span>' + endDot + '<span class="tchart-dot" style="background:' + color +
       '"></span><span class="tchart-tip"></span>';
     var axis = n === 1
       ? '<div class="tchart-axis tchart-axis-1"><span>' + esc(chartDate(series[0].date)) + "</span></div>"
@@ -2014,12 +2017,13 @@
     ".tchart-svg{width:100%;height:96px;display:block;overflow:visible}" +
     ".tchart-cross{position:absolute;top:0;bottom:0;width:1px;background:rgba(196,181,253,.5);display:none;pointer-events:none;transform:translateX(-.5px)}" +
     ".tchart-dot{position:absolute;width:9px;height:9px;border-radius:50%;border:2px solid #100b24;display:none;pointer-events:none;transform:translate(-50%,-50%);box-shadow:0 0 0 1px rgba(255,255,255,.25)}" +
+    ".tchart-end{position:absolute;width:9px;height:9px;border-radius:50%;border:2px solid #100b24;pointer-events:none;transform:translate(-50%,-50%);box-shadow:0 0 0 1px rgba(255,255,255,.22)}" +
     ".tchart-tip{position:absolute;top:-6px;transform:translateY(-100%);display:none;pointer-events:none;background:#0a0817;border:1px solid var(--line2,#2a2145);border-radius:8px;padding:5px 9px;font-size:12px;color:var(--white,#fff);white-space:nowrap;z-index:5;box-shadow:0 8px 24px -8px rgba(0,0,0,.7)}" +
     ".tchart-tip b{font-weight:800}" +
     ".tchart-tip span{display:block;color:var(--mut2,#77809a);font-size:11px;margin-top:1px}" +
     ".tchart-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--mut2,#77809a)}" +
     ".tchart-axis-1{justify-content:center}" +
-    ".bchart{display:flex;align-items:flex-end;gap:8px;height:170px}" +
+    ".bchart{display:flex;align-items:flex-end;gap:8px;height:186px;padding-top:26px}" +
     ".bchart-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;min-width:0}" +
     ".bchart-barwrap{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;position:relative}" +
     ".bchart-bar{position:relative;width:100%;max-width:34px;min-height:3px;border-radius:7px 7px 0 0;background:linear-gradient(180deg,#7c3aed,#4f46e5);transition:filter .12s}" +
