@@ -15,17 +15,19 @@ export default async (req) => {
 
   const headers = { authorization: 'Bearer ' + key };
   const email = u.sub || u.email || '';
+  const days = (new URL(req.url).searchParams.get('days') || '').trim();
+  const win = days ? '?days=' + encodeURIComponent(days) : '';
 
   try {
     // 1. Resolve the logged-in client to their netgrid client by email.
-    const listRes = await fetch(base + '/api/v1/clients?email=' + encodeURIComponent(email), { headers });
+    const listRes = await fetch(base + '/api/v1/clients?email=' + encodeURIComponent(email) + (days ? '&days=' + encodeURIComponent(days) : ''), { headers });
     if (!listRes.ok) return json({ configured: true, ok: false, status: listRes.status, client: null, sites: [] });
     const list = await listRes.json().catch(() => ({}));
     const found = (list.clients || [])[0];
     if (!found) return json({ configured: true, ok: true, client: null, sites: [] });
 
-    // 2. Pull that client's sites + SEO scores.
-    const detRes = await fetch(base + '/api/v1/clients/' + encodeURIComponent(found.id), { headers });
+    // 2. Pull that client's sites + SEO scores (traffic windowed by ?days).
+    const detRes = await fetch(base + '/api/v1/clients/' + encodeURIComponent(found.id) + win, { headers });
     if (!detRes.ok) return json({ configured: true, ok: false, status: detRes.status, client: found, sites: [] });
     const d = await detRes.json().catch(() => ({}));
 

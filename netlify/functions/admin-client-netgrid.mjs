@@ -12,18 +12,21 @@ export default async (req) => {
   const key = process.env.NETGRID_API_KEY || '';
   if (!base || !key) return json({ configured: false, client: null, sites: [] });
 
-  const email = (new URL(req.url).searchParams.get('email') || '').trim();
+  const sp = new URL(req.url).searchParams;
+  const email = (sp.get('email') || '').trim();
   if (!email) return json({ configured: true, ok: false, error: 'missing_email', client: null, sites: [] });
+  const days = (sp.get('days') || '').trim();
+  const win = days ? '?days=' + encodeURIComponent(days) : '';
 
   const headers = { authorization: 'Bearer ' + key };
   try {
-    const listRes = await fetch(base + '/api/v1/clients?email=' + encodeURIComponent(email), { headers });
+    const listRes = await fetch(base + '/api/v1/clients?email=' + encodeURIComponent(email) + (days ? '&days=' + encodeURIComponent(days) : ''), { headers });
     if (!listRes.ok) return json({ configured: true, ok: false, status: listRes.status, client: null, sites: [] });
     const list = await listRes.json().catch(() => ({}));
     const found = (list.clients || [])[0];
     if (!found) return json({ configured: true, ok: true, client: null, sites: [] });
 
-    const detRes = await fetch(base + '/api/v1/clients/' + encodeURIComponent(found.id), { headers });
+    const detRes = await fetch(base + '/api/v1/clients/' + encodeURIComponent(found.id) + win, { headers });
     if (!detRes.ok) return json({ configured: true, ok: false, status: detRes.status, client: found, sites: [] });
     const d = await detRes.json().catch(() => ({}));
 

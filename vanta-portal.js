@@ -107,6 +107,9 @@
     ngLatestCol:{ en: "Latest post",           fr: "Dernier article" },
     ngNoScan:   { en: "Not scanned yet",       fr: "Pas encore analysé" },
     ngNoPost:   { en: "No posts yet",          fr: "Aucun article" },
+    trTitle:    { en: "Traffic over time",     fr: "Trafic dans le temps" },
+    rngAll:     { en: "All time",              fr: "Depuis le début" },
+    rng30:      { en: "30 days",               fr: "30 jours" },
     cdView:     { en: "View",                  fr: "Voir" },
     cdBack:     { en: "Back to clients",       fr: "Retour aux clients" },
     cdReal:     { en: "Real data",             fr: "Données réelles" },
@@ -418,40 +421,64 @@
   }
 
   // ================= CLIENT DASHBOARD =================
+  // Cached client-data so the range toggle can re-render without re-fetching it.
+  var _cUser = null, _cM = null, _cPlanLink = "", _cDays = "";
   function renderClient() {
     if (!requireRole("client")) return;
     var host = el("view-dashboard");
     if (!host) return;
     host.innerHTML = '<div class="sec"><div class="wrap"><p class="lead">…</p></div></div>';
     showView("view-dashboard");
+    _cUser = null; _cM = null; _cPlanLink = ""; _cDays = "";
 
-    var pData = api("/client-data");
-    var pNg = api("/client-netgrid").catch(function () { return { data: {} }; });
-    pData.then(function (res) {
+    api("/client-data").then(function (res) {
       if (res.status === 401) { logout(); return; }
-      var user = (res.data && res.data.user) || {};
-      var m = user.metrics || {};
-      pNg.then(function (nres) {
-        var d = nres.data || {};
-        var ng = (d.configured && d.ok && d.client) ? d.client : null;
-        var ngSites = ng ? (d.sites || []) : [];
-        host.innerHTML = clientHTML(user, m, ng, ngSites);
-        wireCommon();
-        host.querySelectorAll(".dash-stat-click").forEach(function (tl) {
-          tl.onclick = function () { openSiteModal(tl.getAttribute("data-modal"), ngSites); };
-        });
-        try { if (window.__chatIdentify) window.__chatIdentify(user.name, user.email); } catch (e) {}
-        // Auto-load this client's past chat messages into the floating chat.
-        api("/client-chat").then(function (cr) {
-          var cd = cr.data || {};
-          if (window.__chatBind && cd.cid) window.__chatBind({ cid: cd.cid, messages: cd.messages || [], name: user.name, email: user.email });
-        }).catch(function () {});
-        maybeShowExpiry(user, (res.data && res.data.planLink) || "");
-      });
+      _cUser = (res.data && res.data.user) || {};
+      _cM = _cUser.metrics || {};
+      _cPlanLink = (res.data && res.data.planLink) || "";
+      renderClientBody("", false);
     }).catch(function () {
       host.innerHTML = '<div class="sec"><div class="wrap">' + topbar(getName() || "") +
         '<p class="lead">' + esc(t("netErr")) + '</p></div></div>';
       wireCommon();
+    });
+  }
+  // Renders (or re-renders on range toggle) the dashboard body. isToggle=true skips
+  // the one-time chat bind + expiry prompt and only refreshes the data/charts.
+  function renderClientBody(days, isToggle) {
+    var host = el("view-dashboard");
+    if (!host) return;
+    _cDays = days = String(days || "");
+    var user = _cUser || {}, m = _cM || {};
+    var win = days ? "?days=" + encodeURIComponent(days) : "";
+    var pNg = api("/client-netgrid" + win).catch(function () { return { data: {} }; });
+    var pTr = api("/client-traffic" + win).catch(function () { return { data: {} }; });
+    pNg.then(function (nres) {
+      pTr.then(function (tres) {
+        var d = nres.data || {};
+        var ng = (d.configured && d.ok && d.client) ? d.client : null;
+        var ngSites = ng ? (d.sites || []) : [];
+        var td = tres.data || {};
+        var traffic = (td.configured && td.ok) ? (td.series || []) : [];
+        host.innerHTML = clientHTML(user, m, ng, ngSites, traffic, days);
+        wireCommon();
+        wireCharts(host);
+        host.querySelectorAll(".dash-stat-click").forEach(function (tl) {
+          tl.onclick = function () { openSiteModal(tl.getAttribute("data-modal"), ngSites); };
+        });
+        host.querySelectorAll(".rng-btn").forEach(function (bn) {
+          bn.onclick = function () { if (bn.getAttribute("data-days") !== _cDays) renderClientBody(bn.getAttribute("data-days"), true); };
+        });
+        if (!isToggle) {
+          try { if (window.__chatIdentify) window.__chatIdentify(user.name, user.email); } catch (e) {}
+          // Auto-load this client's past chat messages into the floating chat.
+          api("/client-chat").then(function (cr) {
+            var cd = cr.data || {};
+            if (window.__chatBind && cd.cid) window.__chatBind({ cid: cd.cid, messages: cd.messages || [], name: user.name, email: user.email });
+          }).catch(function () {});
+          maybeShowExpiry(user, _cPlanLink);
+        }
+      });
     });
   }
 
@@ -460,7 +487,7 @@
   var NG_REAL_CARDS = [
     ["seo", "ngAvgSeo"], ["sites", "ngSitesN"], ["active", "ngActiveN"],
     ["posts", "cdTotalPosts"], ["rviews", "cdViews"], ["rclicks", "cdClicks"],
-    ["sitelist", "ngSiteList"],
+    ["sitelist", "ngSiteList"], ["traffic", "trTitle"],
   ];
   var NG_MANUAL_CARDS = [
     ["mviews", "views"], ["mclicks", "clicks"], ["mai", "ai"],
@@ -524,6 +551,122 @@
     if (!d) return "";
     return /^https?:\/\//i.test(d) ? d : "https://" + d;
   }
+  // Short axis date, e.g. "Jun 4".
+  function chartDate(iso) {
+    if (!iso) return "";
+    try { return new Date(iso).toLocaleDateString(FR() ? "fr-CA" : "en-CA", { month: "short", day: "numeric" }); }
+    catch (e) { return ""; }
+  }
+  // Tiny inline sparkline for a stat tile. Single series, no axes. "" if < 2 points.
+  function sparkline(vals, color) {
+    vals = (vals || []).map(num);
+    var n = vals.length;
+    if (n < 2) return "";
+    var W = 100, H = 26, m = 2;
+    var max = 0, min = Infinity;
+    for (var k = 0; k < n; k++) { if (vals[k] > max) max = vals[k]; if (vals[k] < min) min = vals[k]; }
+    var range = (max - min) || 1;
+    var pts = [];
+    for (var i = 0; i < n; i++) {
+      var x = m + (i / (n - 1)) * (W - 2 * m);
+      var y = m + (1 - (vals[i] - min) / range) * (H - 2 * m);
+      pts.push(x.toFixed(1) + "," + y.toFixed(1));
+    }
+    return '<span class="vp-spark"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+      '<polyline points="' + pts.join(" ") + '" fill="none" stroke="' + color +
+      '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></span>';
+  }
+  // Single-series area+line chart (never dual-axis). Title names the series (no legend).
+  // Points are embedded as data-pts for the hover crosshair wired by wireCharts().
+  function lineChart(series, key, color, title) {
+    series = series || [];
+    var n = series.length, vals = [];
+    for (var j = 0; j < n; j++) vals.push(num(series[j][key]));
+    var head = '<div class="tchart-head"><span class="tchart-title">' + esc(title) + "</span>" +
+      (n ? '<span class="tchart-last">' + fmt(vals[n - 1]) + "</span>" : "") + "</div>";
+    if (n < 2) return '<div class="tchart">' + head + '<div class="dash-empty">' + esc(t("noData")) + "</div></div>";
+    var W = 320, H = 90, mx = 6, my = 8, base = H - my;
+    var max = 0; for (var a = 0; a < n; a++) max = Math.max(max, vals[a]); max = max || 1;
+    var line = [], pdata = [], x0 = 0, xn = 0;
+    for (var i = 0; i < n; i++) {
+      var x = mx + (i / (n - 1)) * (W - 2 * mx);
+      var y = my + (1 - vals[i] / max) * (H - 2 * my);
+      if (i === 0) x0 = x; if (i === n - 1) xn = x;
+      line.push(x.toFixed(1) + "," + y.toFixed(1));
+      pdata.push({ fx: +(x / W).toFixed(4), fy: +(y / H).toFixed(4), v: vals[i], d: series[i].date });
+    }
+    var area = "M" + x0.toFixed(1) + "," + base + " L" + line.join(" L") + " L" + xn.toFixed(1) + "," + base + " Z";
+    var gid = "tgrad-" + key;
+    var svg = '<svg viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" class="tchart-svg" aria-hidden="true">' +
+      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="' + color + '" stop-opacity="0.28"/>' +
+        '<stop offset="1" stop-color="' + color + '" stop-opacity="0"/></linearGradient></defs>' +
+      '<path d="' + area + '" fill="url(#' + gid + ')"/>' +
+      '<polyline points="' + line.join(" ") + '" fill="none" stroke="' + color +
+      '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
+    var overlay = '<span class="tchart-cross"></span><span class="tchart-dot" style="background:' + color +
+      '"></span><span class="tchart-tip"></span>';
+    var axis = '<div class="tchart-axis"><span>' + esc(chartDate(series[0].date)) + "</span><span>" +
+      esc(chartDate(series[n - 1].date)) + "</span></div>";
+    return '<div class="tchart">' + head +
+      '<div class="tchart-plot" data-pts="' + esc(JSON.stringify(pdata)) + '" data-label="' + esc(title) + '">' +
+      svg + overlay + "</div>" + axis + "</div>";
+  }
+  // Traffic card: two small single-series charts (views + clicks), never dual-axis.
+  function trafficCardHTML(series) {
+    return '<div class="dash-card ng-card"><h3>' + esc(t("trTitle")) + "</h3>" +
+      '<div class="tchart-grid">' +
+        lineChart(series, "views", "#7c3aed", t("cdViews")) +
+        lineChart(series, "clicks", "#e8409b", t("cdClicks")) +
+      "</div></div>";
+  }
+  // Range toggle (all-time vs 30 days). data-days: ""=all, "30".
+  function rangeToggleHTML(days) {
+    days = String(days == null ? "" : days);
+    function b(val, lbl) {
+      return '<button type="button" class="rng-btn' + (days === val ? " is-on" : "") +
+        '" data-days="' + val + '">' + esc(lbl) + "</button>";
+    }
+    return '<div class="rng-toggle">' + b("", t("rngAll")) + b("30", t("rng30")) + "</div>";
+  }
+  // Attach hover crosshair + tooltip to every .tchart-plot within root.
+  function wireCharts(root) {
+    (root || document).querySelectorAll(".tchart-plot").forEach(function (plot) {
+      var pts; try { pts = JSON.parse(plot.getAttribute("data-pts") || "[]"); } catch (e) { pts = []; }
+      if (!pts.length) return;
+      var cross = plot.querySelector(".tchart-cross");
+      var dot = plot.querySelector(".tchart-dot");
+      var tip = plot.querySelector(".tchart-tip");
+      var label = plot.getAttribute("data-label") || "";
+      function move(e) {
+        var r = plot.getBoundingClientRect();
+        if (!r.width) return;
+        var cx = ((e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX) - r.left;
+        var frac = cx / r.width;
+        var best = 0, bd = 2;
+        for (var i = 0; i < pts.length; i++) { var dd = Math.abs(pts[i].fx - frac); if (dd < bd) { bd = dd; best = i; } }
+        var p = pts[best], px = p.fx * r.width, py = p.fy * r.height;
+        if (cross) { cross.style.left = px + "px"; cross.style.display = "block"; }
+        if (dot) { dot.style.left = px + "px"; dot.style.top = py + "px"; dot.style.display = "block"; }
+        if (tip) {
+          tip.innerHTML = "<b>" + fmt(p.v) + "</b> " + esc(label) + "<span>" + esc(chartDate(p.d)) + "</span>";
+          tip.style.display = "block";
+          var lx = Math.max(0, Math.min(r.width - tip.offsetWidth, px - tip.offsetWidth / 2));
+          tip.style.left = lx + "px";
+        }
+      }
+      function leave() {
+        if (cross) cross.style.display = "none";
+        if (dot) dot.style.display = "none";
+        if (tip) tip.style.display = "none";
+      }
+      plot.addEventListener("mousemove", move);
+      plot.addEventListener("mouseleave", leave);
+      plot.addEventListener("touchstart", move);
+      plot.addEventListener("touchmove", move);
+      plot.addEventListener("touchend", leave);
+    });
+  }
   // Clickable list of the client's blog sites (domain links out to the site).
   function clientSitesHTML(sites) {
     sites = sites || [];
@@ -585,8 +728,9 @@
     host.querySelector("#vpSiteX").onclick = close;
     host.querySelector("#vpSiteBg").onclick = function (e) { if (e.target === host.querySelector("#vpSiteBg")) close(); };
   }
-  function clientHTML(user, m, ng, ngSites) {
+  function clientHTML(user, m, ng, ngSites, traffic, days) {
     var name = user.name || getName() || "";
+    traffic = traffic || [];
     var vis = user.visible;
     function show(k) { return showCard(k, vis); }
     var change = num(m.viewsChangePct);
@@ -607,14 +751,19 @@
       if (show("sites")) tiles += stat(num(ng.blogCount), t("ngSitesN"), "", canDrill ? "sites" : "");
       if (show("active")) tiles += stat(ng.activeBlogCount == null ? "—" : num(ng.activeBlogCount), t("ngActiveN"), "", canDrill ? "active" : "");
       if (show("posts") && ng.postCount != null) tiles += stat(fmt(ng.postCount), t("cdTotalPosts"), "");
-      if (show("rviews") && ng.views != null) tiles += stat(fmt(ng.views), t("cdViews"), "");
-      if (show("rclicks") && ng.clicks != null) tiles += stat(fmt(ng.clicks), t("cdClicks"), "");
+      if (show("rviews") && ng.views != null) tiles += stat(fmt(ng.views), t("cdViews"), sparkline(traffic.map(function (p) { return p.views; }), "#7c3aed"));
+      if (show("rclicks") && ng.clicks != null) tiles += stat(fmt(ng.clicks), t("cdClicks"), sparkline(traffic.map(function (p) { return p.clicks; }), "#e8409b"));
     }
     if (show("mviews")) tiles += stat(fmt(m.views), t("views"), '<span class="dash-delta ' + changeCls + '">' + changeTxt + "</span>");
     if (show("mclicks")) tiles += stat(fmt(m.profileClicks), t("clicks"), "");
     if (show("mai")) tiles += stat(fmt(m.aiCitations), t("ai"), "");
     if (show("mpublished")) tiles += stat(fmt(m.articlesPublished), t("published"), '<span class="dash-sub">' + fmt(m.articlesUpcoming) + " " + t("upcoming") + "</span>");
+    // Range toggle (all-time vs 30 days) — governs the real traffic-based cards/charts.
+    if (ng && (show("rviews") || show("rclicks") || show("traffic"))) out += '<div class="rng-bar">' + rangeToggleHTML(days) + "</div>";
     if (tiles) out += '<div class="dash-stats">' + tiles + "</div>";
+
+    // Views/clicks over time — two small single-series charts.
+    if (show("traffic") && ng) out += trafficCardHTML(traffic);
 
     // Clickable list of blog sites.
     if (show("sitelist") && ngSites && ngSites.length) out += clientSitesHTML(ngSites);
@@ -649,25 +798,52 @@
         '<div class="dash-card"><h3>' + esc(t("sources")) + "</h3>" + sourceList(m.sources) + "</div>" +
       "</div>";
   }
-  function cdRealHTML(d) {
+  function cdRealHTML(d, traffic, days) {
     d = d || {};
     if (!d.configured) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoNetgrid")) + "</div></div>";
     if (!d.ok || !d.client) return '<div class="dash-card"><div class="dash-empty">' + esc(t("cdNoMatch")) + "</div></div>";
+    traffic = traffic || [];
     var c = d.client;
     var seoVal = seoBig(c.avgSeoScore);
     var ctr = (c.views != null && num(c.views) > 0) ? (num(c.clicks) / num(c.views) * 100).toFixed(1) + "%" : "—";
     var activeSub = c.activeBlogCount == null ? "" : num(c.activeBlogCount) + " " + esc(t("cdActiveLc"));
     var dash = function (v) { return v == null ? "—" : fmt(v); };
-    return '<div class="dash-stats">' +
+    return '<div class="rng-bar">' + rangeToggleHTML(days) + "</div>" +
+      '<div class="dash-stats">' +
       cdStat(seoVal, t("cdOverallSeo")) +
       cdStat(dash(c.postCount), t("cdTotalPosts")) +
       cdStat(dash(c.postsLast30Days), t("cdPosts30")) +
       cdStat(num(c.blogCount), t("cdBlogSites"), activeSub) +
-      cdStat(dash(c.views), t("cdViews")) +
-      cdStat(dash(c.clicks), t("cdClicks")) +
+      cdStat(dash(c.views), t("cdViews"), sparkline(traffic.map(function (p) { return p.views; }), "#7c3aed")) +
+      cdStat(dash(c.clicks), t("cdClicks"), sparkline(traffic.map(function (p) { return p.clicks; }), "#e8409b")) +
       cdStat(ctr, t("cdCtr")) +
       cdStat(c.lastPostAt ? esc(ngDate(c.lastPostAt)) : "—", t("cdLastPost")) +
-      "</div>";
+      "</div>" +
+      trafficCardHTML(traffic);
+  }
+  // Loads (or reloads on range toggle) the admin Real-data tab for a client.
+  function loadCdReal(email, days) {
+    var host = el("cdReal");
+    if (!host) return;
+    days = String(days || "");
+    var win = days ? "&days=" + encodeURIComponent(days) : "";
+    var em = encodeURIComponent(email || "");
+    var pNg = api("/admin-client-netgrid?email=" + em + win).catch(function () { return { data: {} }; });
+    var pTr = api("/admin-client-traffic?email=" + em + win).catch(function () { return { data: {} }; });
+    pNg.then(function (res) {
+      pTr.then(function (tres) {
+        var host2 = el("cdReal"); if (!host2) return;
+        var td = tres.data || {};
+        var traffic = (td.configured && td.ok) ? (td.series || []) : [];
+        host2.innerHTML = cdRealHTML(res.data || {}, traffic, days);
+        wireCharts(host2);
+        host2.querySelectorAll(".rng-btn").forEach(function (bn) {
+          bn.onclick = function () { if (bn.getAttribute("data-days") !== days) loadCdReal(email, bn.getAttribute("data-days")); };
+        });
+      });
+    }).catch(function () {
+      var host2 = el("cdReal"); if (host2) host2.innerHTML = '<div class="dash-card"><div class="dash-empty">' + esc(t("netErr")) + "</div></div>";
+    });
   }
   function openClientDetail(c, onEdit) {
     var main = el("vpClientsMain"), det = el("vpClientDetail");
@@ -703,11 +879,7 @@
         el("cdManual").style.display = tab === "manual" ? "" : "none";
       };
     });
-    api("/admin-client-netgrid?email=" + encodeURIComponent(c.email || "")).then(function (res) {
-      var host = el("cdReal"); if (host) host.innerHTML = cdRealHTML(res.data || {});
-    }).catch(function () {
-      var host = el("cdReal"); if (host) host.innerHTML = '<div class="dash-card"><div class="dash-empty">' + esc(t("netErr")) + "</div></div>";
-    });
+    loadCdReal(c.email || "", "");
   }
   // Eye-toggle modal: pick which individual cards the client sees.
   function openVisibilityModal(c) {
@@ -1544,6 +1716,27 @@
     ".ng-table td{font-size:13px}" +
     ".ng-site-link{color:#c4b5fd;font-weight:700;text-decoration:none;white-space:nowrap}" +
     ".ng-site-link:hover{text-decoration:underline}" +
+    ".vp-spark{display:block;margin-top:8px;height:26px}" +
+    ".vp-spark svg{width:100%;height:26px;display:block}" +
+    ".rng-bar{display:flex;justify-content:flex-end;margin:0 0 14px}" +
+    ".rng-toggle{display:inline-flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--line2,#2a2145);border-radius:10px;padding:3px}" +
+    ".rng-btn{font:inherit;font-size:12.5px;font-weight:600;color:var(--mut,#9aa);background:none;border:none;border-radius:8px;padding:6px 13px;cursor:pointer}" +
+    ".rng-btn:hover{color:var(--white,#fff)}" +
+    ".rng-btn.is-on{color:var(--white,#fff);background:rgba(124,58,237,.28)}" +
+    ".tchart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}" +
+    ".tchart{min-width:0}" +
+    ".tchart-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}" +
+    ".tchart-title{font-size:13px;color:var(--mut,#9aa);font-weight:600}" +
+    ".tchart-last{font-size:17px;font-weight:800;color:var(--white,#fff)}" +
+    ".tchart-plot{position:relative;height:96px}" +
+    ".tchart-svg{width:100%;height:96px;display:block;overflow:visible}" +
+    ".tchart-cross{position:absolute;top:0;bottom:0;width:1px;background:rgba(196,181,253,.5);display:none;pointer-events:none;transform:translateX(-.5px)}" +
+    ".tchart-dot{position:absolute;width:9px;height:9px;border-radius:50%;border:2px solid #100b24;display:none;pointer-events:none;transform:translate(-50%,-50%);box-shadow:0 0 0 1px rgba(255,255,255,.25)}" +
+    ".tchart-tip{position:absolute;top:-6px;transform:translateY(-100%);display:none;pointer-events:none;background:#0a0817;border:1px solid var(--line2,#2a2145);border-radius:8px;padding:5px 9px;font-size:12px;color:var(--white,#fff);white-space:nowrap;z-index:5;box-shadow:0 8px 24px -8px rgba(0,0,0,.7)}" +
+    ".tchart-tip b{font-weight:800}" +
+    ".tchart-tip span{display:block;color:var(--mut2,#77809a);font-size:11px;margin-top:1px}" +
+    ".tchart-axis{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--mut2,#77809a)}" +
+    "@media(max-width:640px){.tchart-grid{grid-template-columns:1fr}}" +
     ".dash-stat-click{position:relative;cursor:pointer;transition:border-color .12s,background .12s}" +
     ".dash-stat-click:hover{border-color:var(--royal,#7c3aed);background:linear-gradient(180deg,rgba(124,58,237,.12),#0c0918)}" +
     ".dash-stat-more{position:absolute;top:14px;right:16px;color:var(--mut2,#77809a);font-size:18px;line-height:1}" +
