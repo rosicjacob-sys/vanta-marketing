@@ -77,6 +77,7 @@ function ensureSchema() {
       await sql`ALTER TABLE clients ADD COLUMN IF NOT EXISTS snooze_until bigint`;
       await sql`ALTER TABLE clients ADD COLUMN IF NOT EXISTS reminder_sent_for text`;
       await sql`ALTER TABLE clients ADD COLUMN IF NOT EXISTS expired_notified_for text`;
+      await sql`ALTER TABLE clients ADD COLUMN IF NOT EXISTS visible jsonb`;
       await sql`
         CREATE TABLE IF NOT EXISTS notifications (
           id         bigserial PRIMARY KEY,
@@ -134,6 +135,7 @@ function rowToUser(r) {
     snoozeUntil: Number(r.snooze_until) || 0,
     reminderSentFor: r.reminder_sent_for || '',
     expiredNotifiedFor: r.expired_notified_for || '',
+    visible: Array.isArray(r.visible) ? r.visible : null,
     createdAt: Number(r.created_at) || 0,
     updatedAt: Number(r.updated_at) || 0,
   };
@@ -148,22 +150,23 @@ async function pgPut(user) {
   await ensureSchema();
   const email = normEmail(user.email);
   const metrics = JSON.stringify(user.metrics || {});
+  const visible = Array.isArray(user.visible) ? JSON.stringify(user.visible) : null;
   await sqlc()`
     INSERT INTO clients (email, name, plan, role, pw_hash, metrics, availed_at, period,
                          claim_status, claim_at, snooze_until, reminder_sent_for, expired_notified_for,
-                         created_at, updated_at)
+                         visible, created_at, updated_at)
     VALUES (${email}, ${user.name || ''}, ${user.plan || ''}, ${user.role || 'client'},
             ${user.pwHash || ''}, ${metrics}::jsonb, ${user.availedAt || ''}, ${user.period || ''},
             ${user.claimStatus || ''}, ${user.claimAt || null}, ${user.snoozeUntil || null},
             ${user.reminderSentFor || ''}, ${user.expiredNotifiedFor || ''},
-            ${user.createdAt || Date.now()}, ${user.updatedAt || null})
+            ${visible}::jsonb, ${user.createdAt || Date.now()}, ${user.updatedAt || null})
     ON CONFLICT (email) DO UPDATE SET
       name = EXCLUDED.name, plan = EXCLUDED.plan, role = EXCLUDED.role,
       pw_hash = EXCLUDED.pw_hash, metrics = EXCLUDED.metrics,
       availed_at = EXCLUDED.availed_at, period = EXCLUDED.period,
       claim_status = EXCLUDED.claim_status, claim_at = EXCLUDED.claim_at, snooze_until = EXCLUDED.snooze_until,
       reminder_sent_for = EXCLUDED.reminder_sent_for, expired_notified_for = EXCLUDED.expired_notified_for,
-      updated_at = EXCLUDED.updated_at`;
+      visible = EXCLUDED.visible, updated_at = EXCLUDED.updated_at`;
   return { ...user, email };
 }
 async function pgDelete(email) {

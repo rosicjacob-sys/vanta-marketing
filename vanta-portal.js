@@ -100,12 +100,7 @@
     ngAvgSeo:   { en: "Avg SEO score",         fr: "Score SEO moyen" },
     ngSitesN:   { en: "Sites",                 fr: "Sites" },
     ngActiveN:  { en: "Active",                fr: "Actifs" },
-    ngSiteCol:  { en: "Site",                  fr: "Site" },
     ngSeoCol:   { en: "SEO",                   fr: "SEO" },
-    ngLatestCol:{ en: "Latest post",           fr: "Dernier article" },
-    ngNoScan:   { en: "Not scanned yet",       fr: "Pas encore analysé" },
-    ngNoPost:   { en: "No posts yet",          fr: "Aucun article" },
-    ngNone:     { en: "No sites connected yet.", fr: "Aucun site connecté." },
     cdView:     { en: "View",                  fr: "Voir" },
     cdBack:     { en: "Back to clients",       fr: "Retour aux clients" },
     cdReal:     { en: "Real data",             fr: "Données réelles" },
@@ -114,7 +109,6 @@
     cdManualSub:{ en: "Numbers you enter",     fr: "Chiffres que vous saisissez" },
     cdOverallSeo:{ en: "Overall SEO score",    fr: "Score SEO global" },
     cdBlogSites:{ en: "Blog sites",            fr: "Sites de blogue" },
-    cdActiveSites:{ en: "Active sites",        fr: "Sites actifs" },
     cdActiveLc: { en: "active",                fr: "actifs" },
     cdTotalPosts:{ en: "Total posts",          fr: "Articles publiés" },
     cdPosts30:  { en: "Posts (30 days)",       fr: "Articles (30 j)" },
@@ -124,6 +118,13 @@
     cdLastPost: { en: "Latest post",           fr: "Dernier article" },
     cdNoNetgrid:{ en: "netgrid isn't connected yet — set NETGRID_API_URL and NETGRID_API_KEY.", fr: "netgrid n'est pas connecté — configurez NETGRID_API_URL et NETGRID_API_KEY." },
     cdNoMatch:  { en: "No netgrid data for this client — their email isn't matched to a netgrid account.", fr: "Aucune donnée netgrid pour ce client — son courriel ne correspond à aucun compte netgrid." },
+    visSection: { en: "What this client sees",  fr: "Ce que ce client voit" },
+    visHint:    { en: "Choose which data blocks appear on this client's dashboard.", fr: "Choisissez les blocs de données affichés sur le tableau de bord de ce client." },
+    visReal:    { en: "Real data (from netgrid)", fr: "Données réelles (netgrid)" },
+    visRealSub: { en: "SEO score, sites, posts & traffic", fr: "Score SEO, sites, articles et trafic" },
+    visManual:  { en: "Reported data",         fr: "Données rapportées" },
+    visManualSub:{ en: "The metrics you enter below", fr: "Les chiffres que vous saisissez ci-dessous" },
+    refreshNote:{ en: "Data refreshes weekly.", fr: "Les données sont actualisées chaque semaine." },
     settingsTab:{ en: "Settings",            fr: "Paramètres" },
     setHint:    { en: "Configure reminder timing and the emails clients receive. Placeholders: {name} {plan} {date} {days} {brand} {link} (the client's plan checkout link).", fr: "Configurez le moment des rappels et les courriels reçus par les clients. Variables : {name} {plan} {date} {days} {brand} {link} (lien de paiement du forfait du client)." },
     setLeadDays:{ en: "Send renewal reminder this many days before expiry", fr: "Envoyer le rappel de renouvellement ce nombre de jours avant l'expiration" },
@@ -415,19 +416,30 @@
     host.innerHTML = '<div class="sec"><div class="wrap"><p class="lead">…</p></div></div>';
     showView("view-dashboard");
 
-    api("/client-data").then(function (res) {
+    var pData = api("/client-data");
+    var pNg = api("/client-netgrid").catch(function () { return { data: {} }; });
+    pData.then(function (res) {
       if (res.status === 401) { logout(); return; }
       var user = (res.data && res.data.user) || {};
       var m = user.metrics || {};
-      host.innerHTML = clientHTML(user, m);
-      wireCommon();
-      loadNetgrid();
-      maybeShowExpiry(user, (res.data && res.data.planLink) || "");
+      pNg.then(function (nres) {
+        var d = nres.data || {};
+        var ng = (d.configured && d.ok && d.client) ? d.client : null;
+        host.innerHTML = clientHTML(user, m, ng);
+        wireCommon();
+        maybeShowExpiry(user, (res.data && res.data.planLink) || "");
+      });
     }).catch(function () {
       host.innerHTML = '<div class="sec"><div class="wrap">' + topbar(getName() || "") +
         '<p class="lead">' + esc(t("netErr")) + '</p></div></div>';
       wireCommon();
     });
+  }
+
+  // Which dashboard blocks a client sees. Default (unset) = both.
+  var VIS_DEFAULT = ["real", "manual"];
+  function showGroup(key, vis) {
+    return Array.isArray(vis) ? vis.indexOf(key) >= 0 : VIS_DEFAULT.indexOf(key) >= 0;
   }
 
   function bars(series) {
@@ -471,70 +483,57 @@
     return out + "</ul>";
   }
 
-  function clientHTML(user, m) {
-    var name = user.name || getName() || "";
-    var change = num(m.viewsChangePct);
-    var changeTxt = (change > 0 ? "▲ " : change < 0 ? "▼ " : "") + Math.abs(change) + "% " + t("vsPrev");
-    var changeCls = change > 0 ? "up" : change < 0 ? "down" : "";
-    return '<div class="sec"><div class="wrap">' +
-      topbar(name || "") +
-      (user.plan ? '<div class="dash-plan">' + esc(t("yourPlan")) + ': <b>' + esc(user.plan) + "</b></div>" : "") +
-      subBanner(user) +
-      '<div class="dash-stats">' +
-        stat(fmt(m.views), t("views"), '<span class="dash-delta ' + changeCls + '">' + changeTxt + "</span>") +
-        stat(fmt(m.profileClicks), t("clicks"), "") +
-        stat(fmt(m.aiCitations), t("ai"), "") +
-        stat(fmt(m.articlesPublished), t("published"), '<span class="dash-sub">' + fmt(m.articlesUpcoming) + " " + t("upcoming") + "</span>") +
-      "</div>" +
-      '<div class="dash-grid2">' +
-        '<div class="dash-card"><h3>' + esc(t("trend")) + "</h3>" + bars(m.series) + "</div>" +
-        '<div class="dash-card"><h3>' + esc(t("sources")) + "</h3>" + sourceList(m.sources) + "</div>" +
-      "</div>" +
-      '<div class="dash-card"><h3>' + esc(t("articles")) + "</h3>" + articleList(m.articles) + "</div>" +
-      '<div id="vpNetgrid"></div>' +
-      (m.note ? '<p class="dash-note">' + esc(m.note) + "</p>" : "") +
-    '</div></div><div id="vpExpiry"></div>';
-  }
-
-  // ---- netgrid: live sites + SEO scores (client dashboard) ----
   function seoClass(n) { n = num(n); return n >= 80 ? "ok" : n >= 50 ? "pend" : "exp"; }
   function ngDate(iso) {
     if (!iso) return "";
     try { return new Date(iso).toLocaleDateString(FR() ? "fr-CA" : "en-CA", { year: "numeric", month: "short", day: "numeric" }); }
     catch (e) { return ""; }
   }
-  // Shared: the <tr> rows for a netgrid sites table (domain, SEO, latest post).
-  function ngSiteRowsHTML(sites) {
-    sites = sites || [];
-    return sites.length ? sites.map(function (s) {
-      var score = s.seoScore == null ? '<span class="dash-muted">' + esc(t("ngNoScan")) + "</span>"
-        : '<span class="ng-score ' + seoClass(s.seoScore) + '">' + Math.round(num(s.seoScore)) + "</span>";
-      var post = s.lastPostTitle
-        ? esc(s.lastPostTitle) + (s.lastPostAt ? ' <span class="dash-muted">· ' + esc(ngDate(s.lastPostAt)) + "</span>" : "")
-        : '<span class="dash-muted">' + esc(t("ngNoPost")) + "</span>";
-      return "<tr><td><b>" + esc(s.domain || "—") + "</b>" +
-        (s.platform ? ' <span class="ng-plat">' + esc(s.platform) + "</span>" : "") + "</td>" +
-        "<td>" + score + "</td><td>" + post + "</td></tr>";
-    }).join("") : '<tr><td colspan="3" class="dash-empty">' + esc(t("ngNone")) + "</td></tr>";
+  // Real data (netgrid) block on the client dashboard: SEO + sites + traffic
+  // tiles — the summary, no per-site table.
+  function clientRealHTML(c) {
+    var seoVal = c.avgSeoScore == null ? "—"
+      : '<span class="ng-score ' + seoClass(c.avgSeoScore) + '">' + Math.round(num(c.avgSeoScore)) + "</span>";
+    var tiles = stat(seoVal, t("ngAvgSeo"), "") +
+      stat(num(c.blogCount), t("ngSitesN"), "") +
+      stat(c.activeBlogCount == null ? "—" : num(c.activeBlogCount), t("ngActiveN"), "");
+    if (c.postCount != null) tiles += stat(fmt(c.postCount), t("cdTotalPosts"), "");
+    if (c.views != null) tiles += stat(fmt(c.views), t("cdViews"), "");
+    if (c.clicks != null) tiles += stat(fmt(c.clicks), t("cdClicks"), "");
+    return '<h3 class="dash-sec-h">' + esc(t("ngTitle")) + "</h3>" +
+      '<div class="dash-stats">' + tiles + "</div>";
   }
-  function ngSitesTable(sites) {
-    return '<div style="overflow-x:auto"><table class="dash-table ng-table"><thead><tr><th>' + esc(t("ngSiteCol")) +
-      "</th><th>" + esc(t("ngSeoCol")) + "</th><th>" + esc(t("ngLatestCol")) +
-      "</th></tr></thead><tbody>" + ngSiteRowsHTML(sites) + "</tbody></table></div>";
-  }
-  function netgridHTML(c, sites) {
-    c = c || {}; sites = sites || [];
-    var avg = c.avgSeoScore == null ? "—" : Math.round(num(c.avgSeoScore));
-    var avgPill = c.avgSeoScore == null ? '<span class="ng-kpi-v">—</span>'
-      : '<span class="ng-kpi-v ng-score ' + seoClass(c.avgSeoScore) + '">' + avg + "</span>";
-    var summary = '<div class="ng-summary">' +
-      '<div class="ng-kpi">' + avgPill + '<span class="ng-kpi-l">' + esc(t("ngAvgSeo")) + "</span></div>" +
-      '<div class="ng-kpi"><span class="ng-kpi-v">' + num(c.blogCount) + '</span><span class="ng-kpi-l">' + esc(t("ngSitesN")) + "</span></div>" +
-      (c.activeBlogCount == null ? "" :
-        '<div class="ng-kpi"><span class="ng-kpi-v">' + num(c.activeBlogCount) + '</span><span class="ng-kpi-l">' + esc(t("ngActiveN")) + "</span></div>") +
-      "</div>";
-    return '<div class="dash-card ng-card"><div class="ng-head"><h3>' + esc(t("ngTitle")) + "</h3>" + summary + "</div>" +
-      ngSitesTable(sites) + "</div>";
+
+  function clientHTML(user, m, ng) {
+    var name = user.name || getName() || "";
+    var vis = user.visible;
+    var change = num(m.viewsChangePct);
+    var changeTxt = (change > 0 ? "▲ " : change < 0 ? "▼ " : "") + Math.abs(change) + "% " + t("vsPrev");
+    var changeCls = change > 0 ? "up" : change < 0 ? "down" : "";
+    var out = '<div class="sec"><div class="wrap">' +
+      topbar(name || "") +
+      (user.plan ? '<div class="dash-plan">' + esc(t("yourPlan")) + ': <b>' + esc(user.plan) + "</b></div>" : "") +
+      subBanner(user) +
+      '<div class="dash-refresh">' + esc(t("refreshNote")) + "</div>";
+    // Real data (netgrid) — only when enabled for this client and data exists.
+    if (showGroup("real", vis) && ng) out += clientRealHTML(ng);
+    // Reported (manual) data — the metrics you enter.
+    if (showGroup("manual", vis)) {
+      out +=
+        '<div class="dash-stats">' +
+          stat(fmt(m.views), t("views"), '<span class="dash-delta ' + changeCls + '">' + changeTxt + "</span>") +
+          stat(fmt(m.profileClicks), t("clicks"), "") +
+          stat(fmt(m.aiCitations), t("ai"), "") +
+          stat(fmt(m.articlesPublished), t("published"), '<span class="dash-sub">' + fmt(m.articlesUpcoming) + " " + t("upcoming") + "</span>") +
+        "</div>" +
+        '<div class="dash-grid2">' +
+          '<div class="dash-card"><h3>' + esc(t("trend")) + "</h3>" + bars(m.series) + "</div>" +
+          '<div class="dash-card"><h3>' + esc(t("sources")) + "</h3>" + sourceList(m.sources) + "</div>" +
+        "</div>" +
+        '<div class="dash-card"><h3>' + esc(t("articles")) + "</h3>" + articleList(m.articles) + "</div>" +
+        (m.note ? '<p class="dash-note">' + esc(m.note) + "</p>" : "");
+    }
+    return out + '</div></div><div id="vpExpiry"></div>';
   }
 
   // ---- admin client-detail view: Real data (netgrid) + Manual tabs ----
@@ -612,16 +611,6 @@
       var host = el("cdReal"); if (host) host.innerHTML = '<div class="dash-card"><div class="dash-empty">' + esc(t("netErr")) + "</div></div>";
     });
   }
-  function loadNetgrid() {
-    var host = el("vpNetgrid"); if (!host) return;
-    api("/client-netgrid").then(function (res) {
-      var d = res.data || {};
-      // Only show the section when netgrid is configured and this client has data.
-      if (!d.configured || !d.ok || !d.client) { host.innerHTML = ""; return; }
-      host.innerHTML = netgridHTML(d.client, d.sites || []);
-    }).catch(function () { host.innerHTML = ""; });
-  }
-
   function stat(value, label, sub) {
     return '<div class="dash-stat"><div class="dash-stat-v">' + value + "</div>" +
       '<div class="dash-stat-l">' + esc(label) + "</div>" + (sub || "") + "</div>";
@@ -737,6 +726,9 @@
   function clientForm(c, isNew, plans) {
     c = c || {}; var m = c.metrics || {};
     plans = plans || [];
+    // Which data blocks this client sees (default both when unset).
+    var vis = Array.isArray(c.visible) ? c.visible : null;
+    function visChk(key) { return (vis ? vis.indexOf(key) >= 0 : true) ? " checked" : ""; }
     function f(label, name, val, type) {
       return '<label class="vpf">' + esc(label) +
         '<input name="' + name + '" type="' + (type || "text") + '" value="' + esc(val == null ? "" : val) + '"></label>';
@@ -795,6 +787,12 @@
           '<textarea name="articles" rows="3">' + esc(articlesToStr(m.articles)) + "</textarea></label>" +
         '<label class="vpf">' + (FR() ? "Note au client" : "Note to client") +
           '<input name="note" value="' + esc(m.note || "") + '"></label>' +
+        '<div class="vpf-section">' + esc(t("visSection")) + "</div>" +
+        '<div class="vpf-hint" style="margin:-4px 0 6px">' + esc(t("visHint")) + "</div>" +
+        '<label class="vpf-check"><input type="checkbox" name="vis_real"' + visChk("real") + ">" +
+          '<span><b>' + esc(t("visReal")) + "</b><span>" + esc(t("visRealSub")) + "</span></span></label>" +
+        '<label class="vpf-check"><input type="checkbox" name="vis_manual"' + visChk("manual") + ">" +
+          '<span><b>' + esc(t("visManual")) + "</b><span>" + esc(t("visManualSub")) + "</span></span></label>" +
       "</div>" +
       '<div class="dash-modal-foot">' +
         '<div class="hint" id="vpFormMsg"></div>' +
@@ -843,6 +841,10 @@
         note: v("note")
       }
     };
+    var visible = [];
+    if (form.vis_real && form.vis_real.checked) visible.push("real");
+    if (form.vis_manual && form.vis_manual.checked) visible.push("manual");
+    payload.visible = visible;
     var pw = v("password");
     if (pw) payload.password = pw;
     return payload;
@@ -1381,6 +1383,8 @@
     ".dash-art-badge.up{background:rgba(255,255,255,.08);color:var(--mut,#9aa)}" +
     ".dash-empty{color:var(--mut2,#77809a);font-size:13px;padding:8px 0}" +
     ".dash-note{color:var(--mut,#9aa);font-size:13px;margin-top:14px;font-style:italic}" +
+    ".dash-sec-h{margin:4px 0 12px;font-size:15px;color:var(--white,#fff)}" +
+    ".dash-refresh{color:var(--mut2,#77809a);font-size:12px;margin:-6px 0 16px}" +
     ".ng-card{margin-top:14px}" +
     ".ng-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}" +
     ".ng-head h3{margin:0}" +
@@ -1496,6 +1500,11 @@
     ".vpf textarea{resize:vertical}" +
     ".vpf select{width:100%;box-sizing:border-box;font-size:14px;color:var(--white,#fff)}" +
     ".vpf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}" +
+    ".vpf-check{display:flex;align-items:flex-start;gap:10px;margin-top:10px;cursor:pointer;font:inherit}" +
+    ".vpf-check input{margin-top:3px;width:16px;height:16px;accent-color:var(--royal,#7c3aed);flex:0 0 auto}" +
+    ".vpf-check span{display:flex;flex-direction:column}" +
+    ".vpf-check b{font-size:14px;color:var(--white,#fff)}" +
+    ".vpf-check span span{font-size:12px;color:var(--mut2,#77809a)}" +
     ".vpf-actions{display:flex;justify-content:flex-end;gap:10px}" +
     "@media(max-width:820px){.dash-stats{grid-template-columns:1fr 1fr}.dash-grid2{grid-template-columns:1fr}}" +
     "@media(max-width:520px){.vpf-row{grid-template-columns:1fr}.dash-modal-foot{flex-direction:column;align-items:stretch}.vpf-actions .btn{flex:1}}";

@@ -29,12 +29,17 @@ export default async (req) => {
     if (!detRes.ok) return json({ configured: true, ok: false, status: detRes.status, client: found, sites: [] });
     const d = await detRes.json().catch(() => ({}));
 
+    const pick = (a, b) => (a != null ? a : (b != null ? b : null));
     const client = {
       name: d.name || found.name || '', niche: d.niche || null, status: d.status || null,
       blogCount: d.blogCount != null ? d.blogCount : (found.blogCount || 0),
       activeBlogCount: d.activeBlogCount != null ? d.activeBlogCount : null,
-      avgSeoScore: d.avgSeoScore != null ? d.avgSeoScore : (found.avgSeoScore != null ? found.avgSeoScore : null),
+      avgSeoScore: pick(d.avgSeoScore, found.avgSeoScore),
       lastPostAt: d.lastPostAt || null,
+      postCount: pick(d.postCount, found.postCount),
+      postsLast30Days: d.postsLast30Days != null ? d.postsLast30Days : null,
+      views: pick(d.views, found.views),
+      clicks: pick(d.clicks, found.clicks),
     };
     const sites = (d.sites || []).map(s => ({
       id: s.id, domain: s.domain || '', platform: s.platform || null, status: s.status || null,
