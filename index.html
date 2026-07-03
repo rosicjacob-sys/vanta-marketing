@@ -842,9 +842,10 @@ document.getElementById('search').addEventListener('input', e=>buildTiles(e.targ
 route();
 document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on', b.getAttribute('data-lang')===lang));
 
-/* ---- floating two-way chat (messages live in the Google Sheet) ---- */
+/* ---- floating two-way chat (messages live in the database) ---- */
 (function(){
   var w=document.getElementById('chatw'); if(!w) return;
+  var CHAT_API='/.netlify/functions';
   var fab=document.getElementById('chatFab'), x=document.getElementById('chatClose'), cf=document.getElementById('chatForm');
   var thread=document.getElementById('chatThread'), start=document.getElementById('chatStart');
   var nomI=document.getElementById('cNom'), restoI=document.getElementById('cResto'), mailI=document.getElementById('cMail'), msgI=document.getElementById('cMsg');
@@ -855,8 +856,7 @@ document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on', b.g
   function persist(){ try{ localStorage.setItem(K_LOG,JSON.stringify(logArr.slice(-60))); localStorage.setItem(K_SEEN,String(seen)); }catch(_){} }
   function bubble(text, who){ var d=document.createElement('div'); d.className='b '+(who==='admin'?'them':(who==='note'?'note':'you')); d.textContent=text; thread.appendChild(d); thread.scrollTop=thread.scrollHeight; }
   function paint(){ thread.innerHTML=''; bubble(lang==='fr'?'Bonjour ! Une question ? On répond à la plupart des messages en 2 à 4 heures.':'Hi! Have a question? We answer most messages within 2 to 4 hours.','note'); for(var i=0;i<logArr.length;i++) bubble(logArr[i].t, logArr[i].s==='admin'?'admin':'you'); if(info) start.classList.add('hide'); else start.classList.remove('hide'); }
-  function jsonp(params){ return new Promise(function(res){ var cb='__vc'+Date.now()+Math.floor(Math.random()*1e6); var s=document.createElement('script'); var to=setTimeout(function(){ fin(null); },9000); function fin(v){ clearTimeout(to); try{ delete window[cb]; }catch(_){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); res(v); } window[cb]=function(d){ fin(d); }; s.onerror=function(){ fin(null); }; params.callback=cb; s.src=LEADS_ENDPOINT+'?'+new URLSearchParams(params).toString(); document.body.appendChild(s); }); }
-  function doPoll(){ if(!cid) return; jsonp({action:'chat_poll', cid:cid, since:seen}).then(function(r){ if(!r||!r.messages) return; for(var i=0;i<r.messages.length;i++){ if(r.messages[i].sender==='admin'){ logArr.push({s:'admin',t:r.messages[i].text}); bubble(r.messages[i].text,'admin'); } } if(typeof r.head==='number') seen=r.head; persist(); }); }
+  function doPoll(){ if(!cid) return; fetch(CHAT_API+'/chat-poll?cid='+encodeURIComponent(cid)+'&after='+(seen||0)).then(function(r){ return r.json(); }).then(function(r){ if(!r||!r.messages) return; for(var i=0;i<r.messages.length;i++){ if(r.messages[i].sender==='admin'){ logArr.push({s:'admin',t:r.messages[i].body}); bubble(r.messages[i].body,'admin'); } } if(typeof r.head==='number') seen=r.head; persist(); }).catch(function(){}); }
   window.__chatRepaint=function(){ try{paint();}catch(e){} };
   function startPoll(){ if(poll) return; poll=setInterval(function(){ if(opened) doPoll(); }, 7000); }
   fab.addEventListener('click', function(){ var willOpen=!w.classList.contains('open'); w.classList.toggle('open'); opened=willOpen; if(willOpen){ paint(); if(cid){ startPoll(); doPoll(); } setTimeout(function(){ (info?msgI:nomI).focus(); },60); } });
@@ -876,7 +876,7 @@ document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on', b.g
     }
     msgI.value='';
     logArr.push({s:'you',t:msg}); bubble(msg,'you'); persist();
-    saveLead({ action:'chat_send', cid:cid, type:'chat', nom:info.nom, restaurant:info.restaurant, courriel:info.courriel, message:msg, langue:lang, page:'vanta-merged' });
+    fetch(CHAT_API+'/chat-send', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({ cid:cid, name:info.nom, business:info.restaurant, email:info.courriel, message:msg })}).catch(function(){});
     startPoll();
   });
 })();
