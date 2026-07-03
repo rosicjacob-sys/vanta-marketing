@@ -75,6 +75,15 @@
     stConfirmed:{ en: "Confirmed",           fr: "Confirmé" },
     stRejected: { en: "Rejected",            fr: "Rejeté" },
     noClaims:   { en: "No payment claims yet.", fr: "Aucune réclamation de paiement." },
+    emailsTab:  { en: "Emails",              fr: "Courriels" },
+    emailsHint: { en: "Every notification email the system tried to send. Set RESEND_API_KEY and EMAIL_FROM in Netlify to actually deliver them.", fr: "Chaque courriel de notification que le système a tenté d'envoyer. Configurez RESEND_API_KEY et EMAIL_FROM dans Netlify pour les livrer." },
+    noEmails:   { en: "No emails yet.",       fr: "Aucun courriel." },
+    emTo:       { en: "To",                   fr: "À" },
+    emSubject:  { en: "Subject",              fr: "Objet" },
+    emWhen:     { en: "When",                 fr: "Quand" },
+    emSent:     { en: "Sent",                 fr: "Envoyé" },
+    emFailed:   { en: "Failed",               fr: "Échec" },
+    emSkipped:  { en: "Not sent",             fr: "Non envoyé" },
     rejectConfirm:{ en: "Mark this payment as NOT confirmed?", fr: "Marquer ce paiement comme NON confirmé?" },
     underReview:{ en: "Payment under review", fr: "Paiement en vérification" },
     reviewNote: { en: "We're verifying your payment — we'll confirm shortly.", fr: "On vérifie votre paiement — confirmation sous peu." },
@@ -492,6 +501,7 @@
             '<span class="admin-nav-badge" id="vpMsgBadge" hidden></span></button>' +
           '<button class="admin-nav-item" data-nav="payments">' + esc(t("payments")) +
             '<span class="admin-nav-badge" id="vpPayBadge" hidden></span></button>' +
+          navItem("emails", t("emailsTab"), false) +
           navItem("plans", t("managePlans"), false) +
           '<div class="admin-nav-sep"></div>' +
           '<button class="admin-nav-item admin-nav-logout" id="vpLogout">' + esc(t("logout")) + "</button>" +
@@ -509,6 +519,7 @@
             '<div class="vpc-pane" id="vpChatPane"><div class="vpc-empty">' + esc(t("selectConv")) + "</div></div></div>" +
           "</div>" +
           '<div class="dash-panel" data-panel="payments" style="display:none" id="vpPayPanel"></div>' +
+          '<div class="dash-panel" data-panel="emails" style="display:none" id="vpEmailPanel"></div>' +
           '<div class="dash-panel" data-panel="plans" style="display:none" id="vpPlansPanel"></div>' +
         "</div>" +
       "</div>" +
@@ -695,6 +706,7 @@
         if (name === "messages" && !chatLoaded) { chatLoaded = true; loadChats(); }
         if (name === "plans" && !plansRendered) { plansRendered = true; renderPlansPanel(); }
         if (name === "payments") renderPayments();
+        if (name === "emails") renderEmails();
       };
     });
 
@@ -744,6 +756,37 @@
     function decidePayment(email, decision) {
       api("/admin-payments", { method: "POST", body: { email: email, decision: decision } }).then(function () {
         renderPayments(); loadBell();
+      });
+    }
+
+    // ---- emails (outbound log) ----
+    function emailStatusPill(s) {
+      if (s === "sent") return '<span class="sub-pill ok">' + esc(t("emSent")) + "</span>";
+      if (s === "skipped") return '<span class="sub-pill pend">' + esc(t("emSkipped")) + "</span>";
+      return '<span class="sub-pill exp">' + esc(t("emFailed")) + "</span>";
+    }
+    function renderEmails() {
+      var host = el("vpEmailPanel"); if (!host) return;
+      host.innerHTML = '<div class="dash-card"><p class="lead">…</p></div>';
+      api("/admin-emails").then(function (res) {
+        var emails = (res.data && res.data.emails) || [];
+        host.innerHTML =
+          '<div class="dash-card">' +
+            '<p class="dash-muted" style="margin:0 0 16px">' + esc(t("emailsHint")) + "</p>" +
+            '<div style="overflow-x:auto">' +
+            (emails.length
+              ? '<table class="dash-table"><thead><tr><th>' + esc(t("emTo")) + "</th><th>" + esc(t("emSubject")) +
+                "</th><th>" + esc(t("statusCol")) + "</th><th>" + esc(t("emWhen")) + "</th></tr></thead><tbody>" +
+                emails.map(function (e) {
+                  return "<tr><td>" + esc(e.to || "—") + "</td>" +
+                    "<td><b>" + esc(e.subject || "—") + "</b>" +
+                    (e.body ? '<div class="dash-muted vp-em-body">' + esc(e.body) + "</div>" : "") +
+                    (e.status !== "sent" && e.detail ? '<div class="dash-muted">' + esc(e.detail) + "</div>" : "") +
+                    "</td><td>" + emailStatusPill(e.status) + '</td><td class="dash-muted">' +
+                    esc(relTime(e.created_at || Date.now())) + "</td></tr>";
+                }).join("") + "</tbody></table>"
+              : '<div class="dash-empty">' + esc(t("noEmails")) + "</div>") +
+            "</div></div>";
       });
     }
 
@@ -999,6 +1042,7 @@
     ".admin-nav-badge{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#e8409b;color:#fff;font-size:11px;font-weight:700;vertical-align:middle;box-sizing:border-box}" +
     ".admin-nav-badge[hidden]{display:none}" +
     ".admin-nav-sep{height:1px;background:var(--line2,#2a2145);margin:10px 6px}" +
+    ".vp-em-body{max-width:420px;white-space:normal;margin-top:3px;line-height:1.4}" +
     ".admin-nav-logout{color:var(--mut2,#77809a)}" +
     ".admin-nav-logout:hover{color:#ff8f8f;background:rgba(255,122,122,.12)}" +
     ".admin-main{min-width:0}" +

@@ -100,6 +100,17 @@ function ensureSchema() {
           decided_at bigint
         )`;
       await sql`CREATE INDEX IF NOT EXISTS payment_claims_status_idx ON payment_claims (status, claimed_at)`;
+      await sql`
+        CREATE TABLE IF NOT EXISTS email_log (
+          id         bigserial PRIMARY KEY,
+          to_addr    text NOT NULL DEFAULT '',
+          subject    text NOT NULL DEFAULT '',
+          body       text NOT NULL DEFAULT '',
+          status     text NOT NULL DEFAULT '',
+          detail     text NOT NULL DEFAULT '',
+          created_at bigint
+        )`;
+      await sql`CREATE INDEX IF NOT EXISTS email_log_created_idx ON email_log (created_at)`;
     })();
   }
   return _schema;
@@ -393,6 +404,40 @@ async function blobUnread(audience, recipient) {
   return arr.filter(function (x) { return !x.read; }).length;
 }
 
+/* ===================== email log: Postgres ===================== */
+async function pgLogEmail(e) {
+  await ensureSchema();
+  await sqlc()`INSERT INTO email_log (to_addr, subject, body, status, detail, created_at)
+    VALUES (${e.to || ''}, ${e.subject || ''}, ${e.body || ''}, ${e.status || ''}, ${e.detail || ''}, ${Date.now()})`;
+  return { ok: true };
+}
+async function pgListEmails(limit) {
+  await ensureSchema();
+  const n = Math.min(Math.max(Number(limit) || 200, 1), 500);
+  const rows = await sqlc()`SELECT id, to_addr, subject, body, status, detail, created_at
+    FROM email_log ORDER BY created_at DESC LIMIT ${n}`;
+  return rows.map(r => ({ id: Number(r.id), to: r.to_addr, subject: r.subject, body: r.body,
+    status: r.status, detail: r.detail, created_at: Number(r.created_at) }));
+}
+
+/* ===================== email log: Blobs (fallback) ===================== */
+function emailStore() { return getStore({ name: 'vanta-emails', consistency: 'strong' }); }
+async function blobLogEmail(e) {
+  const st = emailStore();
+  const arr = (await st.get('log', { type: 'json' })) || [];
+  const id = arr.length ? arr[arr.length - 1].id + 1 : 1;
+  arr.push({ id, to: e.to || '', subject: e.subject || '', body: e.body || '',
+    status: e.status || '', detail: e.detail || '', created_at: Date.now() });
+  if (arr.length > 300) arr.splice(0, arr.length - 300);
+  await st.setJSON('log', arr);
+  return { ok: true };
+}
+async function blobListEmails(limit) {
+  const arr = (await emailStore().get('log', { type: 'json' })) || [];
+  const n = Math.min(Math.max(Number(limit) || 200, 1), 500);
+  return arr.slice().reverse().slice(0, n);
+}
+
 /* ===================== public API (dispatches) ===================== */
 export function getUser(email)  { return usePg() ? pgGet(email)  : blobGet(email); }
 export function putUser(user)   { return usePg() ? pgPut(user)   : blobPut(user); }
@@ -415,3 +460,6 @@ export function addNotification(n)          { return usePg() ? pgAddNotif(n)    
 export function listNotifications(a, r)     { return usePg() ? pgListNotif(a, r)    : blobListNotif(a, r); }
 export function markNotificationsRead(a, r) { return usePg() ? pgMarkNotif(a, r)    : blobMarkNotif(a, r); }
 export function unreadCount(a, r)           { return usePg() ? pgUnread(a, r)       : blobUnread(a, r); }
+
+export function logEmail(e)                 { return usePg() ? pgLogEmail(e)        : blobLogEmail(e); }
+export function listEmails(limit)           { return usePg() ? pgListEmails(limit)  : blobListEmails(limit); }
