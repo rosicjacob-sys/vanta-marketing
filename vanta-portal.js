@@ -28,6 +28,7 @@
     clicks:     { en: "Clicks to your profile",    fr: "Clics vers votre profil" },
     ai:         { en: "AI citations",              fr: "Citations IA" },
     published:  { en: "Articles published",        fr: "Articles publiés" },
+    pubShort:   { en: "Published",                  fr: "Publié" },
     upcoming:   { en: "Upcoming",                  fr: "À venir" },
     trend:      { en: "Views over time",           fr: "Vues dans le temps" },
     sources:    { en: "AI & discovery sources",    fr: "Sources IA et découverte" },
@@ -43,7 +44,10 @@
     save:       { en: "Save",                      fr: "Enregistrer" },
     cancel:     { en: "Cancel",                    fr: "Annuler" },
     confirmDel: { en: "Delete this client account?", fr: "Supprimer ce compte client ?" },
-    noClients:  { en: "No clients yet. Add your first one.", fr: "Aucun client. Ajoutez le premier." }
+    noClients:  { en: "No clients yet. Add your first one.", fr: "Aucun client. Ajoutez le premier." },
+    secAccount: { en: "Account",           fr: "Compte" },
+    secNumbers: { en: "Dashboard numbers",  fr: "Chiffres du tableau de bord" },
+    close:      { en: "Close",              fr: "Fermer" }
   };
   function t(k) { var e = T[k] || {}; return FR() ? (e.fr || e.en || k) : (e.en || k); }
 
@@ -99,6 +103,13 @@
   function route(hash) {
     if (hash.indexOf("#/admin") === 0) renderAdmin();
     else if (hash.indexOf("#/dashboard") === 0) renderClient();
+  }
+
+  // Hide the marketing top-nav while a signed-in dashboard is showing.
+  function updateChrome() {
+    var h = location.hash || "";
+    var onDash = (h.indexOf("#/admin") === 0 || h.indexOf("#/dashboard") === 0) && !!getToken();
+    document.body.classList.toggle("vp-dash", onDash);
   }
 
   // ================= LOGIN =================
@@ -205,7 +216,7 @@
     var out = '<ul class="dash-arts">';
     articles.forEach(function (a) {
       var pub = (a.status || "").toLowerCase() === "published";
-      var badge = pub ? esc(t("published")) : esc(t("upcoming"));
+      var badge = pub ? esc(t("pubShort")) : esc(t("upcoming"));
       var title = a.url ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.title || "") + "</a>" : esc(a.title || "");
       out += '<li><span class="dash-art-badge ' + (pub ? "pub" : "up") + '">' + badge + "</span>" + title + "</li>";
     });
@@ -290,33 +301,42 @@
       return '<label class="vpf">' + esc(label) +
         '<input name="' + name + '" type="' + (type || "text") + '" value="' + esc(val == null ? "" : val) + '"></label>';
     }
-    return '<div class="dash-modal-bg"><form class="dash-modal logincard" id="vpForm">' +
-      "<h3 style='margin:0 0 6px'>" + esc(isNew ? t("newClient") : t("edit")) + "</h3>" +
-      f("Email", "email", c.email, "email") + (isNew ? "" : '<input type="hidden" name="_email" value="' + esc(c.email) + '">') +
-      f(FR() ? "Nom / entreprise" : "Name / business", "name", c.name) +
-      f(FR() ? "Forfait" : "Plan", "plan", c.plan) +
-      f(isNew ? (FR() ? "Mot de passe" : "Password") : (FR() ? "Nouveau mot de passe (laisser vide)" : "New password (blank = keep)"), "password", "", "text") +
-      '<div class="vpf-row">' +
-        f(t("views"), "views", m.views, "number") +
-        f("% " + t("vsPrev"), "viewsChangePct", m.viewsChangePct, "number") +
-      "</div><div class='vpf-row'>" +
-        f(t("clicks"), "profileClicks", m.profileClicks, "number") +
-        f(t("ai"), "aiCitations", m.aiCitations, "number") +
-      "</div><div class='vpf-row'>" +
-        f(t("published"), "articlesPublished", m.articlesPublished, "number") +
-        f(t("upcoming"), "articlesUpcoming", m.articlesUpcoming, "number") +
+    return '<div class="dash-modal-bg" id="vpModalBg"><form class="dash-modal" id="vpForm">' +
+      '<div class="dash-modal-head">' +
+        "<h3>" + esc(isNew ? t("newClient") : t("edit")) + "</h3>" +
+        '<button type="button" class="dash-modal-x" id="vpClose" aria-label="' + esc(t("close")) + '">&#10005;</button>' +
       "</div>" +
-      '<label class="vpf">' + esc(t("trend")) + ' (' + (FR() ? "ex" : "e.g.") + ' Jan:120, Feb:180)' +
-        '<input name="series" value="' + esc(seriesToStr(m.series)) + '"></label>' +
-      '<label class="vpf">' + esc(t("sources")) + ' (ChatGPT:40, Google:30)' +
-        '<input name="sources" value="' + esc(seriesToStr(m.sources)) + '"></label>' +
-      '<label class="vpf">' + esc(t("articles")) + ' (' + (FR() ? "une par ligne" : "one per line") + ': published | Titre | https://…)' +
-        '<textarea name="articles" rows="3">' + esc(articlesToStr(m.articles)) + "</textarea></label>" +
-      '<label class="vpf">' + (FR() ? "Note au client" : "Note to client") +
-        '<input name="note" value="' + esc(m.note || "") + '"></label>' +
-      '<div class="vpf-actions"><button type="button" class="btn ghost" id="vpCancel">' + esc(t("cancel")) + "</button>" +
-        '<button type="submit" class="btn primary">' + esc(t("save")) + "</button></div>" +
-      '<div class="hint" id="vpFormMsg" style="margin-top:8px"></div>' +
+      '<div class="dash-modal-body">' +
+        '<div class="vpf-section">' + esc(t("secAccount")) + "</div>" +
+        f("Email", "email", c.email, "email") + (isNew ? "" : '<input type="hidden" name="_email" value="' + esc(c.email) + '">') +
+        f(FR() ? "Nom / entreprise" : "Name / business", "name", c.name) +
+        f(FR() ? "Forfait" : "Plan", "plan", c.plan) +
+        f(isNew ? (FR() ? "Mot de passe" : "Password") : (FR() ? "Nouveau mot de passe (laisser vide)" : "New password (blank = keep)"), "password", "", "text") +
+        '<div class="vpf-section">' + esc(t("secNumbers")) + "</div>" +
+        '<div class="vpf-row">' +
+          f(t("views"), "views", m.views, "number") +
+          f("% " + t("vsPrev"), "viewsChangePct", m.viewsChangePct, "number") +
+        "</div><div class='vpf-row'>" +
+          f(t("clicks"), "profileClicks", m.profileClicks, "number") +
+          f(t("ai"), "aiCitations", m.aiCitations, "number") +
+        "</div><div class='vpf-row'>" +
+          f(t("published"), "articlesPublished", m.articlesPublished, "number") +
+          f(t("upcoming"), "articlesUpcoming", m.articlesUpcoming, "number") +
+        "</div>" +
+        '<label class="vpf">' + esc(t("trend")) + ' <span class="vpf-hint">(' + (FR() ? "ex" : "e.g.") + ' Jan:120, Feb:180)</span>' +
+          '<input name="series" value="' + esc(seriesToStr(m.series)) + '"></label>' +
+        '<label class="vpf">' + esc(t("sources")) + ' <span class="vpf-hint">(ChatGPT:40, Google:30)</span>' +
+          '<input name="sources" value="' + esc(seriesToStr(m.sources)) + '"></label>' +
+        '<label class="vpf">' + esc(t("articles")) + ' <span class="vpf-hint">(' + (FR() ? "une par ligne" : "one per line") + ': published | ' + (FR() ? "Titre" : "Title") + ' | https://…)</span>' +
+          '<textarea name="articles" rows="3">' + esc(articlesToStr(m.articles)) + "</textarea></label>" +
+        '<label class="vpf">' + (FR() ? "Note au client" : "Note to client") +
+          '<input name="note" value="' + esc(m.note || "") + '"></label>' +
+      "</div>" +
+      '<div class="dash-modal-foot">' +
+        '<div class="hint" id="vpFormMsg"></div>' +
+        '<div class="vpf-actions"><button type="button" class="btn ghost" id="vpCancel">' + esc(t("cancel")) + "</button>" +
+          '<button type="submit" class="btn primary">' + esc(t("save")) + "</button></div>" +
+      "</div>" +
     "</form></div>";
   }
 
@@ -364,11 +384,23 @@
 
   function wireAdmin(clients) {
     var modal = el("vpModal");
-    function close() { if (modal) modal.innerHTML = ""; }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    function close() {
+      if (modal) modal.innerHTML = "";
+      try { document.body.style.overflow = ""; } catch (e) {}
+      document.removeEventListener("keydown", onKey);
+    }
     function openForm(client, isNew) {
       if (!modal) return;
       modal.innerHTML = clientForm(client, isNew);
+      try { document.body.style.overflow = "hidden"; } catch (e) {}
+      document.addEventListener("keydown", onKey);
       var cancel = el("vpCancel"); if (cancel) cancel.onclick = close;
+      var xBtn = el("vpClose"); if (xBtn) xBtn.onclick = close;
+      var bg = el("vpModalBg");
+      if (bg) bg.onclick = function (e) { if (e.target === bg) close(); };
+      var focusEl = el("vpForm") && el("vpForm").querySelector("input");
+      if (focusEl) { try { focusEl.focus(); } catch (e) {} }
       var form = el("vpForm");
       if (form) form.onsubmit = function (e) {
         e.preventDefault();
@@ -448,14 +480,29 @@
     ".dash-muted{color:var(--mut2,#77809a);font-size:12px;font-weight:400}" +
     ".dash-actions{white-space:nowrap;text-align:right}" +
     ".btn.sm{padding:6px 12px;font-size:12.5px}" +
-    ".dash-modal-bg{position:fixed;inset:0;background:rgba(4,2,12,.72);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:120;overflow:auto}" +
-    ".dash-modal{width:100%;max-width:520px}" +
-    ".vpf{display:grid;gap:4px;font-size:12.5px;color:var(--mut,#9aa);font-weight:600;margin-top:10px}" +
-    ".vpf input,.vpf textarea{font:inherit;font-size:14px;color:var(--white,#fff);background:rgba(255,255,255,.05);border:1px solid var(--line2,#2a2145);border-radius:9px;padding:9px 11px;outline:none}" +
-    ".vpf input:focus,.vpf textarea:focus{border-color:var(--royal,#7c3aed)}" +
-    ".vpf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}" +
-    ".vpf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}" +
-    "@media(max-width:820px){.dash-stats{grid-template-columns:1fr 1fr}.dash-grid2{grid-template-columns:1fr}}";
+    "body.vp-dash nav.vn,body.vp-dash footer{display:none!important}" +
+    "#view-admin>.sec,#view-dashboard>.sec{padding-top:34px}" +
+    ".dash-table tbody tr:hover td{background:rgba(124,58,237,.06)}" +
+    ".dash-modal-bg{position:fixed;inset:0;background:rgba(6,4,16,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:flex-start;justify-content:center;padding:clamp(16px,5vh,56px) 16px;z-index:2000;overflow-y:auto}" +
+    ".dash-modal{width:100%;max-width:560px;display:flex;flex-direction:column;max-height:calc(100vh - 48px);background:#17112f;border:1px solid rgba(196,181,253,.18);border-radius:20px;box-shadow:0 40px 120px -30px rgba(0,0,0,.85);overflow:hidden}" +
+    ".dash-modal-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line2,#2a2145);background:#17112f}" +
+    ".dash-modal-head h3{margin:0;font-size:17px;color:var(--white,#fff)}" +
+    ".dash-modal-x{width:34px;height:34px;flex:0 0 auto;border-radius:9px;border:1px solid var(--line2,#2a2145);background:rgba(255,255,255,.04);color:var(--mut,#9aa);font-size:14px;line-height:1;cursor:pointer}" +
+    ".dash-modal-x:hover{color:#fff;background:rgba(255,255,255,.09)}" +
+    ".dash-modal-body{flex:1 1 auto;padding:2px 22px 18px;overflow-y:auto}" +
+    ".dash-modal-foot{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;border-top:1px solid var(--line2,#2a2145);background:#17112f}" +
+    ".dash-modal-foot .hint{margin:0;text-align:left;font-size:12.5px}" +
+    ".vpf-section{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#c4b5fd;font-weight:700;margin:22px 0 2px;padding-bottom:9px;border-bottom:1px solid rgba(255,255,255,.07)}" +
+    ".vpf-section:first-child{margin-top:12px}" +
+    ".vpf-hint{color:var(--mut2,#77809a);font-weight:500;text-transform:none;letter-spacing:0}" +
+    ".vpf{display:grid;gap:5px;font-size:12.5px;color:var(--mut,#9aa);font-weight:600;margin-top:12px}" +
+    ".vpf input,.vpf textarea{font:inherit;font-size:14px;color:var(--white,#fff);background:rgba(255,255,255,.05);border:1px solid var(--line2,#2a2145);border-radius:9px;padding:10px 12px;outline:none;width:100%;box-sizing:border-box}" +
+    ".vpf input:focus,.vpf textarea:focus{border-color:var(--royal,#7c3aed);background:rgba(124,58,237,.08)}" +
+    ".vpf textarea{resize:vertical}" +
+    ".vpf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}" +
+    ".vpf-actions{display:flex;justify-content:flex-end;gap:10px}" +
+    "@media(max-width:820px){.dash-stats{grid-template-columns:1fr 1fr}.dash-grid2{grid-template-columns:1fr}}" +
+    "@media(max-width:520px){.vpf-row{grid-template-columns:1fr}.dash-modal-foot{flex-direction:column;align-items:stretch}.vpf-actions .btn{flex:1}}";
     var s = document.createElement("style");
     s.id = "vp-css"; s.textContent = css;
     document.head.appendChild(s);
@@ -463,6 +510,7 @@
 
   function boot() {
     injectCSS();
+    window.addEventListener("hashchange", updateChrome);
     // If already signed in and sitting on the login screen, jump to the dashboard.
     var h = location.hash || "";
     if (getToken() && (h === "" || h === "#/" || h.indexOf("#/login") === 0)) {
@@ -470,6 +518,7 @@
     } else {
       route(h);
     }
+    updateChrome();
   }
 
   window.VantaPortal = {
