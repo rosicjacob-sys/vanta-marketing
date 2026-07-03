@@ -831,7 +831,7 @@
           "</div>" +
           '<div style="overflow-x:auto">' +
           (list.length
-            ? '<table class="dash-table"><thead><tr><th>' + esc(t("emTo")) + "</th><th>" + esc(t("emSubject")) +
+            ? '<table class="dash-table em-table"><thead><tr><th>' + esc(t("emTo")) + "</th><th>" + esc(t("emSubject")) +
               "</th><th>" + esc(t("statusCol")) + "</th><th>" + esc(t("emWhen")) + "</th><th></th></tr></thead><tbody>" +
               list.map(function (e) {
                 return '<tr data-id="' + esc(e.id) + '"><td>' + esc(e.to || "—") + "</td>" +
@@ -1223,8 +1223,14 @@
     ".em-tab:hover{color:var(--white,#fff)}" +
     ".em-tab.is-on{color:var(--white,#fff);background:rgba(124,58,237,.2);border-color:transparent}" +
     ".em-tab-n{opacity:.6;font-weight:700;margin-left:2px}" +
-    ".em-subcell{cursor:pointer}" +
-    ".em-prev{max-width:460px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}" +
+    ".em-table{min-width:0;font-size:13px}" +
+    ".em-table th,.em-table td{padding:10px 8px}" +
+    ".em-table .btn.sm{padding:5px 9px;font-size:12px}" +
+    ".em-table .dash-actions{white-space:nowrap}" +
+    ".em-subcell{cursor:pointer;max-width:300px}" +
+    ".em-subcell b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+    ".em-prev{max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}" +
+    "@media(max-width:1150px){.em-subcell,.em-subcell b,.em-prev{max-width:170px}}" +
     ".em-modal-body{white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.5;color:var(--white,#fff);background:rgba(255,255,255,.04);border:1px solid var(--line2,#2a2145);border-radius:10px;padding:12px 14px;margin-top:4px}" +
     ".admin-nav-logout{color:var(--mut2,#77809a)}" +
     ".admin-nav-logout:hover{color:#ff8f8f;background:rgba(255,122,122,.12)}" +
