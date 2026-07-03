@@ -84,7 +84,7 @@
     emFailed:   { en: "Failed",               fr: "Échec" },
     emSkipped:  { en: "Not sent",             fr: "Non envoyé" },
     settingsTab:{ en: "Settings",            fr: "Paramètres" },
-    setHint:    { en: "Configure reminder timing and the emails clients receive. Placeholders: {name} {plan} {date} {days} {brand}.", fr: "Configurez le moment des rappels et les courriels reçus par les clients. Variables : {name} {plan} {date} {days} {brand}." },
+    setHint:    { en: "Configure reminder timing and the emails clients receive. Placeholders: {name} {plan} {date} {days} {brand} {link} (the client's plan checkout link).", fr: "Configurez le moment des rappels et les courriels reçus par les clients. Variables : {name} {plan} {date} {days} {brand} {link} (lien de paiement du forfait du client)." },
     setLeadDays:{ en: "Send renewal reminder this many days before expiry", fr: "Envoyer le rappel de renouvellement ce nombre de jours avant l'expiration" },
     setBrand:   { en: "Brand name (used in emails as {brand})", fr: "Nom de marque (utilisé dans les courriels via {brand})" },
     setRenewal: { en: "Renewal reminder email", fr: "Courriel de rappel de renouvellement" },

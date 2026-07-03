@@ -7,12 +7,12 @@ export const DEFAULTS = {
   reminderLeadDays: 3,
   // Brand name used in email templates via {brand}.
   brandName: 'Vanta',
-  // Renewal reminder email. Placeholders: {name} {plan} {date} {days} {brand}
+  // Renewal reminder email. Placeholders: {name} {plan} {date} {days} {brand} {link}
   renewalSubject: 'Your plan renews soon',
-  renewalBody: 'Hi {name}, your {plan} renews on {date} ({days} left). Thanks for being with {brand}!',
-  // Expiry notice email. Placeholders: {name} {plan} {date} {brand}
+  renewalBody: 'Hi {name}, your {plan} renews on {date} ({days} left). Renew in one tap: {link} — thanks for being with {brand}!',
+  // Expiry notice email. Placeholders: {name} {plan} {date} {brand} {link}
   expiredSubject: 'Your plan has expired',
-  expiredBody: 'Hi {name}, your {plan} expired on {date}. Log in to renew and keep your campaign running.',
+  expiredBody: 'Hi {name}, your {plan} expired on {date}. Renew here to pick back up: {link}',
 };
 
 // Only these keys are accepted from the client (ignore anything else).
