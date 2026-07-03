@@ -868,8 +868,10 @@ document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on', b.g
   function startPoll(){ if(poll) return; poll=setInterval(function(){ if(opened) doPoll(); }, 7000); }
   fab.addEventListener('click', function(){ var willOpen=!w.classList.contains('open'); w.classList.toggle('open'); opened=willOpen; if(willOpen){ paint(); if(cid){ startPoll(); doPoll(); } setTimeout(function(){ (info?msgI:nomI).focus(); },60); } });
   x.addEventListener('click', function(){ w.classList.remove('open'); opened=false; });
+  function resetChat(){ cid=''; info=null; logArr=[]; seen=0; try{ localStorage.removeItem(K_CID); localStorage.removeItem(K_INFO); localStorage.removeItem(K_LOG); localStorage.removeItem(K_SEEN); }catch(_){} if(poll){ clearInterval(poll); poll=null; } try{ paint(); }catch(_){} }
+  window.__chatReset=resetChat; // called on logout to clear this browser's thread
   var newBtn=document.getElementById('chatNew');
-  if(newBtn){ newBtn.title=(lang==='fr'?'Nouvelle conversation':'Start new conversation'); newBtn.addEventListener('click', function(){ if(logArr.length && !confirm(lang==='fr'?'Démarrer une nouvelle conversation? La conversation actuelle sera effacée de ce navigateur.':'Start a new conversation? This clears the current one from this browser.')) return; cid=''; info=null; logArr=[]; seen=0; try{ localStorage.removeItem(K_CID); localStorage.removeItem(K_INFO); localStorage.removeItem(K_LOG); localStorage.removeItem(K_SEEN); }catch(_){} if(poll){ clearInterval(poll); poll=null; } paint(); setTimeout(function(){ if(nomI) nomI.focus(); },40); }); }
+  if(newBtn){ newBtn.title=(lang==='fr'?'Nouvelle conversation':'Start new conversation'); newBtn.addEventListener('click', function(){ if(logArr.length && !confirm(lang==='fr'?'Démarrer une nouvelle conversation? La conversation actuelle sera effacée de ce navigateur.':'Start a new conversation? This clears the current one from this browser.')) return; resetChat(); setTimeout(function(){ if(nomI) nomI.focus(); },40); }); }
   var ltog=document.getElementById('langtog'); if(ltog) ltog.addEventListener('click', function(){ if(opened) setTimeout(paint, 0); });
   msgI.addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); cf.requestSubmit(); } });
   cf.addEventListener('submit', function(e){
