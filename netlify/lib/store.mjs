@@ -216,10 +216,12 @@ async function pgChatList() {
   const rows = await sqlc()`
     SELECT c.cid, c.name, c.email, c.business, c.last_at,
            (SELECT body FROM chat_messages m WHERE m.cid = c.cid ORDER BY created_at DESC LIMIT 1) AS last_body,
-           (SELECT count(*) FROM chat_messages m WHERE m.cid = c.cid) AS msg_count
+           (SELECT count(*) FROM chat_messages m WHERE m.cid = c.cid) AS msg_count,
+           (SELECT max(created_at) FROM chat_messages m WHERE m.cid = c.cid AND m.sender = 'visitor') AS last_client_at
     FROM chat_conversations c ORDER BY c.last_at DESC NULLS LAST`;
   return rows.map(r => ({ cid: r.cid, name: r.name, email: r.email, business: r.business,
-    lastAt: Number(r.last_at) || 0, last: r.last_body || '', count: Number(r.msg_count) || 0 }));
+    lastAt: Number(r.last_at) || 0, last: r.last_body || '', count: Number(r.msg_count) || 0,
+    lastClientAt: Number(r.last_client_at) || 0 }));
 }
 
 /* ===================== plans/settings: Postgres ===================== */
@@ -272,8 +274,11 @@ async function blobChatList() {
     const c = await store.get(b.key, { type: 'json' });
     if (!c) continue;
     const msgs = c.messages || [];
+    let lastClientAt = 0;
+    for (const m of msgs) { if (m.sender === 'visitor' && (m.created_at || 0) > lastClientAt) lastClientAt = m.created_at || 0; }
     out.push({ cid: c.cid, name: c.name || '', email: c.email || '', business: c.business || '',
-      lastAt: c.lastAt || 0, last: msgs.length ? msgs[msgs.length - 1].body : '', count: msgs.length });
+      lastAt: c.lastAt || 0, last: msgs.length ? msgs[msgs.length - 1].body : '', count: msgs.length,
+      lastClientAt });
   }
   out.sort((a, b) => b.lastAt - a.lastAt);
   return out;
