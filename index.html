@@ -871,6 +871,8 @@ document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on', b.g
   x.addEventListener('click', function(){ w.classList.remove('open'); opened=false; });
   function resetChat(){ cid=''; info=null; logArr=[]; seen=0; try{ localStorage.removeItem(K_CID); localStorage.removeItem(K_INFO); localStorage.removeItem(K_LOG); localStorage.removeItem(K_SEEN); }catch(_){} if(poll){ clearInterval(poll); poll=null; } try{ paint(); }catch(_){} }
   window.__chatReset=resetChat; // called on logout to clear this browser's thread
+  // Prefill the start form for a signed-in client so their message is attributed to them.
+  window.__chatIdentify=function(name, email){ if(info) return; if(name){ if(nomI&&!nomI.value) nomI.value=name; if(restoI&&!restoI.value) restoI.value=name; } if(email && mailI && !mailI.value) mailI.value=email; };
   var newBtn=document.getElementById('chatNew');
   if(newBtn){ newBtn.title=(lang==='fr'?'Nouvelle conversation':'Start new conversation'); newBtn.addEventListener('click', function(){ if(logArr.length && !confirm(lang==='fr'?'Démarrer une nouvelle conversation? La conversation actuelle sera effacée de ce navigateur.':'Start a new conversation? This clears the current one from this browser.')) return; resetChat(); setTimeout(function(){ if(nomI) nomI.focus(); },40); }); }
   var ltog=document.getElementById('langtog'); if(ltog) ltog.addEventListener('click', function(){ if(opened) setTimeout(paint, 0); });
