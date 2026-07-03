@@ -46,6 +46,9 @@ export default async (req) => {
       id: s.id, domain: s.domain || '', platform: s.platform || null, status: s.status || null,
       seoScore: s.seoScore != null ? s.seoScore : null,
       lastPostAt: s.lastPostAt || null, lastPostTitle: s.lastPostTitle || null, lastScanAt: s.lastScanAt || null,
+      postCount: s.postCount != null ? s.postCount : null,
+      views: s.views != null ? s.views : null, clicks: s.clicks != null ? s.clicks : null,
+      metrics: s.metrics || null,
     }));
     return json({ configured: true, ok: true, client, sites });
   } catch (e) {
