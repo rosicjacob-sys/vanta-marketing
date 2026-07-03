@@ -34,7 +34,6 @@
     clicks:     { en: "Clicks to your profile",    fr: "Clics vers votre profil" },
     ai:         { en: "AI citations",              fr: "Citations IA" },
     published:  { en: "Articles published",        fr: "Articles publiés" },
-    pubShort:   { en: "Published",                  fr: "Publié" },
     upcoming:   { en: "Upcoming",                  fr: "À venir" },
     trend:      { en: "Views over time",           fr: "Vues dans le temps" },
     sources:    { en: "AI & discovery sources",    fr: "Sources IA et découverte" },
@@ -293,10 +292,14 @@
   }
 
   // Hide the marketing top-nav while a signed-in dashboard is showing.
+  // vp-admin (admin only) additionally hides the floating support chat;
+  // the client dashboard keeps the chat so clients can message us.
   function updateChrome() {
     var h = location.hash || "";
-    var onDash = (h.indexOf("#/admin") === 0 || h.indexOf("#/dashboard") === 0) && !!getToken();
+    var onAdmin = h.indexOf("#/admin") === 0 && !!getToken();
+    var onDash = onAdmin || (h.indexOf("#/dashboard") === 0 && !!getToken());
     document.body.classList.toggle("vp-dash", onDash);
+    document.body.classList.toggle("vp-admin", onAdmin);
   }
 
   // ================= LOGIN =================
@@ -337,6 +340,7 @@
     // (the shared router has no "#/login" branch, so relying on it left the
     //  dashboard visible until a manual refresh).
     document.body.classList.remove("vp-dash");
+    document.body.classList.remove("vp-admin");
     showView("view-login");
     if ((location.hash || "").indexOf("#/login") !== 0) location.hash = "#/login";
   }
@@ -427,6 +431,7 @@
         var ng = (d.configured && d.ok && d.client) ? d.client : null;
         host.innerHTML = clientHTML(user, m, ng);
         wireCommon();
+        try { if (window.__chatIdentify) window.__chatIdentify(user.name, user.email); } catch (e) {}
         maybeShowExpiry(user, (res.data && res.data.planLink) || "");
       });
     }).catch(function () {
@@ -471,17 +476,6 @@
     return out + "</ul>";
   }
 
-  function articleList(articles) {
-    if (!articles || !articles.length) return '<div class="dash-empty">' + esc(t("noData")) + "</div>";
-    var out = '<ul class="dash-arts">';
-    articles.forEach(function (a) {
-      var pub = (a.status || "").toLowerCase() === "published";
-      var badge = pub ? esc(t("pubShort")) : esc(t("upcoming"));
-      var title = a.url ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.title || "") + "</a>" : esc(a.title || "");
-      out += '<li><span class="dash-art-badge ' + (pub ? "pub" : "up") + '">' + badge + "</span>" + title + "</li>";
-    });
-    return out + "</ul>";
-  }
 
   function seoClass(n) { n = num(n); return n >= 80 ? "ok" : n >= 50 ? "pend" : "exp"; }
   function ngDate(iso) {
@@ -530,7 +524,6 @@
           '<div class="dash-card"><h3>' + esc(t("trend")) + "</h3>" + bars(m.series) + "</div>" +
           '<div class="dash-card"><h3>' + esc(t("sources")) + "</h3>" + sourceList(m.sources) + "</div>" +
         "</div>" +
-        '<div class="dash-card"><h3>' + esc(t("articles")) + "</h3>" + articleList(m.articles) + "</div>" +
         (m.note ? '<p class="dash-note">' + esc(m.note) + "</p>" : "");
     }
     return out + '</div></div><div id="vpExpiry"></div>';
@@ -1417,7 +1410,8 @@
     ".dash-muted{color:var(--mut2,#77809a);font-size:12px;font-weight:400}" +
     ".dash-actions{white-space:nowrap;text-align:right}" +
     ".btn.sm{padding:6px 12px;font-size:12.5px}" +
-    "body.vp-dash nav.vn,body.vp-dash footer,body.vp-dash #chatw{display:none!important}" +
+    "body.vp-dash nav.vn,body.vp-dash footer{display:none!important}" +
+    "body.vp-admin #chatw{display:none!important}" +
     "#view-admin>.sec,#view-dashboard>.sec{padding-top:34px}" +
     ".dash-table tbody tr:hover td{background:rgba(124,58,237,.06)}" +
     ".admin-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;margin-top:4px;min-height:62vh}" +
