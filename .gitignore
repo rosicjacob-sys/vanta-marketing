@@ -2,7 +2,7 @@
 node_modules
 *.zip
 *.pdf
-# internal docs — keep them out of the public Netlify deploy
+# internal docs - keep them out of the public Netlify deploy
 WHOP-SETUP-SOP.md
 SETUP-google-sheet.md
 *.gs
