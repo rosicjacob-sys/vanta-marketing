@@ -1,6 +1,6 @@
 // GET /.netlify/functions/client-data   (Bearer token, client role)
 // Returns the signed-in client's own profile + metrics. Never trusts an email
-// from the query string — only the identity baked into the verified token.
+// from the query string - only the identity baked into the verified token.
 import { userFromRequest, json } from '../lib/auth.mjs';
 import { getUser, publicUser, getPlans } from '../lib/store.mjs';
 

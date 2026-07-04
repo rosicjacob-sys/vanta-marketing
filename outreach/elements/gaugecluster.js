@@ -1,15 +1,15 @@
 /*
- * #17 — Gauge Cluster · Lineage: The Instrument
+ * #17 - Gauge Cluster · Lineage: The Instrument
  * A bank of analog gauges that boot like a dashboard ignition: on power-on every
  * needle slams from its rest peg to full-scale and settles back with a spring
- * overshoot, in one synchronized sweep (the screenshot moment). One gauge — the
- * "Citations IA" tach — redlines into a hot-magenta arc. Gauges are labelled with
+ * overshoot, in one synchronized sweep (the screenshot moment). One gauge - the
+ * "Citations IA" tach - redlines into a hot-magenta arc. Gauges are labelled with
  * French (Québec) restaurant metrics; live needles breathe with eased noise.
  *
  * Deps: none (pure Canvas2D; additive glow via 'lighter'; spring physics in JS).
  * Perf: DPR capped to [1,2]; static dial chrome (bezel, ticks, numerals, labels)
  * is pre-rendered ONCE to an offscreen buffer and blitted each frame, so the hot
- * loop only redraws needles + glow + grain — no per-frame text/arc layout, zero
+ * loop only redraws needles + glow + grain - no per-frame text/arc layout, zero
  * per-frame allocation in the loop. Grain tile is a small cached pattern. Coarse-
  * pointer / tiny cells drop grain + scanlines and use a lighter glow. Single rAF;
  * fully torn down on destroy (buffers freed, listeners removed).
@@ -161,7 +161,7 @@ export function mount(container, opts = {}) {
   let redlineFlash = 0; // 0..1 decaying
 
   // count-up readouts driven off the needle position
-  // (so the number ticks up exactly with the needle — tactile)
+  // (so the number ticks up exactly with the needle - tactile)
 
   // ---- interaction ----
   let hover = 0, hoverTarget = 0;
@@ -324,7 +324,7 @@ export function mount(container, opts = {}) {
     c.arc(cx, cy, ring, A_START, A_END);
     c.stroke();
 
-    // redline hot zone — drawn on the static face for the ONE redline gauge.
+    // redline hot zone - drawn on the static face for the ONE redline gauge.
     if (g.redline) {
       const rlFrom = A_START + A_SWEEP * 0.78;
       c.strokeStyle = hexA(tokens.flare, 0.5);
@@ -412,7 +412,7 @@ export function mount(container, opts = {}) {
       const q = (p - T_FULL) / (1 - T_FULL); // 0..1
       const rest = g.target;
       // spring goes from 1 (current) toward rest; settle() returns 0..~1 with
-      // overshoot — map it so frac starts at 1, ends at rest, overshoots past rest.
+      // overshoot - map it so frac starts at 1, ends at rest, overshoots past rest.
       const s = settle(q, 11.5, 5.0); // 0 at q0 -> ~1 at q1, oscillating
       frac = lerp(1, rest, s);
     }
@@ -556,7 +556,7 @@ export function mount(container, opts = {}) {
       drawNeedle(g, r.frac, 1);
     }
 
-    // redline alert flash (decaying magenta bloom around the tach) — earned once
+    // redline alert flash (decaying magenta bloom around the tach) - earned once
     if (redlineFlash > 0.001) {
       const g = G.find((x) => x.redline);
       if (g) {

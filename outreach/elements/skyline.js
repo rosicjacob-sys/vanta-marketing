@@ -1,17 +1,17 @@
 /*
- * #30 — Bar Skyline · Lineage: The Ledger · V2 "THE RECORD STRIKE"
+ * #30 - Bar Skyline · Lineage: The Ledger · V2 "THE RECORD STRIKE"
  *
  * Spring-overshoot bars rise on a reflective ink-violet floor under a slow
  * sweeping highlight; per-month "Vues du blogue" values count up as each bar
- * settles — recognizably the same skyline as V1. The elevation is the crown
+ * settles - recognizably the same skyline as V1. The elevation is the crown
  * beat. Once the 11 supporting bars settle, the record column (Octobre) holds a
  * breath (anticipation pre-compress + ambient pause), then FIRES upward on an
  * under-damped spring driven harder than the others so it visibly punches past
  * its settle line. At the apex the composite pass tears the cap edge red/cyan
  * (chromatic aberration ∝ bar velocity), a 4-point diffraction star lands on a
  * thrown crown chevron, and the lone hot-magenta flare ring expands & dies once.
- * The count-up lands its final digit ON the apex frame — number and motion
- * resolve together — then the bar rebounds with two decaying bounces.
+ * The count-up lands its final digit ON the apex frame - number and motion
+ * resolve together - then the bar rebounds with two decaying bounces.
  *
  * V2 adds, over V1:
  *  - a hand-rolled composite pass: bright-pass threshold bloom (lighter) +
@@ -41,7 +41,7 @@ const ROYAL = {
   lilac: "#A855F7",    // halo gradient start
   lilacHi: "#C4B5FD",  // halo gradient tip
   white: "#F6F3FE",    // type + rarest sparks
-  flare: "#E8409B",    // rare alert flare — used exactly once (record beat)
+  flare: "#E8409B",    // rare alert flare - used exactly once (record beat)
 };
 
 // ---- bespoke easing ----
@@ -65,7 +65,7 @@ const springOvershoot = (t, w, z) => {
   const wd = w * Math.sqrt(1 - z * z);
   return 1 - Math.exp(-z * w * t) * Math.cos(wd * t);
 };
-// analytic derivative of springOvershoot — gives instantaneous velocity for the
+// analytic derivative of springOvershoot - gives instantaneous velocity for the
 // chromatic-aberration spike + haptic glint timing (no per-frame finite-diff state).
 const springVel = (t, w, z) => {
   if (t <= 0 || t >= 1) return 0;
@@ -83,7 +83,7 @@ export const meta = {
   title: "Bar Skyline",
   lineage: "The Ledger",
   version: "V2",
-  signature: "The record bar holds a breath, then strikes past the skyline — chromatic tear, a thrown crown star, one magenta flare, and a count-up that lands on the apex frame.",
+  signature: "The record bar holds a breath, then strikes past the skyline - chromatic tear, a thrown crown star, one magenta flare, and a count-up that lands on the apex frame.",
   interaction: "Hover a bar for its value; the cursor lights the nearest column and parallaxes the depth layers. Click to replay the strike.",
   deps: [],
 };
@@ -207,10 +207,10 @@ export function mount(container, opts = {}) {
 
   // ---- data: "Vues du blogue" by month (illustrative) ----
   const MONTHS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
-  // Illustrative "Vues du blogue" — trends up to the record month (Octobre).
+  // Illustrative "Vues du blogue" - trends up to the record month (Octobre).
   // Realistic, non-round monthly figures; record month ~7 418 vues.
   const RAW = [3142, 2876, 3611, 3389, 4057, 3724, 4388, 4703, 5061, 7418, 6094, 6437];
-  const RECORD = 9; // Octobre — the bar that breaks the skyline
+  const RECORD = 9; // Octobre - the bar that breaks the skyline
   const N = RAW.length;
   const MAXV = Math.max.apply(null, RAW);
 
@@ -224,7 +224,7 @@ export function mount(container, opts = {}) {
 
   // ---- geometry (recomputed on resize) ----
   let geo = null;
-  let barUnionPath = null;   // Path2D of all bar rects (sweep clip) — built once/layout
+  let barUnionPath = null;   // Path2D of all bar rects (sweep clip) - built once/layout
   let recordValW = 0;        // measured fixed advance for tabular value (px)
   function layout() {
     const padX = Math.max(18, W * 0.07);
@@ -244,7 +244,7 @@ export function mount(container, opts = {}) {
     };
     // Build the bar-union clip once (full settled rects incl. record over-reach
     // headroom). Sweep light only rakes the columns, never the gaps. Rebuilt on
-    // layout only — never per frame.
+    // layout only - never per frame.
     barUnionPath = new Path2D();
     const cr = Math.min(barW * 0.32, 6);
     for (let i = 0; i < N; i++) {
@@ -300,7 +300,7 @@ export function mount(container, opts = {}) {
   // record drives a harder, less-damped spring so it punches past settle line
   const REC_W = 10.5, REC_Z = 0.26;
   // apex time within STRIKE (first peak of the under-damped spring), as a fraction
-  // of STRIKE_MS — used to sync crown throw, flare, landing flash & count-up.
+  // of STRIKE_MS - used to sync crown throw, flare, landing flash & count-up.
   const APEX_FRAC = (() => {
     const wd = REC_W * Math.sqrt(1 - REC_Z * REC_Z);
     return Math.PI / wd; // first peak of 1 - e^{} cos(wd t)
@@ -446,7 +446,7 @@ export function mount(container, opts = {}) {
     if (hPix <= 0.5) return;
     const cr = Math.min(w * 0.34, 6.5);
 
-    // contact shadow under the foot (anchors bar to the floor) — skip for mirror
+    // contact shadow under the foot (anchors bar to the floor) - skip for mirror
     if (depthDim == null && hPix > 4) {
       const sh = ctx.createRadialGradient(
         x + w / 2, geo.baseY + 1, 0, x + w / 2, geo.baseY + 1, w * 1.1);
@@ -486,7 +486,7 @@ export function mount(container, opts = {}) {
       lg.addColorStop(1, hexA(tokens.lilacHi, 0));
       ctx.fillStyle = lg;
       ctx.fillRect(x, yTop, rimW, hPix);
-      // right (slightly darker — single key light from upper-left)
+      // right (slightly darker - single key light from upper-left)
       let rg = ctx.createLinearGradient(x + w - rimW, 0, x + w, 0);
       rg.addColorStop(0, hexA(tokens.royal, 0));
       rg.addColorStop(1, hexA(tokens.lilac, rimA * 0.7));
@@ -665,7 +665,7 @@ export function mount(container, opts = {}) {
     paintLabels();
     ctx.restore();
 
-    // grain (gentle additive) — vignette is applied in the composite pass
+    // grain (gentle additive) - vignette is applied in the composite pass
     paintGrain();
   }
 
@@ -730,7 +730,7 @@ export function mount(container, opts = {}) {
       capGlow(cx, yTop, w * (2.2 + rp * 1.4), tokens.royal, 0.30 * rp);
     }
 
-    // thrown crown chevron with micro-overshoot — lands the diffraction star
+    // thrown crown chevron with micro-overshoot - lands the diffraction star
     if (crownPop > 0.001) {
       const p = easeOutCubic(clamp(crownPop, 0, 1));
       // throw overshoot: chevron flies a touch high then settles
@@ -764,7 +764,7 @@ export function mount(container, opts = {}) {
       }
     }
 
-    // the single hot-magenta flare — fires once on the first downbeat
+    // the single hot-magenta flare - fires once on the first downbeat
     if (flareT > 0.001 && flareT < 1) {
       const f = flareT;
       const ring = (w * 0.8) + f * w * 3.4;
@@ -872,7 +872,7 @@ export function mount(container, opts = {}) {
 
       // Anchor the pill a small fixed offset above the cap (independent of the
       // crown-throw lift), then CLAMP so it can never clip off the top of the
-      // canvas — guaranteeing the value is always fully on the dark backdrop and
+      // canvas - guaranteeing the value is always fully on the dark backdrop and
       // fully visible, even in short embed containers where the strike over-reach
       // pushes the cap near the top edge. The opaque dark pill is drawn after the
       // crown chevron, so any overlap is simply covered.
@@ -917,7 +917,7 @@ export function mount(container, opts = {}) {
       }
       ctx.restore();
 
-      // value — pure crisp white on the dark pill, with a dark text-shadow as a
+      // value - pure crisp white on the dark pill, with a dark text-shadow as a
       // belt-and-suspenders guard against any stray bloom bleeding onto it.
       const valBaseline = chipTop + padTop + valFontPx - 2;
       ctx.save();
@@ -929,7 +929,7 @@ export function mount(container, opts = {}) {
       drawTabularValue(cx, valBaseline, valStr);
       ctx.restore();
 
-      // caption — crisp lilac/white on the dark pill
+      // caption - crisp lilac/white on the dark pill
       ctx.save();
       ctx.shadowColor = hexA(tokens.void, 0.9);
       ctx.shadowBlur = 3;
@@ -1040,7 +1040,7 @@ export function mount(container, opts = {}) {
     bctx.drawImage(scene, 0, 0, bloomC.width, bloomC.height);
     // threshold: keep only bright lilac/white. Multiply by a hi-contrast curve
     // by drawing a near-black 'multiply' won't threshold; instead darken mids
-    // with 'source-in' against a luma mask is costly — use a pragmatic darken:
+    // with 'source-in' against a luma mask is costly - use a pragmatic darken:
     // overlay a void wash via 'multiply' twice to crush mids, leaving highlights.
     bctx.globalCompositeOperation = "multiply";
     bctx.fillStyle = "#3a3a3a"; // crush ~ keeps only the brightest
@@ -1059,7 +1059,7 @@ export function mount(container, opts = {}) {
       tmp.ctx.filter = "blur(6px)";
       tmp.ctx.drawImage(tmp.c, 0, 0);
       tmp.ctx.filter = "none";
-      // add bloom back (upsampled) over the view — true additive
+      // add bloom back (upsampled) over the view - true additive
       view.globalCompositeOperation = "lighter";
       view.globalAlpha = 0.85;
       view.drawImage(tmp.c, 0, 0, pw, ph);
@@ -1240,7 +1240,7 @@ export function mount(container, opts = {}) {
         updateStrike(rt);
       } else {
         // before the strike, keep record value counting toward (but not reaching)
-        // its final — final digit is reserved to land on the apex.
+        // its final - final digit is reserved to land on the apex.
         dispVal[RECORD] = RAW[RECORD] * 0.86 *
           easeOutCubic(clamp(elapsed / RECORD_DELAY, 0, 1));
       }
@@ -1285,7 +1285,7 @@ export function mount(container, opts = {}) {
     }
     updateTooltip();
 
-    // ambient sweep — paused during the anticipation beat
+    // ambient sweep - paused during the anticipation beat
     if (!sweepPaused) {
       sweepPhase += dt / 4200;
       if (sweepPhase > 1.35) sweepPhase = -0.15;
@@ -1303,13 +1303,13 @@ export function mount(container, opts = {}) {
   // The act-machine: rt = ms since the strike sequence began.
   function updateStrike(rt) {
     if (rt < ANTIC_MS) {
-      // ACT 1 — anticipation: pre-compress ~6%, dim reflection, pause sweep
+      // ACT 1 - anticipation: pre-compress ~6%, dim reflection, pause sweep
       const a = easeInOutCubic(clamp(rt / ANTIC_MS, 0, 1));
       recordPhase.antic = a;
       recordPhase.v = 0; // not yet over-reaching
       recordPhase.vel = 0;
       sweepPaused = true;
-      // value holds — final digit reserved for apex
+      // value holds - final digit reserved for apex
       dispVal[RECORD] = RAW[RECORD] * 0.86;
       crownPop = 0;
       return;
@@ -1376,7 +1376,7 @@ export function mount(container, opts = {}) {
       // resume the sweep after the strike settles past mid-act-3
       if (t > apexT + 0.35) sweepPaused = false;
     } else {
-      // strike fully done — hand off to idle settle
+      // strike fully done - hand off to idle settle
       recordPhase.v = 1;
       recordPhase.antic = 0;
       crownPop = 1;

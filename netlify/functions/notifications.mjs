@@ -1,4 +1,4 @@
-// /.netlify/functions/notifications   (Bearer token — client or admin)
+// /.netlify/functions/notifications   (Bearer token - client or admin)
 //   GET                    -> { notifications: [...], unread }
 //   POST { action:'read' } -> mark all of the caller's notifications read
 // Audience is derived from the token: admins share one inbox; each client has

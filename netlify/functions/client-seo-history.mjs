@@ -1,5 +1,5 @@
 // GET /.netlify/functions/client-seo-history?days=&blogId=   (client)
-// Per-site overall SEO score over time for the signed-in client — feeds the
+// Per-site overall SEO score over time for the signed-in client - feeds the
 // SEO-score trend line and the per-site authority panel.
 import { userFromRequest, json } from '../lib/auth.mjs';
 import { ngConfig, resolveClientId, fetchSeoHistory } from '../lib/netgrid.mjs';

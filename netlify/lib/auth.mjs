@@ -1,5 +1,5 @@
 // Shared auth helpers: password hashing + signed session tokens.
-// No external crypto deps — uses Node's built-in `crypto`.
+// No external crypto deps - uses Node's built-in `crypto`.
 import { scryptSync, randomBytes, timingSafeEqual, createHmac } from 'node:crypto';
 
 const TOKEN_TTL_SEC = 60 * 60 * 24 * 7; // 7 days

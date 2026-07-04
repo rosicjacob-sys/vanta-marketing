@@ -9,7 +9,7 @@ export const DEFAULTS = {
   brandName: 'Vanta',
   // Renewal reminder email. Placeholders: {name} {plan} {date} {days} {brand} {link}
   renewalSubject: 'Your plan renews soon',
-  renewalBody: 'Hi {name}, your {plan} renews on {date} ({days} left). Renew in one tap: {link} — thanks for being with {brand}!',
+  renewalBody: 'Hi {name}, your {plan} renews on {date} ({days} left). Renew in one tap: {link} - thanks for being with {brand}!',
   // Expiry notice email. Placeholders: {name} {plan} {date} {brand} {link}
   expiredSubject: 'Your plan has expired',
   expiredBody: 'Hi {name}, your {plan} expired on {date}. Renew here to pick back up: {link}',

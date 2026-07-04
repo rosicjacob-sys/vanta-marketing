@@ -1,5 +1,5 @@
 // GET /.netlify/functions/client-posts?limit=&blogId=   (client)
-// Recent posts (articles) for the signed-in client — feeds the posts list
+// Recent posts (articles) for the signed-in client - feeds the posts list
 // and the publishing-cadence chart.
 import { userFromRequest, json } from '../lib/auth.mjs';
 import { ngConfig, resolveClientId, fetchPosts } from '../lib/netgrid.mjs';

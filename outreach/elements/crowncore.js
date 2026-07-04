@@ -1,10 +1,10 @@
 /*
- * Crown Core — #8  ·  ELEVATED V2
+ * Crown Core - #8  ·  ELEVATED V2
  * Lineage: The Orb
  *
  * A distorted royal-emissive icosahedron suspended inside a slow-rotating wireframe
  * double-cage, ringed by a soft fresnel halo and orbited by glowing motes (one rare
- * magenta). It ASSEMBLES from scattered shards — but in V2 the shards don't just snap,
+ * magenta). It ASSEMBLES from scattered shards - but in V2 the shards don't just snap,
  * they LAND with weight: in the last beat of assembly the triangles COIL inward a hair
  * (anticipation), then on the frame they hit home the lilac flash fires with a sharper
  * attack while an expanding SHOCKWAVE ring rips outward through the halo, the camera
@@ -15,24 +15,24 @@
  * here; the rest of the frame crushes back toward ink-violet void.
  *
  * What V2 adds over V1 (without regressing a single V1 feature):
- *   1. Hand-rolled COMPOSITE pass — render scene to a target, half-res bright-pass
+ *   1. Hand-rolled COMPOSITE pass - render scene to a target, half-res bright-pass
  *      threshold bloom (separable 2-pass gaussian), then ONE final fullscreen frag that
  *      does composite = scene + bloom*intensity, barrel distortion, velocity-coupled
  *      chromatic aberration, shadow-crush toward #150E2A, vignette + grain folded in.
- *   2. Real CORE material — specular glint (half-vector key light), back-fresnel
+ *   2. Real CORE material - specular glint (half-vector key light), back-fresnel
  *      subsurface absorption, and energy-gated royal lift (saturation only blooms at
  *      the beat; settles toward ink-violet).
- *   3. Depth & parallax — a far additive DUST layer (z=-8..-12, atmospheric void fade)
+ *   3. Depth & parallax - a far additive DUST layer (z=-8..-12, atmospheric void fade)
  *      plus cursor-driven camera micro-parallax layered against the root tilt.
- *   4. Denser, cleaner geometry — coreDetail 2->3 on capable devices, a double-cage
+ *   4. Denser, cleaner geometry - coreDetail 2->3 on capable devices, a double-cage
  *      energy-breathing wireframe shell, and orbit nodes as soft additive radial
  *      sprites (procedural alpha) instead of low-poly spheres.
- *   5. Three-phase signature beat — anticipation coil -> sharper flash + halo shockwave
+ *   5. Three-phase signature beat - anticipation coil -> sharper flash + halo shockwave
  *      + camera kick -> easeBackOut root-scale settle, all synced to the bloom spike.
- *   6. Tightened grade — shadows crushed toward #150E2A, white reserved for the rarest
+ *   6. Tightened grade - shadows crushed toward #150E2A, white reserved for the rarest
  *      sparks (gated behind energy), one earned magenta untouched.
  *
- * Deps: three@0.160.0 (pinned esm.sh). gsap optional — bespoke easing is hand-rolled,
+ * Deps: three@0.160.0 (pinned esm.sh). gsap optional - bespoke easing is hand-rolled,
  *       so this module has NO hard gsap dependency.
  * Perf: one WebGL context, instanced sprite nodes, geometry built once, no per-frame
  *       allocation, DPR capped [1,2], rAF-gated, paused offscreen via handle.pause().
@@ -49,7 +49,7 @@ export const meta = {
   title: "Crown Core",
   lineage: "The Orb",
   version: "V2",
-  signature: "Shards coil, then LAND — lilac flash, shockwave, camera kick, bloom spike.",
+  signature: "Shards coil, then LAND - lilac flash, shockwave, camera kick, bloom spike.",
   interaction: "Hover spins up the orbit; cursor magnetically tilts and parallaxes the camera.",
   deps: ["three@0.160.0"],
 };
@@ -237,7 +237,7 @@ export function mount(container, opts = {}) {
   const spriteTex = track(makeSpriteTexture(64));
 
   // ---------------------------------------------------------------------------
-  // 1) The CORE — distorted emissive icosahedron (custom shader)
+  // 1) The CORE - distorted emissive icosahedron (custom shader)
   //    Domain-warped vertex displacement + real material. Shards = faces that fly in,
   //    with anticipation-coil in the last beat of assembly.
   // ---------------------------------------------------------------------------
@@ -322,7 +322,7 @@ export function mount(container, opts = {}) {
       varying float vRand;
       varying float vAssembleLocal;
 
-      // cheap 3d noise (value-ish via sin field) — no texture needed
+      // cheap 3d noise (value-ish via sin field) - no texture needed
       float hash(vec3 p){ return fract(sin(dot(p, vec3(17.1,113.5,57.3)))*43758.5453); }
       float noise(vec3 p){
         vec3 i=floor(p); vec3 f=fract(p);
@@ -418,7 +418,7 @@ export function mount(container, opts = {}) {
         float sparkW = spark * (0.18 + 0.82 * uEnergy); // white reserved for beats
         col = mix(col, cWhite, clamp(sparkW, 0.0, 0.9) * 0.8);
 
-        // assemble flash — lilac bloom right as shard lands
+        // assemble flash - lilac bloom right as shard lands
         float land = smoothstep(0.7, 1.0, vAssembleLocal) * (1.0 - smoothstep(1.0, 1.25, vAssembleLocal));
         col += cHaloB * land * 0.6;
 
@@ -444,7 +444,7 @@ export function mount(container, opts = {}) {
   root.add(coreMesh);
 
   // ---------------------------------------------------------------------------
-  // 2) WIREFRAME SHELL — DOUBLE CAGE (V2): two concentric icosahedron edge sets,
+  // 2) WIREFRAME SHELL - DOUBLE CAGE (V2): two concentric icosahedron edge sets,
   //    additive lilac, opacity breathes with uEnergy.
   // ---------------------------------------------------------------------------
   const shellMatA = track(new THREE.LineBasicMaterial({
@@ -467,7 +467,7 @@ export function mount(container, opts = {}) {
   shellBaseA.dispose();
   const shellA = new THREE.LineSegments(shellEdgesA, shellMatA);
   root.add(shellA);
-  // inner cage (detail 0, slightly smaller) — the double-cage read
+  // inner cage (detail 0, slightly smaller) - the double-cage read
   let shellBaseB = new THREE.IcosahedronGeometry(1.78, 0);
   const shellEdgesB = track(new THREE.EdgesGeometry(shellBaseB, 1));
   shellBaseB.dispose();
@@ -475,7 +475,7 @@ export function mount(container, opts = {}) {
   root.add(shellB);
 
   // ---------------------------------------------------------------------------
-  // 3) HALO — billboard fresnel ring sprite (shader plane facing camera)
+  // 3) HALO - billboard fresnel ring sprite (shader plane facing camera)
   //    V2: adds an expanding SHOCKWAVE ring driven by uShock.
   // ---------------------------------------------------------------------------
   const haloGeo = track(new THREE.PlaneGeometry(6.2, 6.2, 1, 1));
@@ -545,7 +545,7 @@ export function mount(container, opts = {}) {
   scene.add(halo); // in scene (not root) so it always faces camera flat
 
   // ---------------------------------------------------------------------------
-  // 3b) FAR DUST LAYER (V2) — additive Points field at z=-8..-12, dim deep/panel,
+  // 3b) FAR DUST LAYER (V2) - additive Points field at z=-8..-12, dim deep/panel,
   //     atmospheric void-fade at edges. Gives true parallax separation.
   // ---------------------------------------------------------------------------
   const DUST_COUNT = small ? 140 : 320;
@@ -624,7 +624,7 @@ export function mount(container, opts = {}) {
   scene.add(dust); // in scene so it parallaxes against root
 
   // ---------------------------------------------------------------------------
-  // 4) ORBIT NODES — instanced soft additive radial SPRITES (V2: not low-poly
+  // 4) ORBIT NODES - instanced soft additive radial SPRITES (V2: not low-poly
   //    spheres). One is magenta. Camera-facing motes that bloom cleanly.
   // ---------------------------------------------------------------------------
   const NODE_COUNT = small ? 7 : 11;
@@ -744,7 +744,7 @@ export function mount(container, opts = {}) {
   root.add(trail);
 
   // ---------------------------------------------------------------------------
-  // 5) HAND-ROLLED COMPOSITE PIPELINE (V2) — the headline upgrade.
+  // 5) HAND-ROLLED COMPOSITE PIPELINE (V2) - the headline upgrade.
   //    scene -> sceneRT, bright-pass (half-res) -> brightRT, 2x gaussian blur ->
   //    blurRT/blurRT2, final fullscreen frag = scene + bloom + barrel + CA + grade.
   // ---------------------------------------------------------------------------
@@ -1046,7 +1046,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  // RENDER — multi-pass composite pipeline
+  // RENDER - multi-pass composite pipeline
   // ---------------------------------------------------------------------------
   function renderAll() {
     // 1) scene -> sceneRT
@@ -1117,7 +1117,7 @@ export function mount(container, opts = {}) {
       nodeUniforms.uReveal.value = rev;
       trailMat.opacity = lerp(0, 0.2, rev);
 
-      // signature flash fires right as assembly completes — three-phase beat
+      // signature flash fires right as assembly completes - three-phase beat
       if (a >= 0.88 && !flashFired) {
         flashFired = true;
         fireSignatureBeat(1.2); // PAYOFF: sharper flash + shock + cam kick + settle

@@ -1,5 +1,5 @@
 /*
- * Royal Donut 3D — #28  ·  ELEVATED V2
+ * Royal Donut 3D - #28  ·  ELEVATED V2
  * Lineage: The Ledger
  *
  * An extruded 3D donut standing on a reflective ink floor: discovery-channel slices
@@ -13,10 +13,10 @@
  *   radial shockwave ring fires from centre; the bloom flares one frame toward the lone
  *   hot-magenta #E8409B then recoils to lilac; the centre digits slot-machine-settle.
  *   The number springs 1.0->1.18->0.98->1.0 while the whole donut takes a 1.5deg
- *   rotational overshoot and the reflective floor catches the flash — then everything
+ *   rotational overshoot and the reflective floor catches the flash - then everything
  *   crushes back toward void as the count locks at the total. One inevitable frame.
  *
- * Deps: three@0.160.0 (pinned esm.sh). gsap NOT required — easing is hand-rolled.
+ * Deps: three@0.160.0 (pinned esm.sh). gsap NOT required - easing is hand-rolled.
  * Perf: one WebGL context; each slice is a single ExtrudeGeometry built once (no per-frame
  *       alloc); slices grouped + transformed (scale/rotate) only; the scene renders to an
  *       RT once then a single fullscreen composite pass adds bloom + barrel + chromatic
@@ -37,7 +37,7 @@ export const meta = {
   lineage: "The Ledger",
   version: "V2",
   signature:
-    "The final lilac slice clicks in — a shockwave fires, the bloom flares to magenta then recoils, and the centre digits slot-machine-settle as the floor catches the flash.",
+    "The final lilac slice clicks in - a shockwave fires, the bloom flares to magenta then recoils, and the centre digits slot-machine-settle as the floor catches the flash.",
   interaction:
     "Hover a slice to lift and highlight it; the camera parallaxes to the cursor and the legend follows.",
   deps: ["three@0.160.0"],
@@ -231,10 +231,10 @@ export function mount(container, opts = {}) {
   const track = (o) => { disposables.push(o); return o; };
 
   // ---------------------------------------------------------------------------
-  // Render targets — scene RT (for composite + planar reflection sampling).
+  // Render targets - scene RT (for composite + planar reflection sampling).
   // ---------------------------------------------------------------------------
   // Ping-pong: the floor's planar-reflection shader samples LAST frame's render
-  // (rtRead) while the current frame renders into rtWrite — avoids reading and
+  // (rtRead) while the current frame renders into rtWrite - avoids reading and
   // writing the same FBO in one pass (undefined behaviour on some drivers).
   let rtA = null, rtB = null, rtWrite = null, rtRead = null;
   function makeRT() {
@@ -259,7 +259,7 @@ export function mount(container, opts = {}) {
   if (useComposite) makeRT();
 
   // ---------------------------------------------------------------------------
-  // Lights — single key + violet fill; emissive materials carry most of the glow.
+  // Lights - single key + violet fill; emissive materials carry most of the glow.
   // ---------------------------------------------------------------------------
   const keyLight = new THREE.DirectionalLight(cHaloB, 1.15);
   keyLight.position.set(2.5, 4.0, 4.0);
@@ -282,7 +282,7 @@ export function mount(container, opts = {}) {
   root.add(spin);
 
   // ---------------------------------------------------------------------------
-  // Geometry — one ExtrudeGeometry per slice (annular sector), built once.
+  // Geometry - one ExtrudeGeometry per slice (annular sector), built once.
   // ---------------------------------------------------------------------------
   const R_OUT = 2.0;
   const R_IN  = 1.18;
@@ -374,7 +374,7 @@ export function mount(container, opts = {}) {
   const lastIdx = CHANNELS.length - 1;
 
   // ---------------------------------------------------------------------------
-  // Inner hub — a thin dark ink ring under the centre so the number sits on a plate.
+  // Inner hub - a thin dark ink ring under the centre so the number sits on a plate.
   // ---------------------------------------------------------------------------
   const hubGeo = track(new THREE.CircleGeometry(R_IN * 0.97, 48));
   const hubMat = track(new THREE.MeshBasicMaterial({
@@ -385,7 +385,7 @@ export function mount(container, opts = {}) {
   spin.add(hub);
 
   // ---------------------------------------------------------------------------
-  // Reflective floor — a horizontal plane below the donut that samples a
+  // Reflective floor - a horizontal plane below the donut that samples a
   // vertically-flipped, blurred copy of the scene RT (planar reflection),
   // faded by Fresnel + distance + crushed toward C.panel. Capable devices only.
   // ---------------------------------------------------------------------------
@@ -643,7 +643,7 @@ export function mount(container, opts = {}) {
           col.b = texture2D(uScene, bUv).b;
 
           // ---- depth-ish DOF: a blurred copy blended by radial distance ----
-          // (no depth buffer needed — edges/halo/floor fall into soft focus,
+          // (no depth buffer needed - edges/halo/floor fall into soft focus,
           //  centre/front stays crisp; amount lifts with uDof.)
           float foc = smoothstep(0.05, 0.55, r2);   // 0 centre -> 1 edges
           float blurAmt = (0.0018 + uDof * 0.0045) * (0.4 + foc);
@@ -726,7 +726,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  // DOM overlay — centre per-digit count-up + caption + legend + hover readout.
+  // DOM overlay - centre per-digit count-up + caption + legend + hover readout.
   // ---------------------------------------------------------------------------
   const overlay = document.createElement("div");
   overlay.style.cssText =
@@ -1077,7 +1077,7 @@ export function mount(container, opts = {}) {
   }
 
   function setStaticFrame() {
-    // fully assembled, no autoplay — a composed screenshot frame
+    // fully assembled, no autoplay - a composed screenshot frame
     elapsed = entranceLen + 1;
     entranceDone = true;
     landFired = true;
@@ -1193,7 +1193,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  // RENDER — scene to RT, then composite (+ planar reflection samples RT).
+  // RENDER - scene to RT, then composite (+ planar reflection samples RT).
   // ---------------------------------------------------------------------------
   function renderAll() {
     if (useComposite && rtWrite) {
@@ -1210,7 +1210,7 @@ export function mount(container, opts = {}) {
       renderer.clear();
       renderer.render(overlayScene, overlayCam);
 
-      // swap buffers — next frame's floor reads this frame's render.
+      // swap buffers - next frame's floor reads this frame's render.
       const tmp = rtWrite; rtWrite = rtRead; rtRead = tmp;
     } else {
       // small/coarse: direct render + cheap grain overlay
@@ -1260,11 +1260,11 @@ export function mount(container, opts = {}) {
       setDigits(displayedNum, false);
       revealDigits(clamp01((elapsed - REVEAL_START) / 0.3) > 0.05);
 
-      // SIGNATURE — final slice timeline
+      // SIGNATURE - final slice timeline
       const finalP = clamp01((elapsed - finalStart) / SLICE_GROW);
 
       // (1) ANTICIPATION: ~120ms before the final slice seats, dip exposure ~8%
-      //     and pull idle spin to near-zero — the donut holds its breath.
+      //     and pull idle spin to near-zero - the donut holds its breath.
       if (!anticipationFired && finalP >= 0.58) {
         anticipationFired = true;
         exposureTarget = 0.92;     // ~8% dip
@@ -1357,7 +1357,7 @@ export function mount(container, opts = {}) {
       if (lp >= 1) {
         for (const lr of legendRows) { lr.displayed = lr.value; lr.val.textContent = lr.value + " %"; }
         legendCountStart = -2; // done
-        // legend has fully tallied — hand off to the highlight cycle.
+        // legend has fully tallied - hand off to the highlight cycle.
         if (!cycleEnabled) {
           cycleEnabled = true;
           highlightIndex = 0;          // start on Google
@@ -1480,7 +1480,7 @@ export function mount(container, opts = {}) {
     const py = (e.clientY - r.top) / r.height;
     tiltTarget.y = (px - 0.5) * 0.5;
     tiltTarget.x = (py - 0.5) * 0.35; // additive over base in frame()
-    // camera parallax — a few percent of the cursor offset
+    // camera parallax - a few percent of the cursor offset
     camOffsetTarget.x = (px - 0.5) * 0.9;
     camOffsetTarget.y = -(py - 0.5) * 0.6;
     // throttle raycast to one per frame

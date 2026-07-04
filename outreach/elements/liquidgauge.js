@@ -1,41 +1,41 @@
 /*
- * 32 — Liquid Gauge · V2  (Lineage: The Ledger)
+ * 32 - Liquid Gauge · V2  (Lineage: The Ledger)
  * ============================================================================
  * THE OVERFLOW MENISCUS SNAP.
  *
  * A circular ledger gauge fills with royal liquid (a real two-sine procedural
  * surface, preserved wholesale from V1) and lands on a monthly goal for a
- * Québec restaurant blog: 1240 / 1600 vues — exactly 78 %.
+ * Québec restaurant blog: 1240 / 1600 vues - exactly 78 %.
  *
  * The signature beat is now a true critically-underdamped spring integrated on
  * the fill fraction, choreographed as three legible acts:
  *
- *   (1) ANTICIPATION — at the scheduled fill, the surface dips ~4% below empty
+ *   (1) ANTICIPATION - at the scheduled fill, the surface dips ~4% below empty
  *       and the rim glow dims for ~180ms, coiling before the climb.
- *   (2) PAYOFF — the spring drives the surface PAST the dashed `objectif` line
+ *   (2) PAYOFF - the spring drives the surface PAST the dashed `objectif` line
  *       so it visibly crests above target. On the EXACT frame the fill first
  *       crosses TARGET, three things fire on the SAME frame for one inevitable
  *       beat: the single magenta flare ring (1-frame ignition, ~220ms decay),
  *       a horizontal meniscus shockwave sweeping left→right across the surface,
  *       and a white count-up landing flash on the percent glyph.
- *   (3) SETTLE — the spring rings down through 2–3 decaying wobbles to land on
+ *   (3) SETTLE - the spring rings down through 2–3 decaying wobbles to land on
  *       EXACTLY 1240 / 1600 and 78 %, meniscus going glassy-still.
  *
  * The screenshot moment is the cusp of the overshoot: liquid arced above the
  * objectif line, rim blooming, magenta ghost, 78 % mid-flash. Chromatic
  * aberration is coupled to slosh velocity in the final composite pass so the
- * rim and readout fringe harder the faster they move — then snap dead-clean as
+ * rim and readout fringe harder the faster they move - then snap dead-clean as
  * velocity hits zero. The stillness after motion is the beat.
  *
  * What V2 adds over V1 (without regressing a single V1 feature):
  *   • Hand-rolled composite pass: bright-pass bloom (downscale + 2 box blurs,
  *     added with 'lighter') + subtle barrel warp + velocity chromatic aberration
- *     — replaces scattered per-stroke shadowBlur with one controlled grade.
- *   • Real spring integrator on fillFrac (stiffness ~120, damping ~11) — frame-
+ *     - replaces scattered per-stroke shadowBlur with one controlled grade.
+ *   • Real spring integrator on fillFrac (stiffness ~120, damping ~11) - frame-
  *     rate independent overshoot + ring-down, replacing the open-loop curve.
  *   • Energy-driven colour grade: lift royal→lilac at crests, crush shadows
- *     toward ink-violet, gate rim brightness — the grade responds to the beat.
- *   • Reflective elliptical floor + soft contact shadow — z-depths the disc.
+ *     toward ink-violet, gate rim brightness - the grade responds to the beat.
+ *   • Reflective elliptical floor + soft contact shadow - z-depths the disc.
  *   • Tabular count-up (monospaced digits) with a 1-frame landing flash and a
  *     lilac gradient hairline rule framing the readout as a data field.
  *   • Camera micro-parallax to cursor across 2–3 z-layers + atmospheric edge
@@ -43,7 +43,7 @@
  *   • Subsurface absorption gradient (Beer–Lambert-ish) + soft additive bubble
  *     sprites that cluster and accelerate during the slosh act.
  *
- * Deps: [] — pure Canvas2D. No three, no gsap. Everything procedural.
+ * Deps: [] - pure Canvas2D. No three, no gsap. Everything procedural.
  * Perf: scene canvas + small reusable offscreen buffers (no per-frame alloc in
  *       the hot loop), DPR capped to [1,2] (coarse pointer -> 1.4); the composite
  *       pass downsamples for the blur so it stays cheap; offscreen pause()/
@@ -70,7 +70,7 @@ export const meta = {
   lineage: "The Ledger",
   version: "V2",
   signature:
-    "The liquid coils, springs past the objectif and crests — flare ring, meniscus shockwave and count-up flash fire on one frame — then rings down to exactly 78 %, glassy-still.",
+    "The liquid coils, springs past the objectif and crests - flare ring, meniscus shockwave and count-up flash fire on one frame - then rings down to exactly 78 %, glassy-still.",
   interaction:
     "Move the cursor to parallax the gauge and ripple the surface; click anywhere to recoil and refill from empty.",
   deps: [],
@@ -172,7 +172,7 @@ export function mount(container, opts = {}) {
   }
 
   // Offscreen scene buffer (full-res) + composite working buffers (downscaled
-  // for the blur). Reused across frames — no per-frame allocation.
+  // for the blur). Reused across frames - no per-frame allocation.
   const scene = document.createElement("canvas");
   let sctx = scene.getContext("2d", { alpha: true });
 
@@ -182,7 +182,7 @@ export function mount(container, opts = {}) {
   let bB = bloomB.getContext("2d", { alpha: true });
 
   // full-res scratch for the chromatic channel split (only sized/used when the
-  // surface is actually moving — otherwise the composite blits clean).
+  // surface is actually moving - otherwise the composite blits clean).
   const split = document.createElement("canvas");
   let spx = split.getContext("2d", { alpha: true });
 
@@ -206,7 +206,7 @@ export function mount(container, opts = {}) {
     scene.width = dw; scene.height = dh;
     split.width = dw; split.height = dh;
 
-    // bloom buffers at ~1/4 res — the blur reads as a soft bloom, cheaply.
+    // bloom buffers at ~1/4 res - the blur reads as a soft bloom, cheaply.
     const div = small || coarse ? 5 : 4;
     BW = Math.max(1, Math.round(dw / div));
     BH = Math.max(1, Math.round(dh / div));
@@ -299,11 +299,11 @@ export function mount(container, opts = {}) {
   // count-up landing flash on the percent glyph
   let landFlash = 0;      // 0..1, 1-frame ignition then decays
 
-  // slosh tilt (lateral momentum -> wave mean tilt) — preserved from V1
+  // slosh tilt (lateral momentum -> wave mean tilt) - preserved from V1
   let sloshTilt = 0;
   let sloshVel = 0;
 
-  // energy scalar = clamp(abs(springV)) — drives the colour grade + aberration
+  // energy scalar = clamp(abs(springV)) - drives the colour grade + aberration
   let energy = 0;
 
   // count-up readout (driven off the SAME spring)
@@ -319,7 +319,7 @@ export function mount(container, opts = {}) {
   let rimEnergy = 1;
 
   function beginFill() {
-    // Act 1: anticipation — coil below empty before the climb.
+    // Act 1: anticipation - coil below empty before the climb.
     anticipPhase = true;
     anticipStart = performance.now();
     anticip = 0;
@@ -359,7 +359,7 @@ export function mount(container, opts = {}) {
   }
 
   /* ====================================================================== *
-   *  SCENE RENDER  — draws the full gauge into the offscreen `scene` buffer
+   *  SCENE RENDER  - draws the full gauge into the offscreen `scene` buffer
    *  (everything except grain/vignette, which ride the composite output).
    * ====================================================================== */
   function compose(now, frac, waveAmp, tilt, flareEnv, rev) {
@@ -397,7 +397,7 @@ export function mount(container, opts = {}) {
     g.scale(gScale, gScale);
     g.globalAlpha = gAlpha;
 
-    // outer ambient glow ring — brightness gated by rimEnergy (dims on coil).
+    // outer ambient glow ring - brightness gated by rimEnergy (dims on coil).
     const amb = g.createRadialGradient(0, 0, R * 0.7, 0, 0, R * 1.6);
     amb.addColorStop(0, rgba(P.royal, 0.0));
     amb.addColorStop(0.55, rgba(P.deep, (0.16 + crest * 0.10) * gAlpha * rimEnergy));
@@ -407,7 +407,7 @@ export function mount(container, opts = {}) {
     g.arc(0, 0, R * 1.6, 0, Math.PI * 2);
     g.fill();
 
-    // tick marks (ledger feel) — far parallax layer
+    // tick marks (ledger feel) - far parallax layer
     const TICKS = small ? 24 : 36;
     for (let i = 0; i < TICKS; i++) {
       const a = (i / TICKS) * Math.PI * 2 - Math.PI / 2;
@@ -504,7 +504,7 @@ export function mount(container, opts = {}) {
     const x0 = -R, x1 = R;
     const tsec = (now - startT) / 1000;
 
-    // wave parameters — PRESERVED V1 model: staggered k1/k2, w1/w2.
+    // wave parameters - PRESERVED V1 model: staggered k1/k2, w1/w2.
     const amp1 = waveAmp * R;
     const amp2 = waveAmp * R * 0.55;
     const k1 = 2.1, k2 = 3.7;
@@ -527,7 +527,7 @@ export function mount(container, opts = {}) {
       return y;
     }
 
-    // sample surface once into ys[] — reused by body fill, sheen, meniscus, shock.
+    // sample surface once into ys[] - reused by body fill, sheen, meniscus, shock.
     const step = (x1 - x0) / N;
     const ys = surfaceYs;
     for (let i = 0; i <= N; i++) ys[i] = surfaceAt(x0 + step * i);
@@ -600,7 +600,7 @@ export function mount(container, opts = {}) {
     g.strokeStyle = rgba(P.white, 0.9);
     g.stroke();
 
-    // bright crest highlight (additive, thin) — preserved
+    // bright crest highlight (additive, thin) - preserved
     g.globalCompositeOperation = "lighter";
     g.beginPath();
     g.moveTo(x0, ys[0]);
@@ -650,7 +650,7 @@ export function mount(container, opts = {}) {
     g.strokeStyle = rimShade;
     g.stroke();
 
-    // bright fresnel rim (additive) — brightness gated by rimEnergy (coil dims
+    // bright fresnel rim (additive) - brightness gated by rimEnergy (coil dims
     // it; payoff/crest blooms it). Bloom itself now comes from composite pass.
     g.globalCompositeOperation = "lighter";
     g.beginPath();
@@ -708,7 +708,7 @@ export function mount(container, opts = {}) {
     const lf = landFlash;
     const punch = 1 + easeOutCubic(lf) * 0.04;
 
-    // big tabular percent — pure white, heavier weight for crisp legibility
+    // big tabular percent - pure white, heavier weight for crisp legibility
     g.save();
     g.scale(punch, punch);
     g.fillStyle = "#FFFFFF";
@@ -724,7 +724,7 @@ export function mount(container, opts = {}) {
     }
     g.restore();
 
-    // count-up value — tabular figures so digits never jitter — pure white, crisp
+    // count-up value - tabular figures so digits never jitter - pure white, crisp
     g.fillStyle = "#FFFFFF";
     g.font = `600 ${R * 0.15}px ${MONO}`;
     g.fillText(`${FR(shownVal)} / ${FR(GOAL)}`, 0, R * 0.2);
@@ -743,7 +743,7 @@ export function mount(container, opts = {}) {
     g.lineTo(hw, hy);
     g.stroke();
 
-    // metric label — pure white, crisp/legible
+    // metric label - pure white, crisp/legible
     g.fillStyle = "#FFFFFF";
     g.font = `600 ${R * 0.1}px "Helvetica Neue", Arial, sans-serif`;
     g.fillText("Vues du blogue · ce mois", 0, R * 0.38);
@@ -774,7 +774,7 @@ export function mount(container, opts = {}) {
     g.restore();
 
     // reflective bounce: a squashed lilac/royal glow echoing the disc's lower
-    // half — a second royal highlight bounce.
+    // half - a second royal highlight bounce.
     g.save();
     g.translate(0, floorY);
     g.scale(1, -0.26);                // mirror + squash
@@ -792,7 +792,7 @@ export function mount(container, opts = {}) {
   }
 
   /* ====================================================================== *
-   *  COMPOSITE PASS — bright-pass bloom + barrel + chromatic aberration
+   *  COMPOSITE PASS - bright-pass bloom + barrel + chromatic aberration
    *  Reads `scene` (full-res), writes the visible `canvas`.
    * ====================================================================== */
   function composite() {
@@ -818,7 +818,7 @@ export function mount(container, opts = {}) {
     // --- base blit with RADIAL chromatic aberration ---
     // Channels are drawn at slightly different scales about the centre: red
     // expanded, blue contracted. Fringe is zero on the optical axis (the readout
-    // stays razor-sharp) and grows toward the rim — physically-correct CA that
+    // stays razor-sharp) and grows toward the rim - physically-correct CA that
     // hardens with velocity and snaps clean on settle.
     if (aberr < 0.02) {
       o.drawImage(scene, -bx, -by, dw, dh);
@@ -983,10 +983,10 @@ export function mount(container, opts = {}) {
       }
       fillFrac = Math.max(0, springX);
 
-      // count-up tracks the SAME spring (clamped to VALUE — no number overshoot)
+      // count-up tracks the SAME spring (clamped to VALUE - no number overshoot)
       shownVal = Math.min(VALUE, Math.max(0, springX) * GOAL);
 
-      /* ----- ACT 2: PAYOFF — fire 3 things on the target-cross frame ----- */
+      /* ----- ACT 2: PAYOFF - fire 3 things on the target-cross frame ----- */
       if (!flareFired && !anticipPhase && springX >= TARGET && springV > 0) {
         flareFired = true;
         flareT = 1;                 // single magenta flare (1-frame ignition)
@@ -1024,13 +1024,13 @@ export function mount(container, opts = {}) {
       waveAmp = 0.012 + Math.sin(now / 1400) * 0.004;
     }
 
-    // energy scalar = clamp(abs(springV)) — drives grade + aberration
+    // energy scalar = clamp(abs(springV)) - drives grade + aberration
     energy = lerp(energy, clamp01(Math.abs(springV) * 0.85 + ripple * 0.4 + (shock >= 0 ? 0.5 : 0)), 0.4);
 
     // rim energy eases back to 1 after the payoff bloom
     if (!anticipPhase) rimEnergy = lerp(rimEnergy, 1, 0.12);
 
-    // slosh tilt physics (spring back to level) — preserved V1 model
+    // slosh tilt physics (spring back to level) - preserved V1 model
     sloshVel += -sloshTilt * 22 * dt;
     sloshVel *= Math.pow(0.06, dt);
     sloshTilt += sloshVel * dt;

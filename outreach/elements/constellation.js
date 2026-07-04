@@ -1,19 +1,19 @@
-// 31 · Node Constellation — lineage: The Ledger — VERSION V2 (ELEVATED)
+// 31 · Node Constellation - lineage: The Ledger - VERSION V2 (ELEVATED)
 // A force-directed 3D graph of Québec restaurants, cities & channels settling under
 // spring physics. A single ring of WHITE LIGHT races edge-by-edge from the seed
-// restaurant outward through every BFS layer — each pulse a comet-streak running the
-// link like a lit fuse — then the whole lattice flexes outward and springs back with a
+// restaurant outward through every BFS layer - each pulse a comet-streak running the
+// link like a lit fuse - then the whole lattice flexes outward and springs back with a
 // damped overshoot, the one earned hot-magenta flare fires, and the just-lit nodes flash
 // their French labels in with a clip-path wipe. The cursor magnetically tugs the nearest
 // node AND micro-parallaxes the camera so the cloud reads as a tangible held object.
 //
-// V2 vs V1 — what was pushed (all V1 features preserved):
+// V2 vs V1 - what was pushed (all V1 features preserved):
 //   1. Hand-rolled COMPOSITE PASS: scene -> WebGLRenderTarget -> fullscreen triangle with
 //      bright-pass threshold bloom (9-tap separable Gaussian), velocity-driven chromatic
 //      aberration (peaks at the cascade crest / on drag-release), subtle barrel distortion,
 //      and graded vignette + grain composited INSIDE the shader (replaces the flat CSS look).
 //   2. COMET-STREAK pulses: each pulse renders as 3 trailing points (t, t-trail, t-2·trail)
-//      with falling alpha — light running down a fuse, not a hopping dot. Hot finale = longer tail.
+//      with falling alpha - light running down a fuse, not a hopping dot. Hot finale = longer tail.
 //   3. FRESNEL nodes + DEPTH grade: custom ShaderMaterial with a fresnel rim tinted to lilac,
 //      a darker interior core, and a near/far z-grade (far nodes crush to ink, near nodes lift
 //      to royal) giving real volume + z-layering.
@@ -24,7 +24,7 @@
 //   6. Masked French LABELS: lit nodes flash their names with a left-to-right clip-path wipe +
 //      lilac hairline underline, projected to screen, fading as excite decays.
 //
-// Deps: three@0.160.0 (WebGL). No gsap — easing is hand-rolled (expo/back/cubic/elastic).
+// Deps: three@0.160.0 (WebGL). No gsap - easing is hand-rolled (expo/back/cubic/elastic).
 // Perf: single WebGL context; InstancedMesh for nodes/halos; one additive LineSegments for
 //       edges; fixed pulse pool (no per-frame alloc); DPR capped to [1,2]; physics on a fixed
 //       substep; offscreen pause()/resume(); FULL dispose in destroy() (incl. RT + composite).
@@ -43,7 +43,7 @@ export const meta = {
   signature:
     "An inhale, then a ring of white comet-light races edge-by-edge to the rim, the lattice flexes and springs, one magenta flare fires, and the lit nodes flash their French names.",
   interaction:
-    "Drag any node — the lattice springs and re-settles; the cursor also tugs the nearest node and micro-parallaxes the camera so you peer around the cloud.",
+    "Drag any node - the lattice springs and re-settles; the cursor also tugs the nearest node and micro-parallaxes the camera so you peer around the cloud.",
   deps: ["three@0.160.0"],
 };
 
@@ -112,7 +112,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  //  STATIC GRADIENT FALLBACK (no WebGL) — never blank
+  //  STATIC GRADIENT FALLBACK (no WebGL) - never blank
   // ---------------------------------------------------------------------------
   if (!webglOK()) {
     const fb = document.createElement("div");
@@ -138,7 +138,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  //  GRAPH MODEL — Québec restaurant / city / channel constellation
+  //  GRAPH MODEL - Québec restaurant / city / channel constellation
   // ---------------------------------------------------------------------------
   // type: 0 hub (restaurant) · 1 city · 2 channel
   const LABELS = [
@@ -275,7 +275,7 @@ export function mount(container, opts = {}) {
   // Composite pass only on capable (non-small, non-coarse) devices.
   const useComposite = !(small() || coarse);
 
-  // background plate (void + faint nebula) — kept as the dark base under the canvas
+  // background plate (void + faint nebula) - kept as the dark base under the canvas
   const plate = document.createElement("div");
   plate.style.cssText = `position:absolute;inset:0;z-index:-1;pointer-events:none;background:
     radial-gradient(130% 120% at 50% 40%, ${C.deep}3a 0%, ${C.void} 60%),
@@ -525,7 +525,7 @@ export function mount(container, opts = {}) {
   const colPulseHot = c3(C.flare);
 
   // ---------------------------------------------------------------------------
-  //  COMPOSITE PASS — RenderTarget -> fullscreen triangle bloom/CA/barrel/grade
+  //  COMPOSITE PASS - RenderTarget -> fullscreen triangle bloom/CA/barrel/grade
   // ---------------------------------------------------------------------------
   let rt = null, brightRT = null, blurRTa = null, blurRTb = null;
   let compositeScene = null, compositeCam = null;
@@ -704,7 +704,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  //  PHYSICS — force-directed (repulsion + spring + centering)
+  //  PHYSICS - force-directed (repulsion + spring + centering)
   // ---------------------------------------------------------------------------
   const tmp = new THREE.Vector3();
   const REPULSE = 0.55;
@@ -782,7 +782,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  //  WRITE BUFFERS (per frame) — no allocation
+  //  WRITE BUFFERS (per frame) - no allocation
   // ---------------------------------------------------------------------------
   const mtx = new THREE.Matrix4();
   const qIdentity = new THREE.Quaternion();
@@ -937,7 +937,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  //  INTERACTION — pointer pick / drag / magnetic pull / camera parallax
+  //  INTERACTION - pointer pick / drag / magnetic pull / camera parallax
   // ---------------------------------------------------------------------------
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
@@ -1019,7 +1019,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  //  SIGNATURE CASCADE — BFS-ring ignition with a dramatic arc
+  //  SIGNATURE CASCADE - BFS-ring ignition with a dramatic arc
   //  (anticipation -> accelerating payoff -> settle with overshoot)
   //  THE BFS-RING SPINE IS PRESERVED: all edges at one depth fire together.
   // ---------------------------------------------------------------------------
@@ -1062,7 +1062,7 @@ export function mount(container, opts = {}) {
     const schedule = built.schedule;
     const maxDepth = Math.max(1, built.maxDepth);
 
-    // (a) ANTICIPATION — inhale: seed swells, frame crushes toward void, dim edges.
+    // (a) ANTICIPATION - inhale: seed swells, frame crushes toward void, dim edges.
     nodeExcite[seed] = 1.3;
     uCrushTarget = 1.0;
     edgeMat.opacity = 0.32;
@@ -1071,7 +1071,7 @@ export function mount(container, opts = {}) {
     let i = 0;
     const fireDepth = () => {
       if (destroyed) return;
-      // (b) PAYOFF — accelerate stepDelay across BFS depths (ring speeds to the rim)
+      // (b) PAYOFF - accelerate stepDelay across BFS depths (ring speeds to the rim)
       const depthNow = i < schedule.length ? schedule[i].depth : -1;
       const dp = clamp(depthNow / maxDepth, 0, 1);
       // ramp CA / velocity uniform so aberration peaks at the OUTERMOST ring
@@ -1090,7 +1090,7 @@ export function mount(container, opts = {}) {
         const delay = lerp(small() ? 130 : 110, small() ? 60 : 45, easeInOutCubic(nextDp));
         cascadeTimer = setTimeout(fireDepth, delay);
       } else {
-        // (c) SETTLE with OVERSHOOT — radial velocity pop on every node; spring pulls back
+        // (c) SETTLE with OVERSHOOT - radial velocity pop on every node; spring pulls back
         const flexK = small() ? 3.2 : 4.4;
         for (let nIdx = 0; nIdx < N; nIdx++) {
           if (nIdx === draggingNode) continue;
@@ -1120,7 +1120,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  //  ENTRANCE — nodes ease from scatter into settled rest; first cascade fires
+  //  ENTRANCE - nodes ease from scatter into settled rest; first cascade fires
   // ---------------------------------------------------------------------------
   let entranceT = 0;
   let entering = false;
@@ -1171,7 +1171,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  //  RENDER — to RT then composite, or straight to screen on lite path
+  //  RENDER - to RT then composite, or straight to screen on lite path
   // ---------------------------------------------------------------------------
   let blurT = 0;
   function renderComposite() {
@@ -1219,7 +1219,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  //  STATIC FRAME (reduced motion) — settled, composed, frozen mid-cascade beat
+  //  STATIC FRAME (reduced motion) - settled, composed, frozen mid-cascade beat
   // ---------------------------------------------------------------------------
   function renderStaticFrame() {
     for (let i = 0; i < N * 3; i++) { pos[i] = rest0[i]; vel[i] = 0; }

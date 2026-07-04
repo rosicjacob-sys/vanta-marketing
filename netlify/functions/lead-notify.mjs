@@ -1,4 +1,4 @@
-// POST /.netlify/functions/lead-notify   (public — called from the marketing
+// POST /.netlify/functions/lead-notify   (public - called from the marketing
 // lead form alongside the Google Sheet post). Emails the admin + drops an
 // in-app alert when a new lead comes in. The Sheet stays the source of truth;
 // this is just a heads-up so the admin doesn't have to watch the Sheet.

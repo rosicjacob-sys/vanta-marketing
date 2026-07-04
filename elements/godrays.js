@@ -1,16 +1,16 @@
 /* ============================================================================
- * 05 · Godrays Cathedral — V2 (ELEVATED)  —  lineage: The Field
+ * 05 · Godrays Cathedral - V2 (ELEVATED)  -  lineage: The Field
  * Volumetric royal god-rays raking through dark violet haze, with GPU-instanced
  * depth-banded dust motes drifting in the light. Rays sweep slowly on idle, lean
  * toward the cursor, and shift with scroll.
  *
  * V2 PUSH (built on V1, regresses nothing):
- *  · REAL threshold bloom — half-res FBO pipeline: bright-pass → separable 9-tap
+ *  · REAL threshold bloom - half-res FBO pipeline: bright-pass → separable 9-tap
  *    gaussian (H then V) → final composite that adds bloom*strength back. God-ray
  *    cores and the white flare actually bleed light into the void. Gated behind
  *    lowQuality: coarse-pointer / FBO-alloc-failure falls back to the V1 single-
  *    pass soft-clamp (never blanks).
- *  · Velocity-coupled chromatic aberration + faint barrel in the composite frag —
+ *  · Velocity-coupled chromatic aberration + faint barrel in the composite frag -
  *    radial 3-tap RGB split scaled by pointer/flare velocity, so cursor flicks and
  *    the flare read optically, not flat.
  *  · Signature beat re-authored to ANTICIPATION → PAYOFF → SETTLE-with-overshoot:
@@ -19,16 +19,16 @@
  *    then snaps to full white incandescence through the bloom pass with a halo
  *    punch; uFlare rings once (~8% overshoot via exp*sin) and settles. White shaft
  *    angle eases into place with a back-out sweep.
- *  · ONE earned magenta spark — a single sub-frame hot-magenta point at the source
+ *  · ONE earned magenta spark - a single sub-frame hot-magenta point at the source
  *    tip, fired exactly once on the very first flare's payoff frame; every other
  *    highlight stays pure white. Rarity is the point.
- *  · True z-layer depth + DOF — motes bucketed into near/mid/far bands with band-
+ *  · True z-layer depth + DOF - motes bucketed into near/mid/far bands with band-
  *    scaled parallax, far band soft-blurred + atmospherically faded into the haze,
  *    near band crisp; royal saturation lifts on the near band only at crests.
  *  · Gradient hairline that wipes in under "Trouvé" on payoff + a 1px overlay
  *    haptic tick + a 1-frame headline scale snap-back.
  *
- * deps: three@0.160.0  (gsap optional — graceful fallback to internal easing)
+ * deps: three@0.160.0  (gsap optional - graceful fallback to internal easing)
  * perf: single WebGL context · half-res bloom FBOs (gated) · 1 instanced-points
  *       mote system · DPR capped [1,2] · no per-frame alloc · coarse-pointer /
  *       small-screen → fewer motes + single-pass soft-clamp · reduced-motion →
@@ -59,7 +59,7 @@ const ROYAL = {
   haloA: "#A855F7",
   haloB: "#C4B5FD",
   white: "#F6F3FE",
-  flare: "#E8409B", // rare hot-magenta alert — used at most once
+  flare: "#E8409B", // rare hot-magenta alert - used at most once
 };
 
 const hexToVec3 = (hex) => {
@@ -120,7 +120,7 @@ export function mount(container, opts = {}) {
     "position:absolute;inset:0;overflow:hidden;background:" +
     P.void +
     ";font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;";
-  // static gradient base — the never-blank floor (also the WebGL fallback)
+  // static gradient base - the never-blank floor (also the WebGL fallback)
   const baseGrad = document.createElement("div");
   baseGrad.style.cssText =
     "position:absolute;inset:0;background:" +
@@ -136,7 +136,7 @@ export function mount(container, opts = {}) {
   root.appendChild(canvas);
 
   /* ---------------------------------------------------------------------- */
-  /* 2 · text overlay (French Québec copy) — masked char reveal             */
+  /* 2 · text overlay (French Québec copy) - masked char reveal             */
   /* ---------------------------------------------------------------------- */
   const overlay = document.createElement("div");
   overlay.style.cssText =
@@ -151,7 +151,7 @@ export function mount(container, opts = {}) {
     "font-weight:600;mix-blend-mode:screen;";
   overlay.appendChild(eyebrow);
 
-  // headline: "Trouvé partout." — "Trouvé" gets the signature flare
+  // headline: "Trouvé partout." - "Trouvé" gets the signature flare
   const headline = document.createElement("h1");
   headline.style.cssText =
     "margin:0;font-weight:700;line-height:.98;letter-spacing:-.02em;" +
@@ -178,7 +178,7 @@ export function mount(container, opts = {}) {
     word1.appendChild(mask);
     charSpans.push(inner);
   }
-  // gradient hairline — wipes in under "Trouvé" synced to the flare payoff
+  // gradient hairline - wipes in under "Trouvé" synced to the flare payoff
   const hairline = document.createElement("span");
   hairline.style.cssText =
     "position:absolute;left:0;right:0;bottom:-0.06em;height:2px;pointer-events:none;" +
@@ -248,7 +248,7 @@ export function mount(container, opts = {}) {
     grain.style.backgroundImage = "url(" + gc.toDataURL() + ")";
     grain.style.backgroundSize = "180px 180px";
   } catch (e) {
-    /* ignore — grain is decorative */
+    /* ignore - grain is decorative */
   }
   root.appendChild(grain);
 
@@ -309,7 +309,7 @@ export function mount(container, opts = {}) {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* 5 · three.js scene — fullscreen ray pass + instanced motes            */
+  /* 5 · three.js scene - fullscreen ray pass + instanced motes            */
   /* ---------------------------------------------------------------------- */
   try {
     renderer = new THREE.WebGLRenderer({
@@ -438,7 +438,7 @@ export function mount(container, opts = {}) {
       rays *= mix(0.18, 1.0, rev) * mix(0.4, 1.0, revMask);
       haze *= mix(0.25, 1.0, rev);
 
-      // ANTICIPATION: the cathedral inhales — crush the shaft field ~45% darker
+      // ANTICIPATION: the cathedral inhales - crush the shaft field ~45% darker
       // and dim the haze just before the payoff so the detonation has contrast.
       float antCrush = mix(1.0, 0.55, uAnticip);
       rays *= antCrush;
@@ -462,9 +462,9 @@ export function mount(container, opts = {}) {
       float whiteShaft = smoothstep(0.16, 0.0, abs(ang - whiteAng));
       whiteShaft = pow(whiteShaft, 1.6) * cone * vert;
       float flicker = 0.85 + 0.15 * sin(t*9.0 + ang*20.0);
-      // pure white incandescence — magenta is NOT baked here (see spark below)
+      // pure white incandescence - magenta is NOT baked here (see spark below)
       col += cWhite * whiteShaft * fl * 2.4 * flicker;
-      // soft white bloom halo around the source while flaring — punches at peak
+      // soft white bloom halo around the source while flaring - punches at peak
       float halo = smoothstep(0.6, 0.0, dist) * fl;
       col += cWhite * halo * (0.7 + fl * 0.5);
 
@@ -562,7 +562,7 @@ export function mount(container, opts = {}) {
       vDepth = depth;
       vBand = aBand;
 
-      // slow buoyant drift; nearer motes (high depth) move more — parallax
+      // slow buoyant drift; nearer motes (high depth) move more - parallax
       float drift = (0.4 + depth);
       // V2: camera micro-parallax to cursor scaled by band depth (far moves least)
       float bandParallax = (aBand + 0.5) / 2.5;            // far≈0.2, near≈1.0
@@ -786,7 +786,7 @@ export function mount(container, opts = {}) {
             vec3 scene = vec3(rC, gC, bC);
             vec3 bloom = texture2D(uBloom, buv).rgb;
             vec3 col = scene + bloom * uBloomStrength;
-            // tone soft-clamp AFTER bloom add — bleeds light but keeps void dark
+            // tone soft-clamp AFTER bloom add - bleeds light but keeps void dark
             col = col / (col + vec3(0.62)) * 1.62;
             gl_FragColor = vec4(col, uOpacity);
           }
@@ -942,7 +942,7 @@ export function mount(container, opts = {}) {
   let revealProgress = 0; // 0..1 drives uReveal
   let revealClock = 0; // seconds since replay()
   let flareFired = false;
-  let magentaSpent = false; // ONE earned magenta — fires exactly once, ever
+  let magentaSpent = false; // ONE earned magenta - fires exactly once, ever
   let payoffHit = false; // payoff-frame triggers (hairline wipe, haptic tick)
 
   function runRevealCSS() {
@@ -1039,7 +1039,7 @@ export function mount(container, opts = {}) {
       word1.style.transform = "scale(1.0)";
     });
 
-    // 1px overlay haptic tick — nudge whole overlay, snap back next frame
+    // 1px overlay haptic tick - nudge whole overlay, snap back next frame
     overlay.style.transition = "none";
     overlay.style.transform = "translateY(-1px)";
     requestAnimationFrame(() => {
@@ -1304,7 +1304,7 @@ export function mount(container, opts = {}) {
     rafId = null;
   }
 
-  // try to grab gsap if the host already loaded it (optional nicety) — never block
+  // try to grab gsap if the host already loaded it (optional nicety) - never block
   try {
     if (typeof window !== "undefined" && window.gsap) gsap = window.gsap;
   } catch (e) {
@@ -1343,7 +1343,7 @@ export function mount(container, opts = {}) {
     antEnv = 0;
     entranceDone = false;
     payoffHit = false;
-    // NOTE: magentaSpent is intentionally NOT reset — the magenta is spent for
+    // NOTE: magentaSpent is intentionally NOT reset - the magenta is spent for
     // the lifetime of this mount; replay never re-fires it. Rarity is the point.
     rayUniforms.uMagenta.value = 0;
     rayUniforms.uWhiteAngOff.value = 0;
@@ -1472,7 +1472,7 @@ export function mount(container, opts = {}) {
   };
 
   /* ====================================================================== */
-  /* FALLBACK · Canvas2D god-rays (no WebGL) — still on-brand, never blank   */
+  /* FALLBACK · Canvas2D god-rays (no WebGL) - still on-brand, never blank   */
   /* ====================================================================== */
   function startFallback() {
     const ctx2d = canvas.getContext("2d");

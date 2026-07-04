@@ -1,5 +1,5 @@
 /* =========================================================================
-   Vanta client/admin portal — real login + dashboards.
+   Vanta client/admin portal - real login + dashboards.
    Talks to Netlify Functions (auth-login, auth-me, client-data, admin-clients)
    which store data in Netlify Blobs. Loaded as a classic script; the heavy
    logic lives here and index.html's module just delegates to window.VantaPortal.
@@ -26,7 +26,7 @@
   var T = {
     signInFail: { en: "Wrong email or password.", fr: "Courriel ou mot de passe invalide." },
     signingIn:  { en: "Signing you in…",           fr: "Connexion en cours…" },
-    netErr:     { en: "Network error — please try again.", fr: "Erreur réseau — réessayez." },
+    netErr:     { en: "Network error - please try again.", fr: "Erreur réseau - réessayez." },
     notConfigured: { en: "Login isn't set up on the server yet (missing environment variables). Set them in Netlify and redeploy.", fr: "La connexion n'est pas encore configurée sur le serveur (variables d'environnement manquantes). Configurez-les dans Netlify et redéployez." },
     notDeployed: { en: "Login service not found (functions not deployed). Check the Netlify deploy.", fr: "Service de connexion introuvable (fonctions non déployées). Vérifiez le déploiement Netlify." },
     logout:     { en: "Log out",                   fr: "Se déconnecter" },
@@ -41,7 +41,7 @@
     trend:      { en: "Views over time",           fr: "Vues dans le temps" },
     sources:    { en: "AI & discovery sources",    fr: "Sources IA et découverte" },
     articles:   { en: "Your articles",             fr: "Vos articles" },
-    noData:     { en: "No data yet — we'll fill this in as your campaign runs.", fr: "Pas encore de données — ça se remplira au fil de la campagne." },
+    noData:     { en: "No data yet - we'll fill this in as your campaign runs.", fr: "Pas encore de données - ça se remplira au fil de la campagne." },
     // admin
     adminTitle: { en: "Admin dashboard",           fr: "Tableau de bord admin" },
     clients:    { en: "Clients",                   fr: "Clients" },
@@ -67,7 +67,7 @@
     justNow:    { en: "just now",            fr: "à l'instant" },
     payments:   { en: "Payments",            fr: "Paiements" },
     runRem:     { en: "Run reminders",        fr: "Lancer les rappels" },
-    remDone:    { en: "Sweep done —",         fr: "Balayage terminé —" },
+    remDone:    { en: "Sweep done -",         fr: "Balayage terminé -" },
     remRems:    { en: "reminder(s),",         fr: "rappel(s)," },
     remExps:    { en: "expiry notice(s),",    fr: "avis d'expiration," },
     remScan:    { en: "scanned",              fr: "analysés" },
@@ -108,7 +108,7 @@
     ngNoScan:   { en: "Not scanned yet",       fr: "Pas encore analysé" },
     ngNoPost:   { en: "No posts yet",          fr: "Aucun article" },
     trTitle:    { en: "Traffic over time",     fr: "Trafic dans le temps" },
-    trNoData:   { en: "No traffic tracked yet — this fills in as visits come in.", fr: "Aucun trafic pour l'instant — se remplit au fil des visites." },
+    trNoData:   { en: "No traffic tracked yet - this fills in as visits come in.", fr: "Aucun trafic pour l'instant - se remplit au fil des visites." },
     rngAll:     { en: "All time",              fr: "Depuis le début" },
     rng30:      { en: "30 days",               fr: "30 jours" },
     recentTitle:{ en: "Recent posts",          fr: "Articles récents" },
@@ -119,7 +119,7 @@
     postsUnit:  { en: "posts",                 fr: "articles" },
     weekOf:     { en: "week of",               fr: "semaine du" },
     seoHistTitle:{ en: "SEO score over time",  fr: "Score SEO dans le temps" },
-    seoHistEmpty:{ en: "No SEO scans yet — this fills in after the first scan.", fr: "Aucune analyse SEO — se remplit après la première analyse." },
+    seoHistEmpty:{ en: "No SEO scans yet - this fills in after the first scan.", fr: "Aucune analyse SEO - se remplit après la première analyse." },
     authTitle:  { en: "SEO authority",         fr: "Autorité SEO" },
     authNoData: { en: "No third-party SEO data yet for these sites.", fr: "Aucune donnée SEO tierce pour ces sites." },
     authDA:     { en: "Domain authority",      fr: "Autorité de domaine" },
@@ -148,8 +148,8 @@
     cdClicks:   { en: "Clicks",                fr: "Clics" },
     cdCtr:      { en: "CTR",                   fr: "CTR" },
     cdLastPost: { en: "Latest post",           fr: "Dernier article" },
-    cdNoNetgrid:{ en: "netgrid isn't connected yet — set NETGRID_API_URL and NETGRID_API_KEY.", fr: "netgrid n'est pas connecté — configurez NETGRID_API_URL et NETGRID_API_KEY." },
-    cdNoMatch:  { en: "No netgrid data for this client — their email isn't matched to a netgrid account.", fr: "Aucune donnée netgrid pour ce client — son courriel ne correspond à aucun compte netgrid." },
+    cdNoNetgrid:{ en: "netgrid isn't connected yet - set NETGRID_API_URL and NETGRID_API_KEY.", fr: "netgrid n'est pas connecté - configurez NETGRID_API_URL et NETGRID_API_KEY." },
+    cdNoMatch:  { en: "No netgrid data for this client - their email isn't matched to a netgrid account.", fr: "Aucune donnée netgrid pour ce client - son courriel ne correspond à aucun compte netgrid." },
     visSection: { en: "What this client sees",  fr: "Ce que ce client voit" },
     visHint:    { en: "Choose which data blocks appear on this client's dashboard.", fr: "Choisissez les blocs de données affichés sur le tableau de bord de ce client." },
     visReal:    { en: "Real data (from netgrid)", fr: "Données réelles (netgrid)" },
@@ -173,7 +173,7 @@
     testFailed: { en: "Couldn't send:",       fr: "Échec de l'envoi :" },
     rejectConfirm:{ en: "Mark this payment as NOT confirmed?", fr: "Marquer ce paiement comme NON confirmé?" },
     underReview:{ en: "Payment under review", fr: "Paiement en vérification" },
-    reviewNote: { en: "We're verifying your payment — we'll confirm shortly.", fr: "On vérifie votre paiement — confirmation sous peu." },
+    reviewNote: { en: "We're verifying your payment - we'll confirm shortly.", fr: "On vérifie votre paiement - confirmation sous peu." },
     expiredT:   { en: "Your plan has expired", fr: "Votre forfait a expiré" },
     expiredMsg: { en: "Your plan expired on", fr: "Votre forfait a expiré le" },
     remindLater:{ en: "Remind me later",     fr: "Me le rappeler plus tard" },
@@ -181,7 +181,7 @@
     alreadyPaid:{ en: "I already paid",      fr: "J'ai déjà payé" },
     managePlans:{ en: "Manage plans",       fr: "Gérer les forfaits" },
     plansHint:  { en: "Define your plans. They appear in the client Plan dropdown; the buy link is your Whop/Stripe checkout.", fr: "Définissez vos forfaits. Ils apparaissent dans le menu Forfait du client; le lien d'achat est votre paiement Whop/Stripe." },
-    planNone:   { en: "— No plan —",         fr: "— Aucun forfait —" },
+    planNone:   { en: "- No plan -",         fr: "- Aucun forfait -" },
     planName:   { en: "Plan name",           fr: "Nom du forfait" },
     planPrice:  { en: "Price (e.g. $97/mo)",  fr: "Prix (ex. 97 $/mois)" },
     planLink:   { en: "Buy link (Whop, Stripe…)", fr: "Lien d'achat (Whop, Stripe…)" },
@@ -486,7 +486,7 @@
     var win = days ? "?days=" + encodeURIComponent(days) : "";
     var pNg = api("/client-netgrid" + win).catch(function () { return { data: {} }; });
     var pTr = api("/client-traffic" + win).catch(function () { return { data: {} }; });
-    // Posts + SEO history don't depend on the range window — fetch once, reuse on toggle.
+    // Posts + SEO history don't depend on the range window - fetch once, reuse on toggle.
     var pPo = (_cPosts !== null)
       ? Promise.resolve(null)
       : api("/client-posts").then(function (pr) {
@@ -594,7 +594,7 @@
   function seoClass(n) { n = num(n); return n >= 80 ? "ok" : n >= 50 ? "pend" : "exp"; }
   // Big colored SEO number for stat tiles (inherits the big tile size).
   function seoBig(score) {
-    return score == null ? "—" : '<span class="ng-score-big ' + seoClass(score) + '">' + Math.round(num(score)) + "</span>";
+    return score == null ? "-" : '<span class="ng-score-big ' + seoClass(score) + '">' + Math.round(num(score)) + "</span>";
   }
   function ngDate(iso) {
     if (!iso) return "";
@@ -653,7 +653,7 @@
       pdata.push({ fx: +(x / W).toFixed(4), fy: +(y / H).toFixed(4), v: vals[i], d: series[i].date });
     }
     var gid = "tgrad-" + key;
-    // Body is empty for a single bucket — it's shown as the round HTML end-dot below
+    // Body is empty for a single bucket - it's shown as the round HTML end-dot below
     // (an SVG circle would be squashed into an ellipse by preserveAspectRatio="none").
     var body = "";
     if (n > 1) {
@@ -743,8 +743,8 @@
     var rows = posts.map(function (p) {
       var url = p.url ? siteUrl(p.url) : "";
       var title = url
-        ? '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="post-link">' + esc(p.title || "—") + " ↗</a>"
-        : '<b class="post-title">' + esc(p.title || "—") + "</b>";
+        ? '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="post-link">' + esc(p.title || "-") + " ↗</a>"
+        : '<b class="post-title">' + esc(p.title || "-") + "</b>";
       var meta = [];
       if (p.publishedAt) meta.push(esc(ngDate(p.publishedAt)));
       if (p.seoScore != null) meta.push('<span class="ng-score ' + seoClass(p.seoScore) + ' post-seo">' + Math.round(num(p.seoScore)) + "</span>");
@@ -826,7 +826,7 @@
       .sort(function (a, b) { return byMonth[a].t - byMonth[b].t; })
       .map(function (k) { return { date: new Date(byMonth[k].t).toISOString(), score: Math.round(byMonth[k].sum / byMonth[k].n) }; });
   }
-  // SEO score over time — averaged across the client's sites (single series).
+  // SEO score over time - averaged across the client's sites (single series).
   function seoHistCardHTML(hist) {
     var series = avgSeoSeries(hist);
     return '<div class="dash-card ng-card"><h3>' + esc(t("seoHistTitle")) + "</h3>" +
@@ -849,12 +849,12 @@
     } else {
       var rows = sites.map(function (s) {
         var m = s.metrics || {};
-        var da = m.domainAuthority != null ? num(m.domainAuthority) : "—";
-        var bl = m.backlinks != null ? fmt(m.backlinks) : "—";
-        var kw = m.organicKeywords != null ? fmt(m.organicKeywords) : "—";
-        var tr = m.organicTrafficEst != null ? fmt(m.organicTrafficEst) : "—";
+        var da = m.domainAuthority != null ? num(m.domainAuthority) : "-";
+        var bl = m.backlinks != null ? fmt(m.backlinks) : "-";
+        var kw = m.organicKeywords != null ? fmt(m.organicKeywords) : "-";
+        var tr = m.organicTrafficEst != null ? fmt(m.organicTrafficEst) : "-";
         return '<tr class="auth-row" data-bid="' + esc(s.id) + '" tabindex="0">' +
-          "<td>" + esc(s.domain || "—") + (s.platform ? ' <span class="ng-plat">' + esc(s.platform) + "</span>" : "") +
+          "<td>" + esc(s.domain || "-") + (s.platform ? ' <span class="ng-plat">' + esc(s.platform) + "</span>" : "") +
             ' <span class="dash-stat-more auth-more">›</span></td>' +
           '<td class="auth-num">' + da + '</td><td class="auth-num">' + bl + '</td>' +
           '<td class="auth-num">' + kw + '</td><td class="auth-num">' + tr + "</td></tr>";
@@ -874,14 +874,14 @@
     var url = siteUrl(site.domain);
     var head = url
       ? '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="ng-site-link">' + esc(site.domain) + " ↗</a>"
-      : esc(site.domain || "—");
+      : esc(site.domain || "-");
     function st(label, val) {
       return '<div class="auth-stat"><div class="auth-stat-v">' + val + "</div>" +
         '<div class="auth-stat-l">' + esc(label) + "</div></div>";
     }
-    var dv = function (v) { return v == null ? "—" : fmt(v); };
-    var stats = st(t("cdOverallSeo"), site.seoScore == null ? "—" : seoBig(site.seoScore)) +
-      st(t("authDA"), m.domainAuthority == null ? "—" : num(m.domainAuthority)) +
+    var dv = function (v) { return v == null ? "-" : fmt(v); };
+    var stats = st(t("cdOverallSeo"), site.seoScore == null ? "-" : seoBig(site.seoScore)) +
+      st(t("authDA"), m.domainAuthority == null ? "-" : num(m.domainAuthority)) +
       st(t("authBacklinks"), dv(m.backlinks)) +
       st(t("authRefDomains"), dv(m.referringDomains)) +
       st(t("authKeywords"), dv(m.organicKeywords)) +
@@ -930,7 +930,7 @@
       var url = siteUrl(s.domain);
       var name = url
         ? '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="ng-site-link">' + esc(s.domain) + " ↗</a>"
-        : "<b>" + esc(s.domain || "—") + "</b>";
+        : "<b>" + esc(s.domain || "-") + "</b>";
       var score = s.seoScore == null ? '<span class="dash-muted">' + esc(t("ngNoScan")) + "</span>"
         : '<span class="ng-score ' + seoClass(s.seoScore) + '">' + Math.round(num(s.seoScore)) + "</span>";
       var post = s.lastPostTitle
@@ -947,7 +947,7 @@
   function statusPill(st) {
     st = String(st || "").toLowerCase();
     var cls = st === "active" ? "ok" : (st === "decommissioned" ? "exp" : "pend");
-    return '<span class="sub-pill ' + cls + '">' + esc(st || "—") + "</span>";
+    return '<span class="sub-pill ' + cls + '">' + esc(st || "-") + "</span>";
   }
   // Drill-down modal for the SEO / Sites / Active tiles: a per-site table.
   function openSiteModal(mode, sites) {
@@ -958,7 +958,7 @@
       var url = siteUrl(s.domain);
       var name = url
         ? '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="ng-site-link">' + esc(s.domain) + " ↗</a>"
-        : "<b>" + esc(s.domain || "—") + "</b>";
+        : "<b>" + esc(s.domain || "-") + "</b>";
       name += (s.platform ? ' <span class="ng-plat">' + esc(s.platform) + "</span>" : "");
       var second;
       if (mode === "seo") second = s.seoScore == null ? '<span class="dash-muted">' + esc(t("ngNoScan")) + "</span>" : '<span class="ng-score ' + seoClass(s.seoScore) + '">' + Math.round(num(s.seoScore)) + "</span>";
@@ -973,7 +973,7 @@
           '<button type="button" class="dash-modal-x" id="vpSiteX" aria-label="' + esc(t("close")) + '">&#10005;</button></div>' +
         '<div class="dash-modal-body"><div style="overflow-x:auto"><table class="dash-table ng-table"><thead><tr><th>' +
           esc(t("ngSiteCol")) + "</th><th>" + esc(col2) + "</th></tr></thead><tbody>" +
-          (rows || '<tr><td colspan="2" class="dash-empty">—</td></tr>') + "</tbody></table></div></div>" +
+          (rows || '<tr><td colspan="2" class="dash-empty">-</td></tr>') + "</tbody></table></div></div>" +
       "</div></div>";
     document.body.appendChild(host);
     try { document.body.style.overflow = "hidden"; } catch (e) {}
@@ -999,14 +999,14 @@
       subBanner(user) +
       '<div class="dash-refresh">' + esc(t("refreshNote")) + "</div>";
 
-    // Stat tiles — real (netgrid) + manual, in one grid, each card toggleable.
+    // Stat tiles - real (netgrid) + manual, in one grid, each card toggleable.
     // SEO / Sites / Active open a detail modal when there are sites to show.
     var canDrill = ngSites && ngSites.length;
     var tiles = "";
     if (ng) {
       if (show("seo")) tiles += stat(seoBig(ng.avgSeoScore), t("ngAvgSeo"), "", canDrill ? "seo" : "");
       if (show("sites")) tiles += stat(num(ng.blogCount), t("ngSitesN"), "", canDrill ? "sites" : "");
-      if (show("active")) tiles += stat(ng.activeBlogCount == null ? "—" : num(ng.activeBlogCount), t("ngActiveN"), "", canDrill ? "active" : "");
+      if (show("active")) tiles += stat(ng.activeBlogCount == null ? "-" : num(ng.activeBlogCount), t("ngActiveN"), "", canDrill ? "active" : "");
       if (show("posts") && ng.postCount != null) tiles += stat(fmt(ng.postCount), t("cdTotalPosts"), "");
       if (show("rviews") && ng.views != null) tiles += stat(fmt(ng.views), t("cdViews"), sparkline(traffic.map(function (p) { return p.views; }), "#7c3aed"));
       if (show("rclicks") && ng.clicks != null) tiles += stat(fmt(ng.clicks), t("cdClicks"), sparkline(traffic.map(function (p) { return p.clicks; }), "#e8409b"));
@@ -1015,11 +1015,11 @@
     if (show("mclicks")) tiles += stat(fmt(m.profileClicks), t("clicks"), "");
     if (show("mai")) tiles += stat(fmt(m.aiCitations), t("ai"), "");
     if (show("mpublished")) tiles += stat(fmt(m.articlesPublished), t("published"), '<span class="dash-sub">' + fmt(m.articlesUpcoming) + " " + t("upcoming") + "</span>");
-    // Range toggle (all-time vs 30 days) — governs the real traffic-based cards/charts.
+    // Range toggle (all-time vs 30 days) - governs the real traffic-based cards/charts.
     if (ng && (show("rviews") || show("rclicks") || show("traffic"))) out += '<div class="rng-bar">' + rangeToggleHTML(days) + "</div>";
     if (tiles) out += '<div class="dash-stats">' + tiles + "</div>";
 
-    // Views/clicks over time — two small single-series charts.
+    // Views/clicks over time - two small single-series charts.
     if (show("traffic") && ng) out += trafficCardHTML(traffic);
 
     // SEO score over time (averaged across sites).
@@ -1034,7 +1034,7 @@
     // Per-site SEO authority table (click a row for the drill-down).
     if (show("authority") && ng && ngSites && ngSites.length) out += authorityCardHTML(ngSites, hist);
 
-    // Charts — trend and/or sources.
+    // Charts - trend and/or sources.
     var charts = [];
     if (show("trend")) charts.push('<div class="dash-card"><h3>' + esc(t("trend")) + "</h3>" + bars(m.series) + "</div>");
     if (show("sources")) charts.push('<div class="dash-card"><h3>' + esc(t("sources")) + "</h3>" + sourceList(m.sources) + "</div>");
@@ -1074,9 +1074,9 @@
     var sites = d.sites || [];
     var c = d.client;
     var seoVal = seoBig(c.avgSeoScore);
-    var ctr = (c.views != null && num(c.views) > 0) ? (num(c.clicks) / num(c.views) * 100).toFixed(1) + "%" : "—";
+    var ctr = (c.views != null && num(c.views) > 0) ? (num(c.clicks) / num(c.views) * 100).toFixed(1) + "%" : "-";
     var activeSub = c.activeBlogCount == null ? "" : num(c.activeBlogCount) + " " + esc(t("cdActiveLc"));
-    var dash = function (v) { return v == null ? "—" : fmt(v); };
+    var dash = function (v) { return v == null ? "-" : fmt(v); };
     return '<div class="rng-bar">' + rangeToggleHTML(days) + "</div>" +
       '<div class="dash-stats">' +
       cdStat(seoVal, t("cdOverallSeo")) +
@@ -1086,7 +1086,7 @@
       cdStat(dash(c.views), t("cdViews"), sparkline(traffic.map(function (p) { return p.views; }), "#7c3aed")) +
       cdStat(dash(c.clicks), t("cdClicks"), sparkline(traffic.map(function (p) { return p.clicks; }), "#e8409b")) +
       cdStat(ctr, t("cdCtr")) +
-      cdStat(c.lastPostAt ? esc(ngDate(c.lastPostAt)) : "—", t("cdLastPost")) +
+      cdStat(c.lastPostAt ? esc(ngDate(c.lastPostAt)) : "-", t("cdLastPost")) +
       "</div>" +
       trafficCardHTML(traffic) +
       seoHistCardHTML(hist) +
@@ -1262,8 +1262,8 @@
     function ngCell(email) {
       if (!ng) return "";
       var d = ng[email];
-      if (!d) return '<td class="dash-muted">—</td>';
-      var score = d.avgSeoScore == null ? '<span class="dash-muted">—</span>'
+      if (!d) return '<td class="dash-muted">-</td>';
+      var score = d.avgSeoScore == null ? '<span class="dash-muted">-</span>'
         : '<span class="ng-score ' + seoClass(d.avgSeoScore) + '">' + Math.round(num(d.avgSeoScore)) + "</span>";
       return "<td>" + score + (d.blogCount != null ? ' <span class="dash-muted">· ' + num(d.blogCount) + "</span>" : "") + "</td>";
     }
@@ -1272,10 +1272,10 @@
       var renewal = si
         ? '<span class="sub-pill ' + (si.expired ? "exp" : "ok") + '">' + (si.expired ? esc(t("expiredS")) : esc(t("active"))) +
           '</span> <span class="dash-muted">' + esc(fmtDate(si.expiry)) + "</span>"
-        : '<span class="dash-muted">—</span>';
+        : '<span class="dash-muted">-</span>';
       return '<tr data-email="' + esc(c.email) + '">' +
-        "<td><b>" + esc(c.name || "—") + "</b><div class='dash-muted'>" + esc(c.email) + "</div></td>" +
-        "<td>" + esc(c.plan || "—") + "</td>" +
+        "<td><b>" + esc(c.name || "-") + "</b><div class='dash-muted'>" + esc(c.email) + "</div></td>" +
+        "<td>" + esc(c.plan || "-") + "</td>" +
         "<td>" + renewal + "</td>" +
         "<td>" + fmt(c.metrics && c.metrics.views) + "</td>" +
         "<td>" + fmt(c.metrics && c.metrics.articlesPublished) + "</td>" +
@@ -1345,7 +1345,7 @@
       var opts = '<option value="">' + esc(t("planNone")) + "</option>";
       var found = false;
       plans.forEach(function (p) {
-        var label = p.name + (p.price ? " — " + p.price : "");
+        var label = p.name + (p.price ? " - " + p.price : "");
         var sel = p.name === current ? " selected" : "";
         if (p.name === current) found = true;
         opts += '<option value="' + esc(p.name) + '"' + sel + ">" + esc(label) + "</option>";
@@ -1548,8 +1548,8 @@
                   statusCell = '<span class="sub-pill ' + (ok ? "ok" : "exp") + '">' + esc(t(ok ? "stConfirmed" : "stRejected")) +
                     "</span>" + (c.decidedAt ? ' <span class="dash-muted">' + esc(relTime(c.decidedAt)) + "</span>" : "");
                 }
-                return '<tr data-email="' + esc(c.email) + '"><td><b>' + esc(c.name || "—") + '</b><div class="dash-muted">' +
-                  esc(c.email) + "</div></td><td>" + esc(c.plan || "—") + '</td><td class="dash-muted">' +
+                return '<tr data-email="' + esc(c.email) + '"><td><b>' + esc(c.name || "-") + '</b><div class="dash-muted">' +
+                  esc(c.email) + "</div></td><td>" + esc(c.plan || "-") + '</td><td class="dash-muted">' +
                   esc(relTime(c.claimedAt || Date.now())) + "</td><td>" + statusCell + "</td></tr>";
               }).join("") + "</tbody></table>"
             : '<div class="dash-empty">' + esc(t("noClaims")) + "</div>") + "</div>";
@@ -1609,8 +1609,8 @@
             ? '<table class="dash-table em-table"><thead><tr><th>' + esc(t("emTo")) + "</th><th>" + esc(t("emSubject")) +
               "</th><th>" + esc(t("statusCol")) + "</th><th>" + esc(t("emWhen")) + "</th><th></th></tr></thead><tbody>" +
               list.map(function (e) {
-                return '<tr data-id="' + esc(e.id) + '"><td>' + esc(e.to || "—") + "</td>" +
-                  '<td class="em-subcell"><b>' + esc(e.subject || "—") + "</b>" +
+                return '<tr data-id="' + esc(e.id) + '"><td>' + esc(e.to || "-") + "</td>" +
+                  '<td class="em-subcell"><b>' + esc(e.subject || "-") + "</b>" +
                   (e.body ? '<div class="dash-muted em-prev">' + esc(e.body) + "</div>" : "") +
                   "</td><td>" + emailStatusPill(e.status) + '</td><td class="dash-muted">' +
                   esc(relTime(e.created_at || Date.now())) + '</td>' +
@@ -1651,10 +1651,10 @@
       var modal = el("vpModal"); if (!modal) return;
       modal.innerHTML =
         '<div class="dash-modal-bg" id="vpEmBg"><div class="dash-modal">' +
-          '<div class="dash-modal-head"><h3>' + esc(e.subject || "—") + "</h3>" +
+          '<div class="dash-modal-head"><h3>' + esc(e.subject || "-") + "</h3>" +
             '<button type="button" class="dash-modal-x" id="vpEmX" aria-label="' + esc(t("close")) + '">&#10005;</button></div>' +
           '<div class="dash-modal-body">' +
-            '<div class="vpf-section">' + esc(t("emTo")) + "</div><div>" + esc(e.to || "—") + "</div>" +
+            '<div class="vpf-section">' + esc(t("emTo")) + "</div><div>" + esc(e.to || "-") + "</div>" +
             '<div style="margin-top:10px">' + emailStatusPill(e.status) +
               ' <span class="dash-muted">' + esc(fullWhen(e.created_at)) + "</span></div>" +
             (e.status !== "sent" && e.detail ? '<div class="vpf-section">' + esc(t("emReason")) +
@@ -1824,7 +1824,7 @@
 
     // ---- messages ----
     var curCid = null, chatSeen = 0, convs = [];
-    // Which client messages the admin has already seen — kept per browser.
+    // Which client messages the admin has already seen - kept per browser.
     var readMap = (function () { try { return JSON.parse(localStorage.getItem("vanta_chat_read") || "{}") || {}; } catch (e) { return {}; } })();
     function saveReadMap() { try { localStorage.setItem("vanta_chat_read", JSON.stringify(readMap)); } catch (e) {} }
     function convUnread(c) { return (c.lastClientAt || 0) > (readMap[c.cid] || 0); }
@@ -1909,7 +1909,7 @@
         if (!thread.children.length) thread.innerHTML = '<div class="dash-empty">' + esc(t("noReplyYet")) + "</div>";
         if (msgs.length) {
           thread.scrollTop = thread.scrollHeight;
-          // The admin is looking at this thread — keep it marked read.
+          // The admin is looking at this thread - keep it marked read.
           readMap[cid] = Math.max(readMap[cid] || 0, chatSeen || 0);
           saveReadMap();
           updateMsgBadge(convs);

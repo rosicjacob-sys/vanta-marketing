@@ -1,4 +1,4 @@
-// 07 · Sovereign Globe — V2 — lineage: The Orb
+// 07 · Sovereign Globe - V2 - lineage: The Orb
 // A near-black sphere wrapped in a royal gradient-hairline cage with a thick lilac fresnel rim;
 // lilac-violet markers fire violet arcs across the surface, and each LANDING arc fires a
 // shader-driven SURFACE WAVE: the dark sphere itself visibly bulges along its normals as a
@@ -7,7 +7,7 @@
 // coupled chromatic aberration) so the moment glows from within against a ~90% near-black frame.
 // Once per session, a single earned hot-magenta arc lands and drives every stage to its peak.
 //
-// V2 over V1 — the elevations:
+// V2 over V1 - the elevations:
 //   1. Hand-rolled composite post pass (FBO -> fullscreen-triangle frag): bright-pass threshold
 //      bloom (5-tap separable), subtle barrel warp, velocity-coupled chromatic aberration, and a
 //      global exposure that DIPS ~12% on landing-anticipation then settles.
@@ -20,7 +20,7 @@
 //   4. Depth: camera micro-parallax to cursor (lookAt every frame), 2 parallax star z-layers
 //      fading to atmosphere, white reserved for marker cores / sparks only (resting markers lilac).
 //   5. Gradient hairline cage: latitude/longitude lines whose per-fragment alpha follows the
-//      fresnel dot(N,V) — crisp on the silhouette, fading to near-nothing face-on.
+//      fresnel dot(N,V) - crisp on the silhouette, fading to near-nothing face-on.
 //   6. The single earned magenta is deterministic (scheduled hero arc, or first deliberate click),
 //      and drives the full composite to its peak: brightest bloom, max fresnel, wider double
 //      ripple, a 1-frame haptic overshoot tick on the marker.
@@ -104,7 +104,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  //  STATIC GRADIENT FALLBACK (no WebGL) — never blank
+  //  STATIC GRADIENT FALLBACK (no WebGL) - never blank
   // ---------------------------------------------------------------------------
   if (!webglOK()) {
     const fb = document.createElement("div");
@@ -301,7 +301,7 @@ export function mount(container, opts = {}) {
         float r2 = dot(cc, cc);
         vec2 uv = vUv + cc * r2 * uBarrel;
 
-        // velocity-coupled chromatic aberration — strongest at the rim
+        // velocity-coupled chromatic aberration - strongest at the rim
         vec2 dir = uv - 0.5;
         float rimAmt = smoothstep(0.05, 0.6, length(dir));
         vec2 ab = normalize(dir + 1e-5) * uAberr * (0.35 + rimAmt);
@@ -587,7 +587,7 @@ export function mount(container, opts = {}) {
   globe.add(halos);
 
   // ---------------------------------------------------------------------------
-  //  ARC POOL — great-circle bezier curves that fire between nodes
+  //  ARC POOL - great-circle bezier curves that fire between nodes
   // ---------------------------------------------------------------------------
   const ARC_POOL = lite() ? 4 : 6;
   const ARC_SEG = 48;
@@ -675,7 +675,7 @@ export function mount(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------------------
-  //  RIPPLE RING POOL — shader-driven annulus band, geodesically anchored.
+  //  RIPPLE RING POOL - shader-driven annulus band, geodesically anchored.
   //  Each ring's alpha is a thin animated band in the frag (not a flat decal),
   //  and EACH active ring also writes a surface-wave displacement into the core.
   // ---------------------------------------------------------------------------
@@ -818,7 +818,7 @@ export function mount(container, opts = {}) {
   scene.add(ambient);
 
   // ---------------------------------------------------------------------------
-  //  STARFIELD — 2 parallax z-layers fading to atmosphere (depth)
+  //  STARFIELD - 2 parallax z-layers fading to atmosphere (depth)
   // ---------------------------------------------------------------------------
   function makeStarLayer(count, rMin, rMax, size, opacity, color) {
     const geo = new THREE.BufferGeometry();
@@ -850,7 +850,7 @@ export function mount(container, opts = {}) {
   const starFar = makeStarLayer(lite() ? 50 : 100, 11, 16, 0.03, 0.28, C.deep);
 
   // ---------------------------------------------------------------------------
-  //  INTERACTION — tilt with inertia (drag + hover) + camera micro-parallax
+  //  INTERACTION - tilt with inertia (drag + hover) + camera micro-parallax
   // ---------------------------------------------------------------------------
   let targetRX = 0.18, targetRY = 0;
   let curRX = 0.18, curRY = 0;
@@ -1195,7 +1195,7 @@ export function mount(container, opts = {}) {
       if (a.t >= 1) {
         a.t = 1;
         a.landed = true;
-        // SIGNATURE landing — fire the surface-wave ripple + wake + marker pop
+        // SIGNATURE landing - fire the surface-wave ripple + wake + marker pop
         fireLanding(a.to, a.hot);
         a.active = false;
         a.mat.opacity = 0;

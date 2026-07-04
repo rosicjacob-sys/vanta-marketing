@@ -1,5 +1,5 @@
 /* ============================================================================
- * 02 — Aurora Veil  ·  V2  ·  lineage: The Field
+ * 02 - Aurora Veil  ·  V2  ·  lineage: The Field
  * ----------------------------------------------------------------------------
  * Raymarched volumetric aurora curtains royal -> lilac over a starfield, now a
  * true parallaxing VOLUME (2–3 z-layers with atmospheric fade + DOF-soft far
@@ -14,7 +14,7 @@
  * overshoot settles back through equilibrium with a damped-spring micro-bounce
  * while embers bloom-then-drift downward.
  *
- * deps: [] — pure WebGL2. No three, no gsap. Generated procedurally.
+ * deps: [] - pure WebGL2. No three, no gsap. Generated procedurally.
  * perf: fullscreen-triangle scene pass (empty VAO, in-shader noise, dithered
  *       raymarch start, trans<0.02 early-out, zero per-frame alloc), plus an
  *       OPTIONAL half-res float bloom path (bright-pass -> separable blur ->
@@ -120,7 +120,7 @@ float fbm(vec3 p, int oct){
 float fbm(vec3 p){ return fbm(p, 5); }
 `;
 
-// SCENE PASS — raymarch the volumetric aurora into an HDR target -------------
+// SCENE PASS - raymarch the volumetric aurora into an HDR target -------------
 const FRAG_SCENE = `#version 300 es
 precision highp float;
 in vec2 vUv;
@@ -147,7 +147,7 @@ uniform vec3  uFlare;
 
 ${NOISE}
 
-// curtain density field — vertical sheets braided by two warps.
+// curtain density field - vertical sheets braided by two warps.
 // returns vec2( density, crest ) where crest is the sheet-edge filament factor.
 vec2 curtain(vec3 p, float t, float soft){
   // primary warp -> the classic aurora "fold"
@@ -221,7 +221,7 @@ void main(){
   float lift = smoothstep(-0.7, 0.65, -p.y);
   col = mix(col, uDeep * 0.16, lift * 0.5);
 
-  // ---- sparse starfield — SHARPENS on the inhale (anticipation) ------------
+  // ---- sparse starfield - SHARPENS on the inhale (anticipation) ------------
   float starGain = (0.6 + 0.4 * uReveal) * (1.0 + uInhale * 0.9);
   float starTight = mix(0.16, 0.105, uInhale); // tighter point on inhale
   vec2 sp = p + uParallax * 0.015;
@@ -251,21 +251,21 @@ void main(){
   float trans = 1.0;
   float crestPeak = 0.0;
 
-  // NEAR layer — moves most, sharp, brightest
+  // NEAR layer - moves most, sharp, brightest
   {
     vec2 par = uParallax * 0.22;
     vec3 rd = normalize(vec3(p.x + par.x, p.y + par.y + 0.04, 1.0));
     marchLayer(ro, rd, 1.0, 0.22, 0.02, 0.0, t, energy * 1.05,
                baseSteps, stepLen, aurora, trans, crestPeak);
   }
-  // MID layer — moderate parallax + drift
+  // MID layer - moderate parallax + drift
   {
     vec2 par = uParallax * 0.12;
     vec3 rd = normalize(vec3(p.x + par.x, p.y + par.y + 0.02, 1.0));
     marchLayer(ro, rd, 2.2, 0.12, -0.015, 0.35, t, energy * 0.8,
                int(float(baseSteps) * 0.7), stepLen * 1.25, aurora, trans, crestPeak);
   }
-  // FAR layer — barely parallaxes, soft (DOF), atmospheric — quality-gated
+  // FAR layer - barely parallaxes, soft (DOF), atmospheric - quality-gated
   if(uQuality > 0.7){
     vec2 par = uParallax * 0.05;
     vec3 rd = normalize(vec3(p.x + par.x, p.y + par.y, 1.0));
@@ -345,7 +345,7 @@ void main(){
   frag = vec4(max(col, 0.0), 1.0);
 }`;
 
-// BRIGHT-PASS — isolate aurora/spark highlights (not the void) into half-res --
+// BRIGHT-PASS - isolate aurora/spark highlights (not the void) into half-res --
 const FRAG_BRIGHT = `#version 300 es
 precision highp float;
 in vec2 vUv;
@@ -360,7 +360,7 @@ void main(){
   frag = vec4(c * k, 1.0);
 }`;
 
-// SEPARABLE GAUSSIAN BLUR — 7 taps, one axis per pass ------------------------
+// SEPARABLE GAUSSIAN BLUR - 7 taps, one axis per pass ------------------------
 const FRAG_BLUR = `#version 300 es
 precision highp float;
 in vec2 vUv;
@@ -383,7 +383,7 @@ void main(){
   frag = vec4(c, 1.0);
 }`;
 
-// COMPOSITE — scene + bloom, chromatic aberration (∝ velocity), barrel warp --
+// COMPOSITE - scene + bloom, chromatic aberration (∝ velocity), barrel warp --
 const FRAG_COMPOSITE = `#version 300 es
 precision highp float;
 in vec2 vUv;
@@ -426,7 +426,7 @@ void main(){
   frag = vec4(max(col, 0.0), 1.0);
 }`;
 
-// FALLBACK COMPOSITE — no float bloom; vignette + light CA only --------------
+// FALLBACK COMPOSITE - no float bloom; vignette + light CA only --------------
 const FRAG_COMPOSITE_LOFI = `#version 300 es
 precision highp float;
 in vec2 vUv;
@@ -511,7 +511,7 @@ export function mount(container, opts = {}) {
   const FONT =
     "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
 
-  // wordmark / brand whisper — staggered masked reveal, timed to the crest
+  // wordmark / brand whisper - staggered masked reveal, timed to the crest
   const label = document.createElement("div");
   label.style.position = "absolute";
   label.style.left = "22px";
@@ -531,7 +531,7 @@ export function mount(container, opts = {}) {
       `transition:opacity .8s ${lineEase},transform .8s ${lineEase}">Trouvé partout · Google + IA</div>`;
   container.appendChild(label);
 
-  // illustrative metric, top-right — count-up lands a flash on the hold
+  // illustrative metric, top-right - count-up lands a flash on the hold
   const metric = document.createElement("div");
   metric.style.position = "absolute";
   metric.style.right = "22px";
@@ -1103,7 +1103,7 @@ export function mount(container, opts = {}) {
   }
   attach();
 
-  // reveal failsafe — never leave labels invisible
+  // reveal failsafe - never leave labels invisible
   const failTimer = setTimeout(() => revealLabels(true), 3500);
 
   startTime = performance.now();

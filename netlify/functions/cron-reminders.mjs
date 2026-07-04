@@ -1,4 +1,4 @@
-// Netlify Scheduled Function — runs once a day and sweeps subscriptions:
+// Netlify Scheduled Function - runs once a day and sweeps subscriptions:
 // renewal reminders before expiry + expiry notices. Idempotent per cycle.
 import { runReminders } from '../lib/reminders.mjs';
 
