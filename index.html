@@ -1150,22 +1150,12 @@ var PORTFOLIO=[
 {id:"payments-ops",tag:"Payments",en:{t:"Payments Ops, Unified Processor Dashboard",d:"Every order, processor and dollar reconciled in one screen."},fr:{t:"Opérations de paiement, tableau unifié",d:"Chaque commande, processeur et dollar réconciliés dans un seul écran."}},
 {id:"affexch",tag:"Affiliate",en:{t:"Affexch, Affiliate Exchange Platform",d:"The full affiliate stack, from click to cleared payout: live tracking, smart links, AI product match and a fraud shield."},fr:{t:"Affexch, plateforme d’affiliation",d:"Toute la chaîne d’affiliation, du clic au paiement encaissé, avec suivi en direct, liens intelligents, appariement IA et bouclier antifraude."}}
 ];
-/* Client sites we build & run — added to "Our work". RD Exterminateur leads (zoomable screenshot,
-   no live link, per request); the Crosta local-SEO network follows as scrollable live-viewer cards
-   ("Open live" opens the real site). montrealcrosta.store omitted (not live yet). */
+/* Client sites we build & run — added to "Our work": RD Exterminateur (zoomable screenshot, no live
+   link, per request) + PizzaCrosta.ca (scrollable live-viewer, "Open live" opens the real site). */
 PORTFOLIO=[
 {id:"rd-exterminateur",tag:"Extermination",scroll:true,en:{t:"RD Exterminateur",d:"A full conversion-focused website and local-SEO build we produced for a Montreal pest-control company."},fr:{t:"RD Exterminateur",d:"Un site web complet axe sur la conversion et une base de referencement local qu'on a produits pour un exterminateur montrealais."}},
-{id:"crosta-pizzacrosta-ca",tag:"Restaurant",live:"https://pizzacrosta.ca",en:{t:"PizzaCrosta.ca",d:"The flagship site and SEO blog for Pizzeria Crosta in Montreal, built and run by Vanta."},fr:{t:"PizzaCrosta.ca",d:"Le site vitrine et le blogue SEO de la Pizzeria Crosta a Montreal, bati et opere par Vanta."}},
-{id:"crosta-crostapizza-shop",tag:"Restaurant",live:"https://crostapizza.shop",en:{t:"CrostaPizza.shop",d:"Part of the Crosta content network that lifts the pizzeria across Google and AI search."},fr:{t:"CrostaPizza.shop",d:"Un site du reseau de contenu Crosta qui propulse la pizzeria dans Google et la recherche IA."}}
-].concat(PORTFOLIO).concat([
-{id:"crosta-crostareviews-store",tag:"Reviews",live:"https://crostareviews.store",en:{t:"CrostaReviews.store",d:"A reputation and reviews property that funnels diners to the restaurant's Google profile."},fr:{t:"CrostaReviews.store",d:"Une propriete d'avis et de reputation qui dirige les clients vers la fiche Google du restaurant."}},
-{id:"crosta-crostareviews-shop",tag:"Reviews",live:"https://crostareviews.shop",en:{t:"CrostaReviews.shop",d:"Fresh, structured content that keeps Crosta visible and cited across search."},fr:{t:"CrostaReviews.shop",d:"Du contenu frais et structure qui garde Crosta visible et cite dans la recherche."}},
-{id:"crosta-reviews",tag:"Reviews",live:"https://reviews.pizzacrosta.ca",en:{t:"Reviews.PizzaCrosta.ca",d:"A review-capture hub in the Crosta local-SEO network."},fr:{t:"Reviews.PizzaCrosta.ca",d:"Un carrefour de collecte d'avis dans le reseau de referencement local Crosta."}},
-{id:"crosta-montreal",tag:"Local SEO",live:"https://montreal.pizzacrosta.ca",en:{t:"Montreal.PizzaCrosta.ca",d:"City-targeted content built to own Montreal pizza searches."},fr:{t:"Montreal.PizzaCrosta.ca",d:"Du contenu cible par ville, concu pour dominer les recherches de pizza a Montreal."}},
-{id:"crosta-montrealcrosta-shop",tag:"Local SEO",live:"https://montrealcrosta.shop",en:{t:"MontrealCrosta.shop",d:"Another node in the network reinforcing Crosta's local footprint."},fr:{t:"MontrealCrosta.shop",d:"Un autre noeud du reseau qui renforce l'empreinte locale de Crosta."}},
-{id:"crosta-crostapizza-store",tag:"Restaurant",live:"https://crostapizza.store",en:{t:"CrostaPizza.store",d:"Story-driven pages that feed the pizzeria's search and AI visibility."},fr:{t:"CrostaPizza.store",d:"Des pages narratives qui nourrissent la visibilite de la pizzeria dans la recherche et l'IA."}},
-{id:"crosta-insights",tag:"Analytics",live:"https://insights.pizzacrosta.ca",en:{t:"insights.PizzaCrosta.ca",d:"The analytics layer tracking how the whole Crosta network performs."},fr:{t:"insights.PizzaCrosta.ca",d:"La couche analytique qui suit la performance de tout le reseau Crosta."}}
-]);
+{id:"crosta-pizzacrosta-ca",tag:"Restaurant",live:"https://pizzacrosta.ca",en:{t:"PizzaCrosta.ca",d:"The flagship site and SEO blog for Pizzeria Crosta in Montreal, built and run by Vanta."},fr:{t:"PizzaCrosta.ca",d:"Le site vitrine et le blogue SEO de la Pizzeria Crosta a Montreal, bati et opere par Vanta."}}
+].concat(PORTFOLIO);
 function renderPortfolio(){
 var isFr=lang==="fr";
 var H=isFr?{ey:"Nos réalisations",h:"Les outils qu’on bâtit et qu’on opère chaque jour.",sub:"Pas des promesses, juste de vrais logiciels qui font rouler nos propres entreprises. En voici quelques-uns."}:{ey:"Our work",h:"The tools we build and run every day.",sub:"Not promises, just the real software that runs our own businesses. A few of them below."};
