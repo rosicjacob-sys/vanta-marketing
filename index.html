@@ -7,7 +7,7 @@
 if('scrollRestoration' in history) history.scrollRestoration='manual';
 addEventListener('pageshow',function(){ document.body.style.overflow=''; });</script>
 <title>Vanta · Be the business Google and AI recommend</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307060D'/%3E%3Ctext x='30' y='45' font-family='Georgia,serif' font-size='40' font-weight='800' text-anchor='middle' fill='%23A855F7'%3EV%3C/text%3E%3Ccircle cx='50' cy='44' r='5' fill='%23E8409B'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307060D'/%3E%3Ctext x='30' y='46' font-family='Arial,Helvetica,sans-serif' font-size='42' font-weight='800' text-anchor='middle' fill='%23F6F3FE'%3EV%3C/text%3E%3Ccircle cx='50' cy='44' r='5.5' fill='%23A855F7'/%3E%3C/svg%3E" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="canonical" href="https://vantamarketing.io/" />
 <meta property="og:type" content="website" /><meta property="og:site_name" content="Vanta Marketing" />
@@ -1158,7 +1158,7 @@ PORTFOLIO=[
 ].concat(PORTFOLIO);
 function renderPortfolio(){
 var isFr=lang==="fr";
-var H=isFr?{ey:"Nos réalisations",h:"Les outils qu’on bâtit et qu’on opère chaque jour.",sub:"Pas des promesses, juste de vrais logiciels qui font rouler nos propres entreprises. En voici quelques-uns."}:{ey:"Our work",h:"The tools we build and run every day.",sub:"Not promises, just the real software that runs our own businesses. A few of them below."};
+var H=isFr?{ey:"Nos réalisations",h:"Ce qu’on bâtit et qu’on opère chaque jour.",sub:"Pas des promesses : de vrais sites clients et les logiciels qui font rouler nos propres entreprises. En voici quelques-uns."}:{ey:"Our work",h:"The work we build and run every day.",sub:"Not promises — real client sites and the software that runs our own businesses. A few of them below."};
 var cards=PORTFOLIO.map(function(p){var c=isFr?p.fr:p.en;var full=(p.live||p.scroll)?" data-full='1'":"";var live=p.live?(" data-live='"+p.live+"'"):"";var badge=p.live?("<span class='pf-live'><i></i>"+(isFr?"Site en ligne":"Live site")+"</span>"):"";return "<figure class='pf-card'><div class='pf-shot'"+full+live+"><img loading='lazy' src='/portfolio/"+p.id+".png' alt='Vanta "+p.tag+"'/><span class='pf-tag'>"+p.tag+"</span>"+badge+"</div><figcaption><h3>"+c.t+"</h3><p>"+c.d+"</p></figcaption></figure>";}).join("");
 return "<div class='sec'><div class='wrap'><div class='pf-head'><div class='eyebrow'>"+H.ey+"</div><h1>"+H.h+"</h1><p class='lead'>"+H.sub+"</p></div><div class='pf-grid'>"+cards+"</div><div class='pf-cta'><a class='btn primary lg' href='#demo'>"+(isFr?"Commencer":"Get started")+"</a></div></div></div>";
 }
