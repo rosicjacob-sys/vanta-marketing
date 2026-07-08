@@ -34,7 +34,7 @@
     yourPlan:   { en: "Your plan",                 fr: "Votre forfait" },
     views:      { en: "Blog views",                fr: "Vues du blogue" },
     vsPrev:     { en: "vs last month",             fr: "vs mois dernier" },
-    clicks:     { en: "Clicks to your profile",    fr: "Clics vers votre profil" },
+    clicks:     { en: "Clicks to Google My Business", fr: "Clics vers Google My Business" },
     ai:         { en: "AI citations",              fr: "Citations IA" },
     published:  { en: "Articles published",        fr: "Articles publiés" },
     upcoming:   { en: "Upcoming",                  fr: "À venir" },
