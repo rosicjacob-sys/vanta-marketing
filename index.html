@@ -1512,6 +1512,12 @@ function slotOx(){ var z=document.getElementById('oxzone'), hst=document.getElem
         focus:(form.focus_resto.value||'').trim(), langue:lang, page:'vanta-home', enrolled:'non' };
       var sb=form.querySelector('[type=submit]'); if(sb) sb.disabled=true;
       saveLead(data);
+      // Clear the form after a successful submission: text fields via reset(),
+      // then the chip selections, their hidden inputs, and the price by hand.
+      try{ form.reset();
+        form.querySelectorAll('.chipbtn.on').forEach(function(c){ c.classList.remove('on'); });
+        form.querySelectorAll('input[type=hidden]').forEach(function(h){ h.value=''; });
+        oxUpdatePrice(); }catch(_){}
       oxco.classList.add('show'); document.body.style.overflow='hidden'; });
     document.getElementById('oxcheckoutClose').addEventListener('click',closeOxCheckout);
     oxco.addEventListener('click',function(e){ if(e.target===oxco) closeOxCheckout(); });
