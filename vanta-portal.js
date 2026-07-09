@@ -155,6 +155,8 @@
     visReal:    { en: "Real data (from netgrid)", fr: "Données réelles (netgrid)" },
     visManual:  { en: "Reported data",         fr: "Données rapportées" },
     refreshNote:{ en: "Data refreshes weekly.", fr: "Les données sont actualisées chaque semaine." },
+    refreshNow: { en: "Refresh now",           fr: "Actualiser" },
+    refreshing: { en: "Refreshing…",           fr: "Actualisation…" },
     settingsTab:{ en: "Settings",            fr: "Paramètres" },
     setHint:    { en: "Configure reminder timing and the emails clients receive. Placeholders: {name} {plan} {date} {days} {brand} {link} (the client's plan checkout link).", fr: "Configurez le moment des rappels et les courriels reçus par les clients. Variables : {name} {plan} {date} {days} {brand} {link} (lien de paiement du forfait du client)." },
     setLeadDays:{ en: "Send renewal reminder this many days before expiry", fr: "Envoyer le rappel de renouvellement ce nombre de jours avant l'expiration" },
@@ -476,6 +478,21 @@
       wireCommon();
     });
   }
+  // Manual refresh: drop the session caches and re-pull everything (client-data,
+  // netgrid, traffic, posts, SEO history) for the range currently in view.
+  function refreshClient(btn) {
+    if (btn) { btn.disabled = true; btn.textContent = t("refreshing"); }
+    _cPosts = null; _cHist = null;
+    api("/client-data").then(function (res) {
+      if (res.status === 401) { logout(); return; }
+      _cUser = (res.data && res.data.user) || {};
+      _cM = _cUser.metrics || {};
+      _cPlanLink = (res.data && res.data.planLink) || "";
+      renderClientBody(_cDays, true); // rebuilds the DOM (fresh, enabled button)
+    }).catch(function () {
+      if (btn) { btn.disabled = false; btn.textContent = t("refreshNow"); }
+    });
+  }
   // Renders (or re-renders on range toggle) the dashboard body. isToggle=true skips
   // the one-time chat bind + expiry prompt and only refreshes the data/charts.
   function renderClientBody(days, isToggle) {
@@ -518,8 +535,14 @@
           tl.onclick = function () { openSiteModal(tl.getAttribute("data-modal"), ngSites); };
         });
         host.querySelectorAll(".rng-btn").forEach(function (bn) {
-          bn.onclick = function () { if (bn.getAttribute("data-days") !== _cDays) renderClientBody(bn.getAttribute("data-days"), true); };
+          bn.onclick = function () {
+            if (bn.getAttribute("data-days") === _cDays) return;
+            _cPosts = null; _cHist = null; // re-pull posts + SEO history so a toggle shows current data
+            renderClientBody(bn.getAttribute("data-days"), true);
+          };
         });
+        var rfBtn = host.querySelector("#vpRefresh");
+        if (rfBtn) rfBtn.onclick = function () { refreshClient(rfBtn); };
         if (!isToggle) {
           try { if (window.__chatIdentify) window.__chatIdentify(user.name, user.email); } catch (e) {}
           // Auto-load this client's past chat messages into the floating chat.
@@ -996,7 +1019,8 @@
       topbar(name || "") +
       (user.plan ? '<div class="dash-plan">' + esc(t("yourPlan")) + ': <b>' + esc(user.plan) + "</b></div>" : "") +
       subBanner(user) +
-      '<div class="dash-refresh">' + esc(t("refreshNote")) + "</div>";
+      '<div class="dash-refresh">' + esc(t("refreshNote")) +
+        ' <button class="dash-refresh-btn" id="vpRefresh" type="button">' + esc(t("refreshNow")) + "</button></div>";
 
     // Stat tiles - real (netgrid) + manual, in one grid, each card toggleable.
     // SEO / Sites / Active open a detail modal when there are sites to show.
@@ -1981,7 +2005,10 @@
     ".dash-empty{color:var(--mut2,#77809a);font-size:13px;padding:8px 0}" +
     ".dash-note{color:var(--mut,#9aa);font-size:13px;margin-top:14px;font-style:italic}" +
     ".dash-sec-h{margin:4px 0 12px;font-size:15px;color:var(--white,#fff)}" +
-    ".dash-refresh{color:var(--mut2,#77809a);font-size:12px;margin:-6px 0 16px}" +
+    ".dash-refresh{color:var(--mut2,#77809a);font-size:12px;margin:-6px 0 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}" +
+    ".dash-refresh-btn{font:inherit;font-size:12px;color:#c4b5fd;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.4);border-radius:8px;padding:4px 12px;cursor:pointer;transition:.15s}" +
+    ".dash-refresh-btn:hover:not(:disabled){background:rgba(124,58,237,.25);border-color:var(--lilac,#a855f7);color:#fff}" +
+    ".dash-refresh-btn:disabled{opacity:.55;cursor:default}" +
     ".ng-card{margin-top:14px}" +
     ".ng-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}" +
     ".ng-head h3{margin:0}" +
