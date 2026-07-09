@@ -477,7 +477,7 @@
     if (!requireRole("client")) return;
     var host = el("view-dashboard");
     if (!host) return;
-    host.innerHTML = '<div class="sec"><div class="wrap"><p class="lead">…</p></div></div>';
+    host.innerHTML = '<div class="sec"><div class="wrap dash-wrap"><p class="lead">…</p></div></div>';
     showView("view-dashboard");
     _cUser = null; _cM = null; _cPlanLink = ""; _cDays = ""; _cPosts = null; _cHist = null;
 
@@ -488,7 +488,7 @@
       _cPlanLink = (res.data && res.data.planLink) || "";
       renderClientBody("", false);
     }).catch(function () {
-      host.innerHTML = '<div class="sec"><div class="wrap">' + topbar(getName() || "") +
+      host.innerHTML = '<div class="sec"><div class="wrap dash-wrap">' + topbar(getName() || "") +
         '<p class="lead">' + esc(t("netErr")) + '</p></div></div>';
       wireCommon();
     });
@@ -1033,7 +1033,7 @@
     var change = num(m.viewsChangePct);
     var changeTxt = (change > 0 ? "▲ " : change < 0 ? "▼ " : "") + Math.abs(change) + "% " + t("vsPrev");
     var changeCls = change > 0 ? "up" : change < 0 ? "down" : "";
-    var out = '<div class="sec"><div class="wrap">' +
+    var out = '<div class="sec"><div class="wrap dash-wrap">' +
       topbar(name || "") +
       (user.plan ? '<div class="dash-plan">' + esc(t("yourPlan")) + ': <b>' + esc(user.plan) + "</b></div>" : "") +
       subBanner(user) +
@@ -1288,7 +1288,7 @@
     if (!host) return;
     if (adminPoll) { clearInterval(adminPoll); adminPoll = null; }
     if (msgPoll) { clearInterval(msgPoll); msgPoll = null; }
-    host.innerHTML = '<div class="sec"><div class="wrap"><p class="lead">…</p></div></div>';
+    host.innerHTML = '<div class="sec"><div class="wrap dash-wrap"><p class="lead">…</p></div></div>';
     showView("view-admin");
 
     api("/admin-clients").then(function (res) {
@@ -1307,7 +1307,7 @@
         });
       });
     }).catch(function () {
-      host.innerHTML = '<div class="sec"><div class="wrap">' + topbar(t("adminTitle")) +
+      host.innerHTML = '<div class="sec"><div class="wrap dash-wrap">' + topbar(t("adminTitle")) +
         '<p class="lead">' + esc(t("netErr")) + "</p></div></div>";
       wireCommon();
     });
@@ -1345,7 +1345,7 @@
     function navItem(id, label, on) {
       return '<button class="admin-nav-item' + (on ? " is-on" : "") + '" data-nav="' + id + '">' + esc(label) + "</button>";
     }
-    return '<div class="sec"><div class="wrap">' +
+    return '<div class="sec"><div class="wrap dash-wrap">' +
       topbar(t("adminTitle"), true) +
       '<div class="admin-layout">' +
         '<aside class="admin-nav">' +
@@ -2242,6 +2242,7 @@
     "body.vp-admin #chatw{display:none!important}" +
     "#view-admin>.sec,#view-dashboard>.sec{padding-top:34px}" +
     ".dash-table tbody tr:hover td{background:rgba(124,58,237,.06)}" +
+    ".wrap.dash-wrap{max-width:1640px}" + // dashboards use the full width (marketing pages stay at 1200)
     ".admin-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;margin-top:4px;min-height:62vh}" +
     ".admin-nav{display:flex;flex-direction:column;gap:4px;align-self:start;position:sticky;top:var(--dash-top-h,84px);max-height:calc(100vh - var(--dash-top-h,84px) - 16px);overflow-y:auto}" +
     ".admin-nav-foot{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:6px}" +
