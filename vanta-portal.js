@@ -9,8 +9,6 @@
 
   var API = "/.netlify/functions";
   var LS = { token: "vanta_token", role: "vanta_role", name: "vanta_name" };
-  // Google Sheet where lead/form submissions are collected (admin "View leads").
-  var LEADS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1hrDo4e5WTX1WQF3n369v1CmsTXQq8ZFOrF8-odcDMI8/edit?gid=0#gid=0";
   var GEAR_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
   var EYE_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
   var EYE_OFF_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
@@ -97,7 +95,22 @@
     emConfirmClear:{ en: "Delete all emails shown in this tab? This can't be undone.", fr: "Supprimer tous les courriels de cet onglet ? Irréversible." },
     emBodyLabel:{ en: "Message",              fr: "Message" },
     emReason:   { en: "Reason",               fr: "Raison" },
-    viewLeads:  { en: "View leads",           fr: "Voir les prospects" },
+    leadsTab:   { en: "Leads",                fr: "Prospects" },
+    addLead:    { en: "Add lead",             fr: "Ajouter un prospect" },
+    noLeads:    { en: "No leads yet.",        fr: "Aucun prospect." },
+    leadName:   { en: "Name",                 fr: "Nom" },
+    leadBusiness:{ en: "Business",            fr: "Entreprise" },
+    leadContact:{ en: "Contact",              fr: "Coordonnées" },
+    leadPhone:  { en: "Phone",                fr: "Téléphone" },
+    leadService:{ en: "Interested in",        fr: "Intéressé par" },
+    leadSource: { en: "Source",               fr: "Source" },
+    leadMessage:{ en: "Message",              fr: "Message" },
+    leadWhen:   { en: "Received",             fr: "Reçu" },
+    delLeadConfirm:{ en: "Delete this lead?", fr: "Supprimer ce prospect ?" },
+    ls_new:     { en: "New",                  fr: "Nouveau" },
+    ls_contacted:{ en: "Contacted",           fr: "Contacté" },
+    ls_won:     { en: "Won",                  fr: "Gagné" },
+    ls_lost:    { en: "Lost",                 fr: "Perdu" },
     ngAvgSeo:   { en: "Avg SEO score",         fr: "Score SEO moyen" },
     ngSitesN:   { en: "Sites",                 fr: "Sites" },
     ngActiveN:  { en: "Active",                fr: "Actifs" },
@@ -1337,6 +1350,7 @@
       '<div class="admin-layout">' +
         '<aside class="admin-nav">' +
           navItem("clients", t("clients"), true) +
+          navItem("leads", t("leadsTab"), false) +
           '<button class="admin-nav-item" data-nav="messages">' + esc(t("tabMessages")) +
             '<span class="admin-nav-badge" id="vpMsgBadge" hidden></span></button>' +
           '<button class="admin-nav-item" data-nav="payments">' + esc(t("payments")) +
@@ -1353,8 +1367,7 @@
           '<div class="dash-panel" data-panel="clients">' +
             '<div id="vpClientsMain">' +
               '<div class="dash-toolbar"><button class="btn primary" id="vpAdd">+ ' + esc(t("addClient")) + "</button>" +
-                ' <button class="btn ghost" id="vpRunRem">' + esc(t("runRem")) + "</button>" +
-                ' <a class="btn ghost" href="' + esc(LEADS_SHEET_URL) + '" target="_blank" rel="noopener">' + esc(t("viewLeads")) + "</a></div>" +
+                ' <button class="btn ghost" id="vpRunRem">' + esc(t("runRem")) + "</button></div>" +
               '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
                 "<th>" + esc(t("clients")) + "</th><th>" + esc(t("yourPlan")) + "</th><th>" + esc(t("renewalCol")) +
                 "</th><th>" + esc(t("views")) + "</th><th>" + esc(t("published")) + "</th>" +
@@ -1366,6 +1379,7 @@
             '<div class="vpc-admin"><div class="vpc-list" id="vpChatList"><div class="dash-empty">…</div></div>' +
             '<div class="vpc-pane" id="vpChatPane"><div class="vpc-empty">' + esc(t("selectConv")) + "</div></div></div>" +
           "</div>" +
+          '<div class="dash-panel" data-panel="leads" style="display:none" id="vpLeadsPanel"></div>' +
           '<div class="dash-panel" data-panel="payments" style="display:none" id="vpPayPanel"></div>' +
           '<div class="dash-panel" data-panel="emails" style="display:none" id="vpEmailPanel"></div>' +
           '<div class="dash-panel" data-panel="plans" style="display:none" id="vpPlansPanel"></div>' +
@@ -1554,6 +1568,7 @@
         });
         if (name === "messages" && !chatLoaded) { chatLoaded = true; loadChats(); }
         if (name === "plans" && !plansRendered) { plansRendered = true; renderPlansPanel(); }
+        if (name === "leads") renderLeads();
         if (name === "payments") renderPayments();
         if (name === "emails") renderEmails();
         if (name === "settings" && !settingsRendered) { settingsRendered = true; renderSettings(); }
@@ -1569,6 +1584,99 @@
     }
     // initial count on admin load (so the badge is right before opening Payments)
     api("/admin-payments").then(function (res) { updatePayBadge((res.data && res.data.claims) || []); });
+
+    // ---- leads (form submissions, stored in the DB, full CRUD) ----
+    var leadsCache = [];
+    function leadStatusPill(s) {
+      var cls = { new: "pend", contacted: "ok", won: "ok", lost: "exp" }[s] || "pend";
+      return '<span class="sub-pill ' + cls + '">' + esc(t("ls_" + (s || "new"))) + "</span>";
+    }
+    function renderLeads() {
+      var host = el("vpLeadsPanel"); if (!host) return;
+      host.innerHTML = '<div class="dash-card"><p class="lead">…</p></div>';
+      api("/admin-leads").then(function (res) {
+        leadsCache = (res.data && res.data.leads) || [];
+        drawLeads();
+      });
+    }
+    function drawLeads() {
+      var host = el("vpLeadsPanel"); if (!host) return;
+      var rows = leadsCache.length ? leadsCache.map(function (l) {
+        return '<tr data-id="' + esc(l.id) + '">' +
+          "<td><b>" + esc(l.name || "-") + "</b>" + (l.business ? '<div class="dash-muted">' + esc(l.business) + "</div>" : "") + "</td>" +
+          "<td>" + (l.email ? esc(l.email) : "") + (l.phone ? '<div class="dash-muted">' + esc(l.phone) + "</div>" : (l.email ? "" : "-")) + "</td>" +
+          "<td>" + esc(l.service || "-") + "</td>" +
+          '<td class="dash-muted">' + esc(l.source || "-") + "</td>" +
+          "<td>" + leadStatusPill(l.status) + "</td>" +
+          '<td class="dash-muted">' + esc(l.created_at ? relTime(l.created_at) : "-") + "</td>" +
+          '<td class="dash-actions"><button class="btn ghost sm lead-edit">' + esc(t("edit")) + "</button> " +
+            '<button class="btn ghost sm lead-del">' + esc(t("del")) + "</button></td></tr>";
+      }).join("") : '<tr><td colspan="7" class="dash-empty">' + esc(t("noLeads")) + "</td></tr>";
+      host.innerHTML =
+        '<div class="dash-toolbar"><button class="btn primary" id="vpAddLead">+ ' + esc(t("addLead")) + "</button></div>" +
+        '<div class="dash-card" style="overflow-x:auto"><table class="dash-table"><thead><tr>' +
+          "<th>" + esc(t("leadName")) + "</th><th>" + esc(t("leadContact")) + "</th><th>" + esc(t("leadService")) +
+          "</th><th>" + esc(t("leadSource")) + "</th><th>" + esc(t("statusCol")) + "</th><th>" + esc(t("leadWhen")) +
+          "</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>";
+      var addBtn = el("vpAddLead"); if (addBtn) addBtn.onclick = function () { openLeadForm(null); };
+      host.querySelectorAll(".lead-edit").forEach(function (btn) {
+        btn.onclick = function () {
+          var id = btn.closest("tr").getAttribute("data-id");
+          openLeadForm(leadsCache.filter(function (x) { return String(x.id) === String(id); })[0] || null);
+        };
+      });
+      host.querySelectorAll(".lead-del").forEach(function (btn) {
+        btn.onclick = function () {
+          if (!confirm(t("delLeadConfirm"))) return;
+          var id = btn.closest("tr").getAttribute("data-id");
+          api("/admin-leads", { method: "DELETE", body: { id: id } }).then(function () { renderLeads(); });
+        };
+      });
+    }
+    function openLeadForm(lead) {
+      if (!modal) return;
+      var isNew = !lead; lead = lead || {};
+      function fld(label, name, val, type) {
+        return '<label class="vpf">' + esc(label) +
+          '<input name="' + name + '" type="' + (type || "text") + '" value="' + esc(val == null ? "" : val) + '"></label>';
+      }
+      var statuses = ["new", "contacted", "won", "lost"];
+      var statusSel = '<label class="vpf">' + esc(t("statusCol")) + '<select name="status">' +
+        statuses.map(function (s) { return '<option value="' + s + '"' + (lead.status === s ? " selected" : "") + ">" + esc(t("ls_" + s)) + "</option>"; }).join("") +
+        "</select></label>";
+      modal.innerHTML = '<div class="dash-modal-bg" id="vpLeadBg"><form class="dash-modal" id="vpLeadForm">' +
+        '<div class="dash-modal-head"><h3>' + esc(isNew ? t("addLead") : t("edit")) + "</h3>" +
+          '<button type="button" class="dash-modal-x" id="vpLeadClose" aria-label="' + esc(t("close")) + '">&#10005;</button></div>' +
+        '<div class="dash-modal-body">' +
+          fld(t("leadName"), "name", lead.name) +
+          fld(t("leadBusiness"), "business", lead.business) +
+          '<div class="vpf-row">' + fld("Email", "email", lead.email, "email") + fld(t("leadPhone"), "phone", lead.phone) + "</div>" +
+          fld(t("leadService"), "service", lead.service) +
+          '<div class="vpf-row">' + fld(t("leadSource"), "source", lead.source) + statusSel + "</div>" +
+          '<label class="vpf">' + esc(t("leadMessage")) + '<textarea name="message" rows="3">' + esc(lead.message || "") + "</textarea></label>" +
+        "</div>" +
+        '<div class="dash-modal-foot"><span></span><div class="vpf-actions">' +
+          '<button type="button" class="btn ghost" id="vpLeadCancel">' + esc(t("cancel")) + "</button>" +
+          '<button type="submit" class="btn primary">' + esc(t("save")) + "</button></div></div>" +
+        "</form></div>";
+      try { document.body.style.overflow = "hidden"; } catch (e) {}
+      document.addEventListener("keydown", onKey);
+      el("vpLeadClose").onclick = close;
+      el("vpLeadCancel").onclick = close;
+      var bg = el("vpLeadBg"); if (bg) bg.onclick = function (e) { if (e.target === bg) close(); };
+      var form = el("vpLeadForm");
+      var focusEl = form && form.querySelector("input"); if (focusEl) { try { focusEl.focus(); } catch (e) {} }
+      form.onsubmit = function (e) {
+        e.preventDefault();
+        var body = {
+          name: form.name.value.trim(), business: form.business.value.trim(), email: form.email.value.trim(),
+          phone: form.phone.value.trim(), service: form.service.value.trim(), source: form.source.value.trim(),
+          status: form.status.value, message: form.message.value.trim(),
+        };
+        if (!isNew) body.id = lead.id;
+        api("/admin-leads", { method: isNew ? "POST" : "PUT", body: body }).then(function () { close(); renderLeads(); });
+      };
+    }
 
     function renderPayments() {
       var host = el("vpPayPanel"); if (!host) return;

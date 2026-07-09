@@ -114,6 +114,22 @@ function ensureSchema() {
         )`;
       await sql`ALTER TABLE email_log ADD COLUMN IF NOT EXISTS audience text NOT NULL DEFAULT ''`;
       await sql`CREATE INDEX IF NOT EXISTS email_log_created_idx ON email_log (created_at)`;
+      await sql`
+        CREATE TABLE IF NOT EXISTS leads (
+          id         bigserial PRIMARY KEY,
+          name       text NOT NULL DEFAULT '',
+          business   text NOT NULL DEFAULT '',
+          email      text NOT NULL DEFAULT '',
+          phone      text NOT NULL DEFAULT '',
+          service    text NOT NULL DEFAULT '',
+          message    text NOT NULL DEFAULT '',
+          source     text NOT NULL DEFAULT '',
+          status     text NOT NULL DEFAULT 'new',
+          meta       jsonb NOT NULL DEFAULT '{}'::jsonb,
+          created_at bigint,
+          updated_at bigint
+        )`;
+      await sql`CREATE INDEX IF NOT EXISTS leads_created_idx ON leads (created_at)`;
     })();
   }
   return _schema;
@@ -455,6 +471,86 @@ async function pgClearEmails(audience) {
   return { ok: true };
 }
 
+/* ===================== leads: Postgres ===================== */
+function leadRow(r) {
+  return {
+    id: Number(r.id), name: r.name || '', business: r.business || '', email: r.email || '',
+    phone: r.phone || '', service: r.service || '', message: r.message || '', source: r.source || '',
+    status: r.status || 'new', meta: (r.meta && typeof r.meta === 'object' && !Array.isArray(r.meta)) ? r.meta : {},
+    created_at: Number(r.created_at) || 0, updated_at: Number(r.updated_at) || 0,
+  };
+}
+async function pgAddLead(l) {
+  await ensureSchema();
+  const t = now();
+  const rows = await sqlc()`
+    INSERT INTO leads (name, business, email, phone, service, message, source, status, meta, created_at, updated_at)
+    VALUES (${l.name || ''}, ${l.business || ''}, ${l.email || ''}, ${l.phone || ''}, ${l.service || ''},
+            ${l.message || ''}, ${l.source || ''}, ${l.status || 'new'}, ${JSON.stringify(l.meta || {})}::jsonb, ${t}, ${t})
+    RETURNING id`;
+  return { ok: true, id: Number(rows[0] && rows[0].id) || 0 };
+}
+async function pgListLeads() {
+  await ensureSchema();
+  const rows = await sqlc()`SELECT * FROM leads ORDER BY created_at DESC NULLS LAST LIMIT 2000`;
+  return rows.map(leadRow);
+}
+async function pgUpdateLead(id, l) {
+  await ensureSchema();
+  await sqlc()`
+    UPDATE leads SET name = ${l.name || ''}, business = ${l.business || ''}, email = ${l.email || ''},
+      phone = ${l.phone || ''}, service = ${l.service || ''}, message = ${l.message || ''},
+      source = ${l.source || ''}, status = ${l.status || 'new'}, meta = ${JSON.stringify(l.meta || {})}::jsonb,
+      updated_at = ${now()}
+    WHERE id = ${Number(id) || 0}`;
+  return { ok: true };
+}
+async function pgDeleteLead(id) {
+  await ensureSchema();
+  await sqlc()`DELETE FROM leads WHERE id = ${Number(id) || 0}`;
+  return { ok: true };
+}
+
+/* ===================== leads: Blobs (fallback) ===================== */
+function leadStore() { return getStore({ name: 'vanta-leads', consistency: 'strong' }); }
+function normLead(l, id, t) {
+  return {
+    id, name: l.name || '', business: l.business || '', email: l.email || '', phone: l.phone || '',
+    service: l.service || '', message: l.message || '', source: l.source || '', status: l.status || 'new',
+    meta: l.meta || {}, created_at: t, updated_at: t,
+  };
+}
+async function blobAddLead(l) {
+  const st = leadStore();
+  const arr = (await st.get('all', { type: 'json' })) || [];
+  const id = arr.reduce((mx, x) => Math.max(mx, x.id || 0), 0) + 1;
+  arr.push(normLead(l, id, now()));
+  await st.setJSON('all', arr);
+  return { ok: true, id };
+}
+async function blobListLeads() {
+  const arr = (await leadStore().get('all', { type: 'json' })) || [];
+  return arr.slice().sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+}
+async function blobUpdateLead(id, l) {
+  const st = leadStore();
+  const arr = (await st.get('all', { type: 'json' })) || [];
+  const i = arr.findIndex(x => String(x.id) === String(id));
+  if (i >= 0) {
+    arr[i] = { ...arr[i], name: l.name || '', business: l.business || '', email: l.email || '',
+      phone: l.phone || '', service: l.service || '', message: l.message || '', source: l.source || '',
+      status: l.status || 'new', meta: l.meta || {}, updated_at: now() };
+    await st.setJSON('all', arr);
+  }
+  return { ok: true };
+}
+async function blobDeleteLead(id) {
+  const st = leadStore();
+  const arr = (await st.get('all', { type: 'json' })) || [];
+  await st.setJSON('all', arr.filter(x => String(x.id) !== String(id)));
+  return { ok: true };
+}
+
 /* ===================== email log: Blobs (fallback) ===================== */
 function emailStore() { return getStore({ name: 'vanta-emails', consistency: 'strong' }); }
 async function blobLogEmail(e) {
@@ -512,6 +608,11 @@ export function addNotification(n)          { return usePg() ? pgAddNotif(n)    
 export function listNotifications(a, r)     { return usePg() ? pgListNotif(a, r)    : blobListNotif(a, r); }
 export function markNotificationsRead(a, r) { return usePg() ? pgMarkNotif(a, r)    : blobMarkNotif(a, r); }
 export function unreadCount(a, r)           { return usePg() ? pgUnread(a, r)       : blobUnread(a, r); }
+
+export function addLead(l)                  { return usePg() ? pgAddLead(l)        : blobAddLead(l); }
+export function listLeads()                 { return usePg() ? pgListLeads()       : blobListLeads(); }
+export function updateLead(id, l)           { return usePg() ? pgUpdateLead(id, l) : blobUpdateLead(id, l); }
+export function deleteLead(id)              { return usePg() ? pgDeleteLead(id)    : blobDeleteLead(id); }
 
 export function logEmail(e)                 { return usePg() ? pgLogEmail(e)        : blobLogEmail(e); }
 export function listEmails(limit)           { return usePg() ? pgListEmails(limit)  : blobListEmails(limit); }
