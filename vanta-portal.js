@@ -748,7 +748,6 @@
       var meta = [];
       if (p.publishedAt) meta.push(esc(ngDate(p.publishedAt)));
       if (p.seoScore != null) meta.push('<span class="ng-score ' + seoClass(p.seoScore) + ' post-seo">' + Math.round(num(p.seoScore)) + "</span>");
-      if (p.views != null) meta.push(fmt(p.views) + " " + esc(t("postViews")));
       return '<li class="post-item">' + title +
         '<div class="post-meta">' + meta.join('<span class="post-dot">·</span>') + "</div></li>";
     }).join("");
