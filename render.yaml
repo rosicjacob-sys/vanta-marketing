@@ -3,40 +3,14 @@
 # One Node web service that serves the static site AND hosts the former Netlify
 # Functions (see server.mjs), plus a daily cron job for subscription reminders
 # (replaces the old Netlify Scheduled Function). The database stays on Neon -
-# set its connection string as NETLIFY_DATABASE_URL below (the code reads that
-# name via @netlify/neon; no code change needed).
+# set its connection string as NETLIFY_DATABASE_URL (the code reads that name
+# via @netlify/neon; no code change needed).
 #
-# Secrets (sync: false) are NOT stored in this file - fill them in the Render
-# dashboard after the blueprint is created (Environment -> the "vanta-env" group).
-
-envVarGroups:
-  - name: vanta-env
-    envVars:
-      # --- Required for login ---
-      - key: ADMIN_EMAIL          # admin login email
-        sync: false
-      - key: ADMIN_PW_HASH        # scrypt$<salt>$<hash> (never the raw password)
-        sync: false
-      - key: SESSION_SECRET       # random secret used to sign session tokens
-        sync: false
-      # --- Database (Neon) ---
-      - key: NETLIFY_DATABASE_URL # your Neon Postgres connection string
-        sync: false
-      # --- netgrid API ---
-      - key: NETGRID_API_URL      # e.g. https://api.netgrid...
-        sync: false
-      - key: NETGRID_API_KEY
-        sync: false
-      # --- Email (Resend) ---
-      - key: RESEND_API_KEY
-        sync: false
-      - key: EMAIL_FROM
-        value: "Vanta <noreply@vantamarketing.io>"
-      # --- Misc ---
-      - key: URL                  # public site URL, used to build links in emails
-        value: "https://vantamarketing.io"
-      - key: REMINDER_LEAD_DAYS   # days before expiry to send the renewal reminder
-        value: "3"
+# Environment variables are NOT managed by this blueprint - set them directly
+# on each service in the Render dashboard (Environment tab). Required:
+#   ADMIN_EMAIL, ADMIN_PW_HASH (scrypt$<salt>$<hash>), SESSION_SECRET,
+#   NETLIFY_DATABASE_URL (Neon), NETGRID_API_URL, NETGRID_API_KEY, RESEND_API_KEY
+# Optional (have code defaults): EMAIL_FROM, URL, REMINDER_LEAD_DAYS
 
 services:
   # Static site + serverless functions, served by one Node process.
@@ -51,7 +25,6 @@ services:
     healthCheckPath: /robots.txt
     autoDeploy: true
     envVars:
-      - fromGroup: vanta-env
       - key: NODE_VERSION
         value: "20"
 
@@ -66,6 +39,5 @@ services:
     buildCommand: npm install
     startCommand: node scripts/run-reminders.mjs
     envVars:
-      - fromGroup: vanta-env
       - key: NODE_VERSION
         value: "20"
