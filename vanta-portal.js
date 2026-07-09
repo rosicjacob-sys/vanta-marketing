@@ -1100,7 +1100,7 @@
     var ctr = (c.views != null && num(c.views) > 0) ? (num(c.clicks) / num(c.views) * 100).toFixed(1) + "%" : "-";
     var activeSub = c.activeBlogCount == null ? "" : num(c.activeBlogCount) + " " + esc(t("cdActiveLc"));
     var dash = function (v) { return v == null ? "-" : fmt(v); };
-    return '<div class="rng-bar">' + rangeToggleHTML(days) + "</div>" +
+    return '<div class="rng-bar"><button class="dash-refresh-btn" id="cdRefresh" type="button">' + esc(t("refreshNow")) + "</button>" + rangeToggleHTML(days) + "</div>" +
       '<div class="dash-stats">' +
       cdStat(seoVal, t("cdOverallSeo")) +
       cdStat(dash(c.postCount), t("cdTotalPosts")) +
@@ -1145,6 +1145,8 @@
         host2.querySelectorAll(".rng-btn").forEach(function (bn) {
           bn.onclick = function () { if (bn.getAttribute("data-days") !== days) loadCdReal(email, bn.getAttribute("data-days")); };
         });
+        var rf = host2.querySelector("#cdRefresh");
+        if (rf) rf.onclick = function () { rf.disabled = true; rf.textContent = t("refreshing"); loadCdReal(email, days); };
         });
         });
       });
@@ -2029,7 +2031,7 @@
     ".ng-site-link:hover{text-decoration:underline}" +
     ".vp-spark{display:block;margin-top:8px;height:26px}" +
     ".vp-spark svg{width:100%;height:26px;display:block}" +
-    ".rng-bar{display:flex;justify-content:flex-end;margin:0 0 14px}" +
+    ".rng-bar{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:0 0 14px}" +
     ".rng-toggle{display:inline-flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--line2,#2a2145);border-radius:10px;padding:3px}" +
     ".rng-btn{font:inherit;font-size:12.5px;font-weight:600;color:var(--mut,#9aa);background:none;border:none;border-radius:8px;padding:6px 13px;cursor:pointer}" +
     ".rng-btn:hover{color:var(--white,#fff)}" +
