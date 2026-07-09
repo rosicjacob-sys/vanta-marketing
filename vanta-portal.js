@@ -139,6 +139,8 @@
     cdManual:   { en: "Manual",                fr: "Manuel" },
     cdRealSub:  { en: "Live from netgrid",     fr: "En direct de netgrid" },
     cdManualSub:{ en: "Numbers you enter",     fr: "Chiffres que vous saisissez" },
+    cdRawShow:  { en: "Show raw netgrid API response (diagnostic)", fr: "Afficher la réponse brute de l'API netgrid (diagnostic)" },
+    cdRawHint:  { en: "Exactly what netgrid's API returns for this client - compare these field names/values to netgrid's own dashboard.", fr: "Exactement ce que l'API netgrid renvoie pour ce client - comparez ces champs/valeurs au tableau de bord netgrid." },
     cdOverallSeo:{ en: "Overall SEO score",    fr: "Score SEO global" },
     cdBlogSites:{ en: "Blog sites",            fr: "Sites de blogue" },
     cdActiveLc: { en: "active",                fr: "actifs" },
@@ -1114,7 +1116,10 @@
       trafficCardHTML(traffic) +
       seoHistCardHTML(hist) +
       '<div class="dash-grid2">' + postsCardHTML(posts) + cadenceCardHTML(posts) + "</div>" +
-      (sites.length ? authorityCardHTML(sites, hist) : "");
+      (sites.length ? authorityCardHTML(sites, hist) : "") +
+      '<details class="cd-raw"><summary>' + esc(t("cdRawShow")) + "</summary>" +
+        '<div class="cd-raw-hint">' + esc(t("cdRawHint")) + "</div>" +
+        '<pre class="cd-raw-pre" id="cdRawOut">…</pre></details>';
   }
   // Loads (or reloads on range toggle) the admin Real-data tab for a client.
   function loadCdReal(email, days) {
@@ -1147,6 +1152,15 @@
         });
         var rf = host2.querySelector("#cdRefresh");
         if (rf) rf.onclick = function () { rf.disabled = true; rf.textContent = t("refreshing"); loadCdReal(email, days); };
+        var raw = host2.querySelector(".cd-raw");
+        if (raw) raw.addEventListener("toggle", function () {
+          if (!raw.open) return;
+          var out = host2.querySelector("#cdRawOut");
+          if (out && out.getAttribute("data-loaded")) return; // fetch once per render
+          api("/admin-client-netgrid-raw?email=" + em + win).then(function (r) {
+            if (out) { out.textContent = JSON.stringify(r.data, null, 2); out.setAttribute("data-loaded", "1"); }
+          }).catch(function () { if (out) out.textContent = t("netErr"); });
+        });
         });
         });
       });
@@ -2032,6 +2046,10 @@
     ".vp-spark{display:block;margin-top:8px;height:26px}" +
     ".vp-spark svg{width:100%;height:26px;display:block}" +
     ".rng-bar{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:0 0 14px}" +
+    ".cd-raw{margin:16px 0 0;border:1px solid var(--line2,#2a2350);border-radius:12px;padding:12px 16px;background:rgba(255,255,255,.03)}" +
+    ".cd-raw>summary{cursor:pointer;color:#c4b5fd;font-size:13px;font-weight:600;user-select:none}" +
+    ".cd-raw-hint{color:var(--mut2,#77809a);font-size:12px;margin:8px 0 6px}" +
+    ".cd-raw-pre{max-height:360px;overflow:auto;background:rgba(0,0,0,.35);border-radius:8px;padding:12px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#d8d4ff;white-space:pre;margin:0}" +
     ".rng-toggle{display:inline-flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--line2,#2a2145);border-radius:10px;padding:3px}" +
     ".rng-btn{font:inherit;font-size:12.5px;font-weight:600;color:var(--mut,#9aa);background:none;border:none;border-radius:8px;padding:6px 13px;cursor:pointer}" +
     ".rng-btn:hover{color:var(--white,#fff)}" +
