@@ -834,21 +834,24 @@
     if (cards.length === 1) return cards[0];
     return "";
   }
-  // Average overall SEO score across all sites, bucketed by month -> one series.
+  // Average overall SEO score across all sites, bucketed by week (Monday-started,
+  // UTC) -> one series.
   function avgSeoSeries(hist) {
     var sites = (hist && hist.sites) || [];
-    var byMonth = {};
+    var byWeek = {};
     sites.forEach(function (s) {
       (s.points || []).forEach(function (p) {
         var dt = new Date(p.date); if (isNaN(dt.getTime())) return;
-        var mk = dt.getUTCFullYear() + "-" + (dt.getUTCMonth() + 1);
-        if (!byMonth[mk]) byMonth[mk] = { sum: 0, n: 0, t: Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), 1) };
-        byMonth[mk].sum += num(p.score); byMonth[mk].n++;
+        var d = new Date(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate()));
+        d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); // back to Monday
+        var wk = d.getTime();
+        if (!byWeek[wk]) byWeek[wk] = { sum: 0, n: 0, t: wk };
+        byWeek[wk].sum += num(p.score); byWeek[wk].n++;
       });
     });
-    return Object.keys(byMonth)
-      .sort(function (a, b) { return byMonth[a].t - byMonth[b].t; })
-      .map(function (k) { return { date: new Date(byMonth[k].t).toISOString(), score: Math.round(byMonth[k].sum / byMonth[k].n) }; });
+    return Object.keys(byWeek)
+      .sort(function (a, b) { return byWeek[a].t - byWeek[b].t; })
+      .map(function (k) { return { date: new Date(byWeek[k].t).toISOString(), score: Math.round(byWeek[k].sum / byWeek[k].n) }; });
   }
   // SEO score over time - averaged across the client's sites (single series).
   function seoHistCardHTML(hist) {
