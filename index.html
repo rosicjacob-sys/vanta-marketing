@@ -776,7 +776,7 @@ function renderHome(){
   SVC_CATS.forEach(function(c){
     const items = SERVICES.filter(s=>s.cat===c.id);
     if(!items.length) return;
-    h += '<div class="svc-cat"><div class="tierlabel"><span class="nm">'+(lang==='fr'?c.nameFr:c.name)+'</span><span class="ln"></span></div><div class="svc-grid">'+items.map(s=>svcCard(s,false)).join('')+'</div></div>';
+    h += '<div class="svc-cat"><div class="tierlabel reveal"><span class="nm">'+(lang==='fr'?c.nameFr:c.name)+'</span><span class="ln"></span></div><div class="svc-grid reveal d1">'+items.map(s=>svcCard(s,false)).join('')+'</div></div>';
   });
   h += '</div></div>';
   return h;
@@ -903,6 +903,21 @@ function mountAnimEl(el){ el.setAttribute('aria-hidden','true'); const sceneId=e
   return function(){ alive=false; cancelAnimationFrame(raf); try{ro&&ro.disconnect();}catch(e){} el.innerHTML=''; };
 }
 function mountAllAnims(){ unmountAllAnims(); document.querySelectorAll('.view.active [data-anim]').forEach(function(el){ PAGEANIMS.push(mountAnimEl(el)); }); }
+// Scroll-reveal for dynamically-rendered home sections (grids, category labels, headers, signature viz).
+// Mirrors the outreach-zone reveal: IntersectionObserver + reduced-motion instant + 3.5s force-show failsafe.
+function armHomeReveals(){
+  var root=document.getElementById('view-home'); if(!root) return;
+  var reduce=false; try{ reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+  var els=[].slice.call(root.querySelectorAll('.reveal')).filter(function(el){ return !el.classList.contains('in'); });
+  if(!els.length) return;
+  if(reduce){ els.forEach(function(el){ el.classList.add('in'); }); return; }
+  var show=function(){ els.forEach(function(el){ el.classList.add('in'); }); };
+  try{
+    var io=new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } }); },{threshold:0.12,rootMargin:'0px 0px -6% 0px'});
+    els.forEach(function(el){ io.observe(el); });
+  }catch(e){ show(); }
+  setTimeout(show,3500); // failsafe: never leave a section invisible
+}
 
 function applyLang(l){
   lang=l; try{ localStorage.setItem('vanta_lang', l); }catch(e){}
@@ -912,7 +927,7 @@ function applyLang(l){
   document.querySelectorAll('[data-ph]').forEach(el=>{ const k=el.getAttribute('data-ph'); const v=UI[l]&&UI[l][k]; if(typeof v==='string') el.placeholder=v; });
   const _av=document.querySelector('.view.active'); const _snap={};
   if(_av) _av.querySelectorAll('input[name],textarea[name],select[name]').forEach(el=>{ if(el.type!=='hidden'&&el.value) _snap[el.name]=el.value; });
-  var _hc=document.getElementById('homeContent'); var _vh=document.getElementById('view-home'); if(_hc && _vh && _vh.classList.contains('active')){ var _zz=document.getElementById('oxzone'); if(_zz) document.body.appendChild(_zz); _hc.innerHTML=renderHome(); if(typeof slotOx==='function') slotOx(); }
+  var _hc=document.getElementById('homeContent'); var _vh=document.getElementById('view-home'); if(_hc && _vh && _vh.classList.contains('active')){ var _zz=document.getElementById('oxzone'); if(_zz) document.body.appendChild(_zz); _hc.innerHTML=renderHome(); if(typeof slotOx==='function') slotOx(); mountAllAnims(); armHomeReveals(); }
   if(typeof route==='function') route();
   const _nv=document.querySelector('.view.active');
   if(_nv) Object.keys(_snap).forEach(k=>{ const el=_nv.querySelector('[name="'+k+'"]'); if(el&&!el.value) el.value=_snap[k]; });
@@ -1139,7 +1154,7 @@ function route(){
     if(_tid && _av && _av.id!=='view-home'){ try{ if(_av.querySelector('#'+CSS.escape(_tid))) return; }catch(_e){} }
     var _hc0=document.getElementById('homeContent');
     if(!_hc0.innerHTML){ var _z0=document.getElementById('oxzone'); if(_z0) document.body.appendChild(_z0); _hc0.innerHTML=renderHome(); }
-    unmountDash(); unmountAllAnims(); show('view-home'); if(typeof slotOx==='function') slotOx();
+    unmountDash(); unmountAllAnims(); show('view-home'); if(typeof slotOx==='function') slotOx(); mountAllAnims(); armHomeReveals();
     if(_tid){ requestAnimationFrame(function(){ var _el=document.getElementById(_tid); if(_el) _el.scrollIntoView({behavior:'smooth',block:'start'}); }); }
     (document.getElementById('navCta')||{setAttribute:function(){}}).setAttribute('href','#demo'); return; }
   unmountDash(); unmountAllAnims();
@@ -1158,7 +1173,7 @@ function route(){
   if(h.startsWith('#/industries')){ buildTiles(''); show('view-industries'); window.scrollTo(0,0); (document.getElementById('navCta')||{setAttribute:function(){}}).setAttribute('href','#demo'); return; }
   if(h.startsWith('#/portfolio')){ document.getElementById('portfolioContent').innerHTML=renderPortfolio(); show('view-portfolio'); window.scrollTo(0,0); (document.getElementById('navCta')||{setAttribute:function(){}}).setAttribute('href','#demo'); return; }
   var _zh=document.getElementById('oxzone'); if(_zh) document.body.appendChild(_zh);
-  document.getElementById('homeContent').innerHTML=renderHome(); if(typeof slotOx==='function') slotOx(); show('view-home'); window.scrollTo(0,0); (document.getElementById('navCta')||{setAttribute:function(){}}).setAttribute('href','#demo');
+  document.getElementById('homeContent').innerHTML=renderHome(); if(typeof slotOx==='function') slotOx(); show('view-home'); mountAllAnims(); armHomeReveals(); window.scrollTo(0,0); (document.getElementById('navCta')||{setAttribute:function(){}}).setAttribute('href','#demo');
 }
 document.addEventListener('click', function(e){ var a=e.target.closest&&e.target.closest('a[href="#pricing"]'); if(!a)return; e.preventDefault(); var el=document.getElementById('pricing'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); else location.hash='#/industries'; });
 document.addEventListener('submit', function(e){ if(e.target&&e.target.id==='loginForm'){ e.preventDefault(); if(window.VantaPortal){ window.VantaPortal.handleLogin(e.target); } } });
